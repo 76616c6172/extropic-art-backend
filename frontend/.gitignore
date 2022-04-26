@@ -1,10 +1,7 @@
-services
-build_controller_statically
-build_static_controller_and_upload
-
 .DS_Store
 node_modules
 /dist
+
 
 # local env files
 .env.local

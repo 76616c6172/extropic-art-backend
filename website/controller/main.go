@@ -1,14 +1,15 @@
 package main
 
 import (
-	"dd-web-app/controller/internals"
 	"encoding/json"
+	"exia/controller/internals"
+	"fmt"
 
 	"net/http"
 	"text/template"
 )
 
-const WEBSERVER_PORT = ":80" // this is where we serve for testing purposes
+const WEBSERVER_PORT = ":8080" // this is where we serve for testing purposes
 
 var view *template.Template
 
@@ -77,8 +78,7 @@ func api_0_status(w http.ResponseWriter, r *http.Request) {
 // Starts the webserver on port WEBSERVER_PORT (8080 for testing)
 func main() {
 	http.Handle("/assets/", http.StripPrefix("/assets", http.FileServer(http.Dir("./model/pub")))) //serves requests to www.url/assets/
-
-	http.HandleFunc("/", index_handler) // handles requests to url
+	http.HandleFunc("/", index_handler)                                                            // handles requests to url
 
 	http.HandleFunc("/api/0/status", api_0_status) // registers api_0_status() as the handler for "/api/0/status"
 	http.HandleFunc("/api/0/jobs", api_0_jobs)
@@ -86,6 +86,7 @@ func main() {
 	//http.HandleFunc("/api/0/gpu", api_0_gpu)     // maybe we don't need it!
 
 	http.ListenAndServe(WEBSERVER_PORT, nil) // Run the server
+	fmt.Println("test")
 }
 
 /* According to Tod MclEod, this is how to handle requests

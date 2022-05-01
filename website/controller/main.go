@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"exia/controller/internals"
-	"fmt"
 
 	"net/http"
 	"text/template"
@@ -86,7 +85,6 @@ func main() {
 	//http.HandleFunc("/api/0/gpu", api_0_gpu)     // maybe we don't need it!
 
 	http.ListenAndServe(WEBSERVER_PORT, nil) // Run the server
-	fmt.Println("test")
 }
 
 /* According to Tod MclEod, this is how to handle requests

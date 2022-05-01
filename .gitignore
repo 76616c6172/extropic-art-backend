@@ -1,3 +1,2 @@
 services
-build_controller_statically
-build_static_controller_and_upload
+exia-controller

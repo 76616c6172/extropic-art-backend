@@ -1,5 +1,12 @@
-import { createApp } from 'vue'
-import App from './App.vue'
-/* import './styles/global.scss'; */
+import { createApp } from 'vue';
+import * as bsMin from 'bootstrap/dist/js/bootstrap.min.js';
+import router from './router';
+import App from './App.vue';
 
-createApp(App).mount('#app')
+
+let vueApp = createApp(App);
+
+vueApp.use(bsMin);
+vueApp.use(router);
+vueApp.mount('#app');
+

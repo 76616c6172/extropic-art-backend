@@ -1,8 +1,9 @@
 #!/bin/bash
-# Statically builds the controller (webserver) and redeploys it to the specified VPS
-
+# Statically build and redeploy the controller (webserver)
 
 set -e # fail fast
+
+# not needed
 #cd $(dirname $0) # make sure we're in the dir we expect
 #if [ "$#" -ne 2 ]; then
 #    echo "usage: $0 user@server-address /path/to/remote/directory/"
@@ -25,10 +26,11 @@ BUILD_TIMESTAMP=$(TZ=UTC date -u +"%s")
 FILE_HASH=$(b2sum $OUTFILE | cut -f1 -d' ')
 REMOTE_FILENAME="$BINARY_NAME-$BUILD_TIMESTAMP-$COMMIT_HASH-$FILE_HASH"
 
-# REMOTE EXECUTION
-ssh $SERVER_SSH "mkdir -p $SERVER_PATH/versions/"
+# 2. Copy over the file
+ssh $SERVER_SSH "mkdir -p $SERVER_PATH/versions/" # create dirs as needed
 scp "$OUTFILE" "$SERVER_SSH:$SERVER_PATH/versions/$REMOTE_FILENAME"
 
+# 3. Symlink the latest version of the binary and restart the systemd service
 ssh -q -T $SERVER_SSH <<EOL
     nohup sh -c "\
     rm "$SERVER_PATH/$BINARY_NAME" && \

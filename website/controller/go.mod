@@ -1,3 +1,3 @@
-module dd-web-app/controller
+module exia/controller
 
 go 1.18

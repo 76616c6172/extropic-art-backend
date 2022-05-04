@@ -1,0 +1,10 @@
+#!/bin/bash
+# Build docker container for the controller locally and run it on port 8080
+set -e # fail fast
+
+echo "building docker container.."
+BUILDHASH=$(docker build . | tail -n 1 | cut -c 20-)
+echo "completed building: $BUILDHASH"
+
+echo "running $BUILDHASH on localhost:8088"
+docker run -p 8080:8080 --rm -it "$BUILDHASH"

@@ -35,9 +35,12 @@ func api_0_jobs(w http.ResponseWriter, r *http.Request) {
 // Answers calls to the endpoint /api/0/img
 // TODO: requires a jobid and sends back the latest image for that job id.
 func api_0_img(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "POST" {
-		internals.HandleImgRequests(w, r) // TODO: Return the correct image based on the request (request with jobid)
-	}
+	internals.HandleImgRequests(w, r) // TODO: Return the correct image based on the request (request with jobid)
+
+	/*
+		if r.Method == "POST" {
+		}
+	*/
 
 }
 

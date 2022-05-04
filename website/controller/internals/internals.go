@@ -2,10 +2,12 @@ package internals
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 )
 
 const GPU_STATUS string = "offline" // can be offline, online, or busy
@@ -36,7 +38,7 @@ func HandleStatusRequest(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" { // send back the response
 
 		var testJob job
-		testJob.Jobid = "752byy5cd9013dcf3f6ebf577f99fa76adf4f32459"
+		testJob.Jobid = "47d5090d689508acf1a6c29695e0d05ad4b60ba"
 		testJob.Prompt = "3d render of celestial space nebula, cosmic, space station, unreal engine 3, photorealistic materials, trending on Artstation"
 
 		var responseObject = status{
@@ -45,7 +47,7 @@ func HandleStatusRequest(w http.ResponseWriter, r *http.Request) {
 
 		// Just testing
 		responseObject.Completed_jobs = append(responseObject.Completed_jobs, testJob)
-		testJob.Jobid = "847d5090d689508acf1a6c29695e0d05ad4b60ba"
+		testJob.Jobid = "752b5cd9013dcf3f6ebf577f99fa76adf4f32459"
 		testJob.Prompt = "Space panorama of moon-shaped burning wool, large as the moon, races towards  the blue planet earth, nasa earth, trending on artstation"
 		responseObject.Completed_jobs = append(responseObject.Completed_jobs, testJob)
 
@@ -56,8 +58,14 @@ func HandleStatusRequest(w http.ResponseWriter, r *http.Request) {
 
 // Obtains the coorect image for a given job and sends it back
 func HandleImgRequests(w http.ResponseWriter, r *http.Request) {
+
 	w.Header().Set("Access-Control-Allow-Origin", "*") // TESTING: allow CORS for testing purposes
 
+	input := fmt.Sprintln(r.URL)
+	inputstring := strings.TrimLeft(input, "/api/0/img?jobid=")
+	inputstring2 := strings.TrimSpace(inputstring)
+
+	/* Don/t care bout the body for now
 	jsonDecoder := json.NewDecoder(r.Body)
 	var imgRequest imgRequest
 	err := jsonDecoder.Decode(&imgRequest)
@@ -65,19 +73,24 @@ func HandleImgRequests(w http.ResponseWriter, r *http.Request) {
 		log.Println(err) // maybe handle this better
 		return
 	}
+	*/
 
+	//img, err := os.Open("./model/images/" + imgRequest.Jobid + ".png") // for now just get this image for testing
+	img, err := os.Open("./model/images/" + inputstring2 + ".png") // temporary
 	// TODO: Actually lookfor the image in SQLite database
-	img, err := os.Open("./model/images/" + imgRequest.Jobid + ".png") // for now just get this image for testing
+	// img, err := os.Open("./model/images/" + imgRequest.Jobid + ".png") // for now just get this image for testing
 	if err != nil {
-		log.Fatal(err) // perhaps handle this nicer
+		fmt.Println(err) // perhaps handle this nicer
+		return
 	}
 	defer img.Close()
-	w.Header().Set("Access-Control-Allow-Origin", "*") // TESTING: allow CORS for testing purposes
-	w.Header().Set("Content-Type", "image/png")        // <-- set the content-type header
-	_, err = io.Copy(w, img)                           // send the image
+
+	w.Header().Set("Content-Type", "image/png") // <-- set the content-type header
+	_, err = io.Copy(w, img)                    // send the image
 	if err != nil {
 		log.Println(err)
 	}
+
 }
 
 // Deals with POST requests made to the jobs endpoint (POST new jobs)

@@ -48,7 +48,6 @@ func HandleStatusRequest(w http.ResponseWriter, r *http.Request) {
 		testJob.Jobid = "847d5090d689508acf1a6c29695e0d05ad4b60ba"
 		testJob.Prompt = "Space panorama of moon-shaped burning wool, large as the moon, races towards  the blue planet earth, nasa earth, trending on artstation"
 		responseObject.Completed_jobs = append(responseObject.Completed_jobs, testJob)
-		// testing end
 
 		json.NewEncoder(w).Encode(responseObject) // send back the json as a the response
 	}
@@ -66,10 +65,6 @@ func HandleImgRequests(w http.ResponseWriter, r *http.Request) {
 		log.Println(err) // maybe handle this better
 		return
 	}
-
-	//debug logging
-	log.Print(imgRequest.Jobid) //debug
-	log.Print(imgRequest)       //debug
 
 	// TODO: Actually lookfor the image in SQLite database
 	img, err := os.Open("./model/images/" + imgRequest.Jobid + ".png") // for now just get this image for testing

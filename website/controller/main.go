@@ -25,9 +25,10 @@ func index_handler(w http.ResponseWriter, r *http.Request) {
 func api_0_jobs(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
-	case "POST": // Return info about existing jobs (I would like to make this GET but the frontend requires POST)
+	case "GET": // Return info about existing jobs (I would like to make this GET but the frontend requires POST)
+		internals.HandleJobsApiGet(w, r)
+	case "POST": // take in new jobs
 		internals.HandleJobsApiPost(w, r)
-	case "PUT": // take in new jobs
 		// TODO: deal with accepting new jobs
 	}
 }

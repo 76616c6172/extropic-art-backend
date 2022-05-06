@@ -12,6 +12,10 @@ import (
 
 const GPU_STATUS string = "offline" // can be offline, online, or busy
 
+type newjob struct {
+	Prompt string `json:"prompt"`
+}
+
 // Schema for request sent to job endpoint by client
 type job struct {
 	Jobid  string `json:"jobid"`
@@ -93,17 +97,15 @@ func HandleImgRequests(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// Deals with POST requests made to the jobs endpoint (POST new jobs)
-func HandleJobsApiPost(w http.ResponseWriter, r *http.Request) {
+// takes /api/0/jobs=?jobid="yourjodidhere"
+// sends back json object with info about the job
+func HandleJobsApiGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*") // TESTING: allow CORS for testing purposes
 
-	jsonDecoder := json.NewDecoder(r.Body)
-	var jobRequest job
-	err := jsonDecoder.Decode(&jobRequest)
-	if err != nil {
-		log.Println(err) // maybe handle this better
-		return
-	}
+	// Get the jobid
+	input := fmt.Sprintln(r.URL)
+	inputstring := strings.TrimLeft(input, "/api/0/jobs?jobid=")
+	inputstring2 := strings.TrimSpace(inputstring)
 
 	type newJob struct {
 		Jobid      string `json:"jobid"`
@@ -112,10 +114,45 @@ func HandleJobsApiPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var j newJob
-	j.Jobid = "552byy5cd9013dcf3f6ebf577f99fa76asd4f32459" // Placeholder
+	// TODO: do this for real not just hardcode
+	if inputstring2 == "752b5cd9013dcf3f6ebf577f99fa76adf4f32459" {
+
+		j.Jobid = inputstring2
+		j.Prompt = "Space panorama of moon-shaped burning wool, large as the moon, races towards  the blue planet earth, nasa earth, trending on artstation"
+		j.Job_status = "completed" //pending? rejected?
+
+		json.NewEncoder(w).Encode(j) // send back the json as a the response
+	}
+	if inputstring2 == "47d5090d689508acf1a6c29695e0d05ad4b60ba" {
+		j.Jobid = inputstring2
+		j.Prompt = "3d render of celestial space nebula, cosmic, space station, unreal engine 3, photorealistic materials, trending on Artstation"
+		j.Job_status = "completed"   //pending? rejected?
+		json.NewEncoder(w).Encode(j) // send back the json as a the response
+	}
+}
+
+// Deals with POST requests made to the jobs endpoint (POST new jobs)
+func HandleJobsApiPost(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*") // TESTING: allow CORS for testing purposes
+
+	jsonDecoder := json.NewDecoder(r.Body)
+	var jobRequest newjob
+	err := jsonDecoder.Decode(&jobRequest)
+	if err != nil {
+		log.Println(err) // maybe handle this better
+		return
+	}
+
+	type jobResponse struct {
+		Jobid      string `json:"jobid"`
+		Prompt     string `json:"prompt"`
+		Job_status string `json:"job_status"`
+	}
+
+	var j jobResponse
+	j.Jobid = "PLACEHOLDER_552byy5ebf577f99fa76asd4f32459" // Placeholder
 	j.Prompt = jobRequest.Prompt                           // TODO: Validate and sanitize user input first
 	j.Job_status = "accepted"                              //pending? rejected?
 
-	w.Header().Set("Access-Control-Allow-Origin", "*") // TESTING: allow CORS for testing purposes
-	json.NewEncoder(w).Encode(j)                       // send back the json as a the response
+	json.NewEncoder(w).Encode(j) // send back the json as a the response
 }

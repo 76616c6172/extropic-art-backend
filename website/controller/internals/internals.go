@@ -133,7 +133,11 @@ func HandleJobsApiGet(w http.ResponseWriter, r *http.Request) {
 
 // Deals with POST requests made to the jobs endpoint (POST new jobs)
 func HandleJobsApiPost(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*") // TESTING: allow CORS for testing purposes
+	//w.Header().Set("Access-Control-Allow-Origin", "https://www.exia.art") // TESTING: allow CORS for testing purposes
+	//w.Header().Set("Access-Control-Allow-Origin", "*")
+	//w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
+	//w.Header().Set("Access-Control-Allow-Headers", r.Header.Get("Access-Control-Request-Headers"))
+	w.Header().Set("Access-Control-Allow-Headers", "*")
 
 	jsonDecoder := json.NewDecoder(r.Body)
 	var jobRequest newjob

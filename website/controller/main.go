@@ -23,6 +23,8 @@ func index_handler(w http.ResponseWriter, r *http.Request) {
 
 // Answers calls to the endpoint /api/0/jobs
 func api_0_jobs(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin")) // FIXME
+	w.Header().Set("Access-Control-Allow-Headers", "*")                   //FIXME because I don't get it
 
 	switch r.Method {
 	case "GET": // Return info about existing jobs (I would like to make this GET but the frontend requires POST)

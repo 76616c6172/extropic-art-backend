@@ -42,7 +42,7 @@ func HandleStatusRequest(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" { // send back the response
 
 		var testJob job
-		testJob.Jobid = "47d5090d689508acf1a6c29695e0d05ad4b60ba"
+		testJob.Jobid = "752b5cd9013dcf3f6ebf577f99fa76adf4f32459"
 		testJob.Prompt = "3d render of celestial space nebula, cosmic, space station, unreal engine 3, photorealistic materials, trending on Artstation"
 
 		var responseObject = status{
@@ -51,7 +51,7 @@ func HandleStatusRequest(w http.ResponseWriter, r *http.Request) {
 
 		// Just testing
 		responseObject.Completed_jobs = append(responseObject.Completed_jobs, testJob)
-		testJob.Jobid = "752b5cd9013dcf3f6ebf577f99fa76adf4f32459"
+		testJob.Jobid = "47d5090d689508acf1a6c29695e0d05ad4b60ba"
 		testJob.Prompt = "Space panorama of moon-shaped burning wool, large as the moon, races towards  the blue planet earth, nasa earth, trending on artstation"
 		responseObject.Completed_jobs = append(responseObject.Completed_jobs, testJob)
 
@@ -118,14 +118,14 @@ func HandleJobsApiGet(w http.ResponseWriter, r *http.Request) {
 	if inputstring2 == "752b5cd9013dcf3f6ebf577f99fa76adf4f32459" {
 
 		j.Jobid = inputstring2
-		j.Prompt = "Space panorama of moon-shaped burning wool, large as the moon, races towards  the blue planet earth, nasa earth, trending on artstation"
+		j.Prompt = "3d render of celestial space nebula, cosmic, space station, unreal engine 3, photorealistic materials, trending on Artstation"
 		j.Job_status = "completed" //pending? rejected?
 
 		json.NewEncoder(w).Encode(j) // send back the json as a the response
 	}
 	if inputstring2 == "47d5090d689508acf1a6c29695e0d05ad4b60ba" {
 		j.Jobid = inputstring2
-		j.Prompt = "3d render of celestial space nebula, cosmic, space station, unreal engine 3, photorealistic materials, trending on Artstation"
+		j.Prompt = "Space panorama of moon-shaped burning wool, large as the moon, races towards  the blue planet earth, nasa earth, trending on artstation"
 		j.Job_status = "completed"   //pending? rejected?
 		json.NewEncoder(w).Encode(j) // send back the json as a the response
 	}

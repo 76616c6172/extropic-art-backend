@@ -7,6 +7,7 @@ WORKDIR /src
 ## Get dependencies
 COPY go.mod ./
 RUN go mod download
+RUN touch test
 COPY . .
 
 ## Compile static binary

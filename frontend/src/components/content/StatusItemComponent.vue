@@ -1,6 +1,6 @@
 <template>
   <li
-    @click="onClickSetImage"
+    @click="onClickSetSelected(jobId)"
     style="list-style-type: none; background-color: lightgrey"
   >
     <p class="text-start"><strong>Prompt: </strong>{{ prompt }}</p>
@@ -22,9 +22,9 @@ export default {
     },
   },
   methods: {
-    onClickSetImage() {
-      console.log(this.jobId);
-      this.$store.dispatch("fetchImage");
+    onClickSetSelected(jobId) {
+      this.$store.dispatch("fetchSelectedImage", jobId);
+      this.$store.dispatch("fetchSelectedPrompt", jobId);
     },
   },
 };

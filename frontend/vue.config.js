@@ -1,14 +1,17 @@
-const { defineConfig } = require('@vue/cli-service')
+const { defineConfig } = require("@vue/cli-service");
 const path = require("path");
 module.exports = defineConfig({
   transpileDependencies: true,
-  chainWebpack: config => {
+  chainWebpack: (config) => {
     const types = ["vue-modules", "vue", "normal-modules", "normal"];
-    types.forEach(type =>
+    types.forEach((type) =>
       addStyleResource(config.module.rule("scss").oneOf(type))
     );
-  }
-})
+  },
+  // devServer: {
+  //   proxy: "https://exia.art/api/0/img",
+  // },
+});
 
 /* SCSS support (https://vinceumo.github.io/devNotes/Javascript/vue-scss-setup/) */
 function addStyleResource(rule) {
@@ -20,7 +23,7 @@ function addStyleResource(rule) {
         path.resolve(__dirname, "./src/styles/animations/*.scss"),
         path.resolve(__dirname, "./src/styles/functions/*.scss"),
         path.resolve(__dirname, "./src/styles/mixins/*.scss"),
-        path.resolve(__dirname, "./src/styles/variables/*.scss")
-      ]
+        path.resolve(__dirname, "./src/styles/variables/*.scss"),
+      ],
     });
 }

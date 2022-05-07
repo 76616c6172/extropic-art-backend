@@ -3,9 +3,10 @@
     <div class="mt-5">
       <div class="row justify-content-center">
         <div class="col-lg-8 col-sm-12">
-          <!-- <TypingComponent /> -->
-          <StatusListComponent />
-          <!-- <PromptComponent /> -->
+          <!-- <Typing /> -->
+          <StatusItemList />
+          <Prompt />
+          <StatusImage />
         </div>
       </div>
     </div>
@@ -13,16 +14,18 @@
 </template>
 
 <script>
-// import TypingComponent from "../components/miscellaneous/TypingComponent.vue";
-// import PromptComponent from "../components/content/PromptComponent.vue";
-import StatusListComponent from "../components/content/StatusListComponent.vue";
+// import { default as Typing } from "../components/miscellaneous/TypingComponent.vue";
+import { default as Prompt } from "../components/content/PromptComponent.vue";
+import { default as StatusItemList } from "./content/StatusItemListComponent.vue";
+import { default as StatusImage } from "./content/StatusImageComponent.vue";
 
 export default {
   name: "HomeComponent",
   components: {
-    // TypingComponent,
-    // PromptComponent,
-    StatusListComponent,
+    // Typing,
+    Prompt,
+    StatusItemList,
+    StatusImage,
   },
   props: {
     msg: String,

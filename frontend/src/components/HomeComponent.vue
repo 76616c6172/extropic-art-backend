@@ -6,7 +6,6 @@
           <!-- <Typing /> -->
           <StatusItemList />
           <Prompt />
-          <StatusImage />
         </div>
       </div>
     </div>
@@ -17,7 +16,6 @@
 // import { default as Typing } from "../components/miscellaneous/TypingComponent.vue";
 import { default as Prompt } from "../components/content/PromptComponent.vue";
 import { default as StatusItemList } from "./content/StatusItemListComponent.vue";
-import { default as StatusImage } from "./content/StatusImageComponent.vue";
 
 export default {
   name: "HomeComponent",
@@ -25,7 +23,6 @@ export default {
     // Typing,
     Prompt,
     StatusItemList,
-    StatusImage,
   },
   props: {
     msg: String,

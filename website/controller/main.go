@@ -55,7 +55,7 @@ func api_0_status(w http.ResponseWriter, r *http.Request) {
 func main() {
 
 	// Handle requests for web assets
-	http.Handle("/assets/", http.StripPrefix("/assets", http.FileServer(http.Dir("./model/pub")))) //serves requests to www.url/assets/
+	http.Handle("/assets/", http.StripPrefix("/assets", http.FileServer(http.Dir("./view/dist")))) //serves requests to www.url/assets/
 	http.HandleFunc("/", index_handler)                                                            // handles requests to /
 
 	// Handle API endpoints

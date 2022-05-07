@@ -1,19 +1,19 @@
 <template>
   <div>
-    <div @click="buildModalDialogue()">Open Modal</div>
-    <ConfirmDialogue ref="confirmDialogue" />
+    <!-- <div @click="buildModalDialogue()">Open Modal</div>
+    <ConfirmDialogue ref="confirmDialogue" /> -->
     <!-- <p>{{ getSelectedPrompt }}</p>
     <img :src="`${getSelectedImageUrl}`" alt="" /> -->
   </div>
 </template>
 
 <script>
-import ConfirmDialogue from "../modal/Confirmdialogue.vue";
+// import ConfirmDialogue from "../modal/Confirmdialogue.vue";
 
 export default {
   name: "StatusImageComponent",
   components: {
-    ConfirmDialogue,
+    // ConfirmDialogue,
   },
   methods: {
     async buildModalDialogue() {

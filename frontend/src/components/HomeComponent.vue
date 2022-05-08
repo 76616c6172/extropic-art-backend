@@ -1,23 +1,23 @@
 <template>
-  <div class="container">
+  <div class="container-fluid">
     <div class="mt-5">
       <div class="row justify-content-center">
-        <div class="col-lg-8 col-sm-12">
+        <div class="col-lg-7 col-sm-12">
           <Typing />
         </div>
       </div>
       <div class="row justify-content-center">
-        <div class="col-lg-8 col-sm-12">
+        <div class="col-lg-7 col-sm-12">
           <Instructions />
         </div>
       </div>
-      <div class="row justify-content-center">
-        <div class="col-lg-8 col-sm-12">
+      <div class="row justify-content-center bg-light">
+        <div class="col-lg-7 col-sm-12">
           <StatusItemList />
         </div>
       </div>
-      <div class="row justify-content-center">
-        <div class="col-lg-8 col-sm-12">
+      <div class="row justify-content-center bg-light">
+        <div class="col-lg-7 col-sm-12">
           <Prompt />
         </div>
       </div>

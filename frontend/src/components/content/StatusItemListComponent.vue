@@ -1,6 +1,9 @@
 <template>
-  <div>
-    <ul style="display: block; margin: 0; padding: 0">
+  <div class="mt-5 mb-4">
+    <h2 class="text-start mt-5 mb-4">
+      <strong> ImageList</strong>
+    </h2>
+    <ul class="list-group-flush" style="padding-left: 0 !important">
       <StatusItem
         v-for="(job, index) in storeGetJobs"
         :key="index"

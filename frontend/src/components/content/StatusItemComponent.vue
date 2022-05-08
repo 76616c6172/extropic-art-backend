@@ -1,7 +1,7 @@
 <template>
   <li
     @click="onClickSetSelected(jobId) & buildModalDialogue()"
-    style="list-style-type: none; background-color: lightgrey"
+    class="list-group-item list-group-item-action"
   >
     <p class="text-start"><strong>Prompt: </strong>{{ prompt }}</p>
     <p class="text-start">(<strong>JobID: </strong> {{ jobId }})</p>

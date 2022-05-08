@@ -1,7 +1,11 @@
 <template>
   <div class="appContainer">
     <Navbar />
-    <Home />
+    <div class="row">
+      <div class="col-12">
+        <Home />
+      </div>
+    </div>
     <Footer />
   </div>
 </template>

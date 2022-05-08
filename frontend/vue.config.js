@@ -8,9 +8,6 @@ module.exports = defineConfig({
       addStyleResource(config.module.rule("scss").oneOf(type))
     );
   },
-  // devServer: {
-  //   proxy: "https://exia.art/api/0/img",
-  // },
 });
 
 /* SCSS support (https://vinceumo.github.io/devNotes/Javascript/vue-scss-setup/) */

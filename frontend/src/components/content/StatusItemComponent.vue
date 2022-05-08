@@ -7,7 +7,12 @@
       <div class="col-10">
         <p class="text-start"><strong>Prompt: </strong>{{ prompt }}</p>
       </div>
-      <div class="col-2">asdf</div>
+      <div class="col-2">
+        <button type="button" class="btn btn-primary">
+          Profile <span class="badge badge-light">9</span>
+          <span class="sr-only">unread messages</span>
+        </button>
+      </div>
     </div>
   </li>
   <ConfirmDialogue ref="confirmDialogue" />

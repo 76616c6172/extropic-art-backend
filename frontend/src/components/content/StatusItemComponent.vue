@@ -3,8 +3,12 @@
     @click="onClickSetSelected(jobId) & buildModalDialogue()"
     class="list-group-item list-group-item-action"
   >
-    <p class="text-start"><strong>Prompt: </strong>{{ prompt }}</p>
-    <p class="text-start">(<strong>JobID: </strong> {{ jobId }})</p>
+    <div class="row">
+      <div class="col-10">
+        <p class="text-start"><strong>Prompt: </strong>{{ prompt }}</p>
+      </div>
+      <div class="col-2">asdf</div>
+    </div>
   </li>
   <ConfirmDialogue ref="confirmDialogue" />
 </template>
@@ -28,14 +32,13 @@ export default {
   },
   methods: {
     onClickSetSelected(jobId) {
-      this.$store.dispatch("fetchSelectedImage", jobId);
-      this.$store.dispatch("fetchSelectedPrompt", jobId);
+      this.$store.dispatch("getSelectedJob", jobId);
     },
     async buildModalDialogue() {
       console.log("triggered");
       const ok = await this.$refs.confirmDialogue.show({
-        title: this.getSelectedPrompt,
-        image: this.getSelectedImageUrl,
+        title: this.getSelectedJob.prompt,
+        image: this.getSelectedJob.img,
         message: "",
         okButton: "Löschen",
       });
@@ -45,12 +48,16 @@ export default {
     },
   },
   computed: {
-    getSelectedImageUrl() {
-      return this.$store.getters.getSelectedImageUrl;
-    },
-    getSelectedPrompt() {
-      return this.$store.getters.getSelectedPrompt;
+    getSelectedJob() {
+      return this.$store.getters.getSelectedJob;
     },
   },
 };
 </script>
+
+<style scoped>
+.list-group-item {
+  background: transparent;
+  padding: 10px 5px;
+}
+</style>

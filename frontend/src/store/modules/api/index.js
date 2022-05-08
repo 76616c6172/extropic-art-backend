@@ -4,18 +4,14 @@ const url = "https://exia.art/api/0";
 
 const state = {
   jobs: [],
-  selectedImgUrl: "",
-  selectedPrompt: "",
+  selectedJob: [],
 };
 const getters = {
   getJobs: (state) => {
     return state.jobs;
   },
-  getSelectedPrompt: (state) => {
-    return state.selectedPrompt;
-  },
-  getSelectedImageUrl: (state) => {
-    return state.selectedImgUrl;
+  getSelectedJob: (state) => {
+    return state.selectedJob;
   },
 };
 const actions = {
@@ -47,28 +43,21 @@ const actions = {
       console.log(error);
     }
   },
-  // Fetch Selected Image
-  fetchSelectedImage({ commit }, jobId) {
-    const selectedImgUrl = `${url}/img?${jobId}`;
-    commit("FETCH_SELECTED_IMAGE", selectedImgUrl);
-  },
-  // Fetch Selected Job
-  fetchSelectedPrompt({ commit }, jobId) {
-    const selectedPrompt = this.getters.getJobs.filter(
+  getSelectedJob({ commit }, jobId) {
+    const payload = this.getters.getJobs.filter(
       (job) => job.jobid === jobId
-    )[0].prompt;
-    commit("FETCH_SELECTED_PROMPT", selectedPrompt);
+    )[0];
+    payload.img = `${url}/img?${jobId}`;
+    commit("FETCH_SELECTED_JOB", payload);
   },
 };
 const mutations = {
   FETCH_JOBS(state, payload) {
     state.jobs = payload;
   },
-  FETCH_SELECTED_IMAGE(state, payload) {
-    state.selectedImgUrl = payload;
-  },
-  FETCH_SELECTED_PROMPT(state, payload) {
-    state.selectedPrompt = payload;
+  FETCH_SELECTED_JOB(state, payload) {
+    state.selectedJob = payload;
+    console.log(state.selectedJob);
   },
 };
 

@@ -1,5 +1,5 @@
 <template>
-  <nav class="navbar navbar-expand-lg navbar-dark fixed-top bg-dark">
+  <nav class="navbar navbar-expand-lg navbar-light fixed-top">
     <div class="container">
       <a class="navbar-brand" href="#">Exia</a>
       <button
@@ -17,10 +17,14 @@
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav">
           <li class="nav-item">
-            <router-link to="/" class="nav-link text-start active">Home</router-link>
+            <router-link to="/" class="nav-link text-start active"
+              >Home</router-link
+            >
           </li>
           <div class="nav-item">
-            <router-link to="/" class="nav-link text-start">Settings</router-link>
+            <router-link to="/" class="nav-link text-start"
+              >Settings</router-link
+            >
           </div>
           <div class="nav-item">
             <router-link to="/" class="nav-link text-start">About</router-link>
@@ -36,6 +40,6 @@
 
 <script>
 export default {
-  name: "NavbarComponent"
-}
+  name: "NavbarComponent",
+};
 </script>

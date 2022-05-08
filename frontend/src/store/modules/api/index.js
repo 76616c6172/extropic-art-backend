@@ -36,23 +36,13 @@ const actions = {
   async sendNewJob({ commit }, newJobObj) {
     console.log(newJobObj);
     try {
-      return await axios
-        .post(
-          `${url}/jobs`,
-          {
-            headers: {
-              "Content-Type": "text/json",
-            },
-          },
-          newJobObj
-        )
-        .then((response) => {
-          if (response.status == 200) {
-            console.log(response);
-            console.log("200");
-            console.log(commit);
-          }
-        });
+      return await axios.post(`${url}/jobs`, newJobObj).then((response) => {
+        if (response.status == 200) {
+          console.log(response);
+          console.log("200");
+          console.log(commit);
+        }
+      });
     } catch (error) {
       console.log(error);
     }

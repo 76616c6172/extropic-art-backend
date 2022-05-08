@@ -23,10 +23,21 @@ type job struct {
 }
 
 // Schema for request sent to job endpoint by client
+/*
+{
+  "jobid": "1",
+  "prompt": "Space wool bla bla, bla bla..",
+  "job_status": "qeued",
+  "iteration_status": "125",
+  "iteration_max": "240",
+}
+*/
 type testJob struct {
-	Jobid      string `json:"jobid"`
-	Prompt     string `json:"prompt"`
-	Job_status string `json:"job_status"`
+	Jobid            string `json:"jobid"`
+	Prompt           string `json:"prompt"`
+	Job_status       string `json:"job_status"`
+	Iteration_status int    `json:"iteration_status"`
+	Iteration_max    int    `json:"iteration_max"`
 }
 
 // Schema for request sent to img endpoint by client
@@ -58,24 +69,32 @@ func HandleStatusRequest(w http.ResponseWriter, r *http.Request) {
 		testJob.Jobid = "1"
 		testJob.Prompt = "3d render of celestial space nebula, cosmic, space station, unreal engine 3, photorealistic materials, trending on Artstation"
 		testJob.Job_status = "completed"
+		testJob.Iteration_max = 240
+		testJob.Iteration_status = 240
 		responseObject.Completed_jobs = append(responseObject.Completed_jobs, testJob)
 
 		// Add another job for testing
 		testJob.Jobid = "2"
 		testJob.Prompt = "Space panorama of moon-shaped burning wool, large as the moon, races towards  the blue planet earth, nasa earth, trending on artstation"
 		testJob.Job_status = "completed"
+		testJob.Iteration_max = 240
+		testJob.Iteration_status = 240
 		responseObject.Completed_jobs = append(responseObject.Completed_jobs, testJob)
 
 		// Add another job for testing
 		testJob.Jobid = "3"
 		testJob.Prompt = "stripped tree bark texture, closeup, PBR texture"
-		testJob.Job_status = "225/240"
+		testJob.Job_status = "processing"
+		testJob.Iteration_max = 240
+		testJob.Iteration_status = 225
 		responseObject.Completed_jobs = append(responseObject.Completed_jobs, testJob)
 
 		// Add another job for testing
 		testJob.Jobid = "4"
 		testJob.Prompt = "Mandelbulber fractal, infinite 3d fractal, high resolution 4k"
 		testJob.Job_status = "queued"
+		testJob.Iteration_max = 240
+		testJob.Iteration_status = 0
 		responseObject.Completed_jobs = append(responseObject.Completed_jobs, testJob)
 
 		json.NewEncoder(w).Encode(responseObject) // send back the json as a the response

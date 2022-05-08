@@ -13,7 +13,7 @@ var view *template.Template
 
 // Know which templates to use
 func init() {
-	view = template.Must(template.ParseGlob("view/*.gohtml"))
+	view = template.Must(template.ParseGlob("../view/*.gohtml"))
 }
 
 // Handler for all requests to www.the_url/
@@ -57,8 +57,8 @@ func api_0_status(w http.ResponseWriter, r *http.Request) {
 func main() {
 
 	// Handle requests for web assets
-	http.Handle("/assets/", http.StripPrefix("/assets", http.FileServer(http.Dir("./view/dist")))) //serves requests to www.url/assets/
-	http.HandleFunc("/", index_handler)                                                            // handles requests to /
+	http.Handle("/assets/", http.StripPrefix("/assets", http.FileServer(http.Dir("../view/dist")))) //serves requests to www.url/assets/
+	http.HandleFunc("/", index_handler)                                                             // handles requests to /
 
 	// Handle API endpoints
 	http.HandleFunc("/api/0/status", api_0_status) // registers api_0_status() as the handler for "/api/0/status"

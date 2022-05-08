@@ -22,6 +22,13 @@ type job struct {
 	Prompt string `json:"prompt"`
 }
 
+// Schema for request sent to job endpoint by client
+type testJob struct {
+	Jobid      string `json:"jobid"`
+	Prompt     string `json:"prompt"`
+	Job_status string `json:"job_status"`
+}
+
 // Schema for request sent to img endpoint by client
 type imgRequest struct {
 	Jobid string `json:"jobid"`
@@ -29,9 +36,9 @@ type imgRequest struct {
 
 // Schema for the status object returned by the status endpoint
 type status struct {
-	Gpu            string `json:"gpu"`
-	Current_job    string `json:"current_job"`
-	Completed_jobs []job  `json:"completed_jobs"`
+	Gpu            string    `json:"gpu"`
+	Current_job    string    `json:"current_job"`
+	Completed_jobs []testJob `json:"completed_jobs"`
 	//Description string `json:"Description"`
 }
 
@@ -41,18 +48,34 @@ func HandleStatusRequest(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "GET" { // send back the response
 
-		var testJob job
-		testJob.Jobid = "752b5cd9013dcf3f6ebf577f99fa76adf4f32459"
-		testJob.Prompt = "3d render of celestial space nebula, cosmic, space station, unreal engine 3, photorealistic materials, trending on Artstation"
-
 		var responseObject = status{
 			Gpu: "ready", // busy, offline
 		}
 
-		// Just testing
+		var testJob testJob
+
+		// Add one job for testing
+		testJob.Jobid = "1"
+		testJob.Prompt = "3d render of celestial space nebula, cosmic, space station, unreal engine 3, photorealistic materials, trending on Artstation"
+		testJob.Job_status = "completed"
 		responseObject.Completed_jobs = append(responseObject.Completed_jobs, testJob)
-		testJob.Jobid = "47d5090d689508acf1a6c29695e0d05ad4b60ba"
+
+		// Add another job for testing
+		testJob.Jobid = "2"
 		testJob.Prompt = "Space panorama of moon-shaped burning wool, large as the moon, races towards  the blue planet earth, nasa earth, trending on artstation"
+		testJob.Job_status = "completed"
+		responseObject.Completed_jobs = append(responseObject.Completed_jobs, testJob)
+
+		// Add another job for testing
+		testJob.Jobid = "3"
+		testJob.Prompt = "stripped tree bark texture, closeup, PBR texture"
+		testJob.Job_status = "225/240"
+		responseObject.Completed_jobs = append(responseObject.Completed_jobs, testJob)
+
+		// Add another job for testing
+		testJob.Jobid = "4"
+		testJob.Prompt = "Mandelbulber fractal, infinite 3d fractal, high resolution 4k"
+		testJob.Job_status = "queued"
 		responseObject.Completed_jobs = append(responseObject.Completed_jobs, testJob)
 
 		json.NewEncoder(w).Encode(responseObject) // send back the json as a the response
@@ -80,7 +103,7 @@ func HandleImgRequests(w http.ResponseWriter, r *http.Request) {
 	*/
 
 	//img, err := os.Open("./model/images/" + imgRequest.Jobid + ".png") // for now just get this image for testing
-	img, err := os.Open("./model/images/" + inputstring2 + ".png") // temporary
+	img, err := os.Open("../model/images/" + inputstring2 + ".png") // temporary
 	// TODO: Actually lookfor the image in SQLite database
 	// img, err := os.Open("./model/images/" + imgRequest.Jobid + ".png") // for now just get this image for testing
 	if err != nil {
@@ -115,7 +138,7 @@ func HandleJobsApiGet(w http.ResponseWriter, r *http.Request) {
 
 	var j newJob
 	// TODO: do this for real not just hardcode
-	if inputstring2 == "752b5cd9013dcf3f6ebf577f99fa76adf4f32459" {
+	if inputstring2 == "1" {
 
 		j.Jobid = inputstring2
 		j.Prompt = "3d render of celestial space nebula, cosmic, space station, unreal engine 3, photorealistic materials, trending on Artstation"
@@ -123,10 +146,23 @@ func HandleJobsApiGet(w http.ResponseWriter, r *http.Request) {
 
 		json.NewEncoder(w).Encode(j) // send back the json as a the response
 	}
-	if inputstring2 == "47d5090d689508acf1a6c29695e0d05ad4b60ba" {
+	if inputstring2 == "2" {
 		j.Jobid = inputstring2
 		j.Prompt = "Space panorama of moon-shaped burning wool, large as the moon, races towards  the blue planet earth, nasa earth, trending on artstation"
 		j.Job_status = "completed"   //pending? rejected?
+		json.NewEncoder(w).Encode(j) // send back the json as a the response
+	}
+	if inputstring2 == "3" {
+		j.Jobid = "3"
+		j.Prompt = "stripped tree bark texture, closeup, PBR texture"
+		j.Job_status = "225/240"
+		json.NewEncoder(w).Encode(j) // send back the json as a the response
+	}
+	if inputstring2 == "4" {
+		// Add another job for testing
+		j.Jobid = "4"
+		j.Prompt = "Mandelbulber fractal, infinite 3d fractal, high resolution 4k"
+		j.Job_status = "queued"
 		json.NewEncoder(w).Encode(j) // send back the json as a the response
 	}
 }
@@ -137,7 +173,6 @@ func HandleJobsApiPost(w http.ResponseWriter, r *http.Request) {
 	//w.Header().Set("Access-Control-Allow-Origin", "*")
 	//w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
 	//w.Header().Set("Access-Control-Allow-Headers", r.Header.Get("Access-Control-Request-Headers"))
-	w.Header().Set("Access-Control-Allow-Headers", "*")
 
 	jsonDecoder := json.NewDecoder(r.Body)
 	var jobRequest newjob
@@ -154,9 +189,9 @@ func HandleJobsApiPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var j jobResponse
-	j.Jobid = "PLACEHOLDER_552byy5ebf577f99fa76asd4f32459" // Placeholder
-	j.Prompt = jobRequest.Prompt                           // TODO: Validate and sanitize user input first
-	j.Job_status = "accepted"                              //pending? rejected?
+	j.Jobid = ""                 // Placeholder
+	j.Prompt = jobRequest.Prompt // TODO: Validate and sanitize user input first
+	j.Job_status = "accepted"    //pending? rejected?
 
 	json.NewEncoder(w).Encode(j) // send back the json as a the response
 }

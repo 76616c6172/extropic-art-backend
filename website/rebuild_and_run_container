@@ -9,4 +9,4 @@ echo "completed building: $BUILDHASH"
 
 echo "starting ephemeral container.."
 echo "running $BUILDHASH on localhost:8088"
-docker run -p 8080:8080 --rm -it "$BUILDHASH"
+docker run -p 8080:8080 --rm "$BUILDHASH"

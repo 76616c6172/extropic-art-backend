@@ -106,6 +106,12 @@ export default {
 .badge {
   width: 100%;
 }
-.badge.iterationStatus {
+/* Cut string ... Elipsis */
+p {
+  white-space: nowrap;
+  width: 100%; /* IE6 needs any width */
+  overflow: hidden; /* "overflow" value must be different from  visible"*/
+  -o-text-overflow: ellipsis; /* Opera < 11*/
+  text-overflow: ellipsis; /* IE, Safari (WebKit), Opera >= 11, FF > 6 */
 }
 </style>

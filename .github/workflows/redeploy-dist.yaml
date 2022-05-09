@@ -1,4 +1,4 @@
-# Redeploys dist folder to remote server
+# Adds ssh keys to runner and redeploys local folder
 name: Actions Test
 
 on:
@@ -18,7 +18,7 @@ jobs:
         run: |
           mkdir -p /home/runner/.ssh
           ssh-keyscan exia.art >> /home/runner/.ssh/known_hosts
-          echo "${{ secrets.SSH_KEY }}" > /home/runner/.ssh/github_actions
+          echo "${{ secrets.EXIA_SSH_KEY }}" > /home/runner/.ssh/github_actions
           chmod 600 /home/runner/.ssh/github_actions
           ssh-agent -a $SSH_AUTH_SOCK > /dev/null
           ssh-add /home/runner/.ssh/github_actions

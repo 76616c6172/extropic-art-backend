@@ -33,26 +33,26 @@ export default {
     job: {
       type: Object,
       required: true,
-    },
-    iteration_max: {
-      type: String,
-      required: true,
-    },
-    iteration_status: {
-      type: String,
-      required: true,
-    },
-    job_status: {
-      type: String,
-      required: true,
-    },
-    job_id: {
-      type: String,
-      required: true,
-    },
-    prompt: {
-      type: String,
-      required: true,
+      iteration_max: {
+        type: String,
+        required: true,
+      },
+      iteration_status: {
+        type: String,
+        required: true,
+      },
+      job_status: {
+        type: String,
+        required: true,
+      },
+      job_id: {
+        type: String,
+        required: true,
+      },
+      prompt: {
+        type: String,
+        required: true,
+      },
     },
   },
   methods: {
@@ -108,6 +108,7 @@ export default {
 }
 /* Cut string ... Elipsis */
 p {
+  font-family: "Rubik-Light";
   white-space: nowrap;
   width: 100%; /* IE6 needs any width */
   overflow: hidden; /* "overflow" value must be different from  visible"*/

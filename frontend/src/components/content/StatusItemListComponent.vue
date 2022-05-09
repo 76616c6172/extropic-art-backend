@@ -7,8 +7,7 @@
       <StatusItem
         v-for="(job, index) in storeGetJobs"
         :key="index"
-        :prompt="job.prompt"
-        :jobId="job.jobid"
+        :job="job"
       />
     </ul>
   </div>

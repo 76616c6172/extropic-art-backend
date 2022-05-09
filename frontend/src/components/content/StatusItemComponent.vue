@@ -1,17 +1,21 @@
 <template>
   <li
-    @click="onClickSetSelected(jobId) & buildModalDialogue()"
+    @click="onClickSetSelected(job.jobid)"
     class="list-group-item list-group-item-action"
   >
     <div class="row">
-      <div class="col-10">
-        <p class="text-start"><strong>Prompt: </strong>{{ prompt }}</p>
+      <div class="col-lg-10 col-md-10">
+        <p class="text-start">{{ job.prompt }}</p>
       </div>
-      <div class="col-2">
-        <button type="button" class="btn btn-primary">
-          Profile <span class="badge badge-light">9</span>
-          <span class="sr-only">unread messages</span>
-        </button>
+      <div class="col-lg-2 col-md-2">
+        <span
+          :class="getJobBorderClass(job.job_status)"
+          class="badge border text-secondary"
+          >{{ job.job_status }}
+        </span>
+        <span class="badge border text-secondary"
+          >{{ job.iteration_status }}/{{ job.iteration_max }}
+        </span>
       </div>
     </div>
   </li>
@@ -26,11 +30,27 @@ export default {
     ConfirmDialogue,
   },
   props: {
-    prompt: {
+    job: {
+      type: Object,
+      required: true,
+    },
+    iteration_max: {
       type: String,
       required: true,
     },
-    jobId: {
+    iteration_status: {
+      type: String,
+      required: true,
+    },
+    job_status: {
+      type: String,
+      required: true,
+    },
+    job_id: {
+      type: String,
+      required: true,
+    },
+    prompt: {
       type: String,
       required: true,
     },
@@ -38,6 +58,7 @@ export default {
   methods: {
     onClickSetSelected(jobId) {
       this.$store.dispatch("getSelectedJob", jobId);
+      this.buildModalDialogue();
     },
     async buildModalDialogue() {
       console.log("triggered");
@@ -51,6 +72,23 @@ export default {
         // this.$store.dispatch("deleteTodo", "todoObj._id");
       }
     },
+    getJobBorderClass(jobStatus) {
+      let returnJobStatus;
+      switch (jobStatus) {
+        case "completed":
+          returnJobStatus = "border-success";
+          break;
+        case "processing":
+          returnJobStatus = "border-info";
+          break;
+        case "queued":
+          returnJobStatus = "border-warning";
+          break;
+        default:
+          break;
+      }
+      return returnJobStatus;
+    },
   },
   computed: {
     getSelectedJob() {
@@ -63,6 +101,11 @@ export default {
 <style scoped>
 .list-group-item {
   background: transparent;
-  padding: 10px 5px;
+  padding: 20px 5px 15px 5px;
+}
+.badge {
+  width: 100%;
+}
+.badge.iterationStatus {
 }
 </style>

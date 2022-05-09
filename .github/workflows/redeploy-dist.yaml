@@ -1,6 +1,5 @@
-# Git hub workflow on push to master
-# Adds ssh keys to runner and redeploys local folder
-name: Redeploy dist to remote server
+# Redeploys dist folder to remote server
+name: Actions Test
 
 on:
   push:
@@ -10,7 +9,7 @@ on:
 jobs:
   Configure-Runner-SSH:
     runs-on: ubuntu-latest
-    env: 
+    env:
       SSH_AUTH_SOCK: /tmp/ssh_agent.sock
     steps:
       - name: checkout the repo
@@ -19,9 +18,9 @@ jobs:
         run: |
           mkdir -p /home/runner/.ssh
           ssh-keyscan exia.art >> /home/runner/.ssh/known_hosts
-          echo "${{ secrets.SSH_KEY}}" > /home/runner/.ssh/github_actions
+          echo "${{ secrets.SSH_KEY }}" > /home/runner/.ssh/github_actions
           chmod 600 /home/runner/.ssh/github_actions
-          ssh-agent -a $SSH_AUTH_SOCK > /dev/null   
+          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
           ssh-add /home/runner/.ssh/github_actions
       - name: Run script to redeploy dist folder
         run: |

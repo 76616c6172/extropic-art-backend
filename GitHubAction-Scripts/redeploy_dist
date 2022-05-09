@@ -3,7 +3,7 @@
 
 set -e # fail fast
 
-SERVER_SSH="exia"
+SERVER_SSH="root@exia.art"
 SERVER_PATH="/root/exia/view"
 OUT_FOLDER="./website/view/dist"
 REMOTE_FOLDERNAME="dist"
@@ -14,8 +14,8 @@ REMOTE_FOLDERNAME="dist"
 # 1. Delete the current frontend
 ssh -q -T $SERVER_SSH <<EOL
   nohup sh -c "\
- rm -rf "$SERVER_PATH/$REMOTE_FOLDERNAME/" \
-"
+   rm -rf "$SERVER_PATH/$REMOTE_FOLDERNAME/" \
+   "
 EOL
 
 # 2. Push over the new files

@@ -2,6 +2,7 @@
   <div>
     <div class="input-group">
       <input
+        @keyup.enter="onClickSendNewJob()"
         v-model="vPrompt"
         type="text"
         class="form-control"

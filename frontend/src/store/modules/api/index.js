@@ -29,14 +29,12 @@ const actions = {
     }
   },
   // Send Job
-  async sendNewJob({ commit }, newJobObj) {
+  async sendNewJob(newJobObj) {
     console.log(newJobObj);
     try {
       return await axios.post(`${url}/jobs`, newJobObj).then((response) => {
         if (response.status == 200) {
           console.log(response);
-          console.log("200");
-          console.log(commit);
         }
       });
     } catch (error) {

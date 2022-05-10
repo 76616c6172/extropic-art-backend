@@ -99,14 +99,22 @@ export default {
 </script>
 
 <style scoped>
-.list-group-item {
+li.list-group-item {
   background: transparent;
-  padding: 20px 5px 15px 5px;
+  padding: 20px 0px 15px 0px;
+  cursor: pointer;
+  transition: 0.1s background ease-out;
+  --color-highlight: 204, 204, 204;
+}
+li.list-group-item:hover,
+li.list-group-item:active,
+li.list-group-item:focus {
+  background: #dedede;
+  background-color: rgba(var(--color-highlight), 0.1);
 }
 .badge {
   width: 100%;
 }
-/* Cut string ... Elipsis */
 p {
   font-family: "Rubik-Light";
   white-space: nowrap;

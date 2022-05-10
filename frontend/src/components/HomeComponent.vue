@@ -3,7 +3,7 @@
     <div class="mt-5">
       <div class="row justify-content-center">
         <div class="col-lg-6 col-sm-12">
-          <Typing />
+          <!-- <Typing /> -->
         </div>
       </div>
       <div class="row justify-content-center">
@@ -26,7 +26,7 @@
 </template>
 
 <script>
-import { default as Typing } from "../components/miscellaneous/TypingComponent.vue";
+// import { default as Typing } from "../components/miscellaneous/TypingComponent.vue";
 import { default as Instructions } from "../components/miscellaneous/InstructionsComponent.vue";
 import { default as Prompt } from "../components/content/PromptComponent.vue";
 import { default as StatusItemList } from "./content/StatusItemListComponent.vue";
@@ -34,7 +34,7 @@ import { default as StatusItemList } from "./content/StatusItemListComponent.vue
 export default {
   name: "HomeComponent",
   components: {
-    Typing,
+    // Typing,
     Instructions,
     Prompt,
     StatusItemList,

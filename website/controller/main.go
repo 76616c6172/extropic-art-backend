@@ -38,10 +38,13 @@ func api_0_status(w http.ResponseWriter, r *http.Request) {
 
 // This is the main function :D
 func main() {
+	// Initialize the jobs database
+	internals.JobdbInit()
+
 	// TESTING: Play with SQLite
 	fmt.Println("Testing SQLite db..")
-	internals.JobdbInit()
-	os.Exit(0)
+	internals.EntryPointForTesting() //testing
+	os.Exit(0)                       // exit for now since we're just testing
 
 	// Handle requests for assets, everything in ../view/dist is accessible to the public
 	http.Handle("/", http.FileServer(http.Dir("../view/dist"))) //serves requests to www.url/assets/

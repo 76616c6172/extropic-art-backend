@@ -1,0 +1,59 @@
+// Start: Popup-modal
+.popupmodal {
+  background-color: rgba(0, 0, 0, 0.5);
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  z-index: 10;
+}
+
+.popupmodal.fade-enter-active,
+.popupmodal.fade-leave-active {
+  transition: opacity 0.3s;
+}
+
+.popupmodal.fade-enter,
+.popupmodal.fade-leave-to {
+  opacity: 0;
+}
+
+.popupmodal__window {
+  background: #fff;
+  border-radius: 5px;
+  box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.2);
+  max-width: auto;
+  margin: 5% 10%;
+  padding: 1rem 7rem;
+  .popupmodal__buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+  .popupmodal__title {
+    padding: 10px 0;
+    font-size: 1.6em;
+    color: darkgrey;
+  }
+}
+
+.popupmodal__buttons {
+  .popupmodal__buttons-cancel,
+  .popupmodal__buttons-ok {
+    border-radius: 5px;
+    font-weight: bold;
+    font-size: 16px;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .popupmodal__buttons-cancel {
+    color: blue;
+  }
+  .popupmodal__buttons-ok {
+    color: red;
+  }
+}

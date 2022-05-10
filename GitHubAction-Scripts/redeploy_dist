@@ -1,0 +1,26 @@
+#!/bin/bash
+# Redeploy VIEW to remote server
+
+set -e # fail fast
+
+SERVER_SSH="root@exia.art"
+SERVER_PATH="/root/exia/view"
+OUT_FOLDER="./website/view/dist"
+REMOTE_FOLDERNAME="dist"
+
+##rm -rf "$SERVER_SSH:$SERVER_PATH/$REMOTE_FOLDERNAME"/ \
+#rm -rf "/root/exia/view/" \
+
+# 1. Delete the current frontend
+ssh -q -T $SERVER_SSH <<EOL
+  nohup sh -c "\
+   rm -rf "$SERVER_PATH/$REMOTE_FOLDERNAME/" \
+   "
+EOL
+
+# 2. Push over the new files
+ssh $SERVER_SSH "mkdir -p $SERVER_PATH/$OUT_FOLDER/"
+scp -r "$OUT_FOLDER" "$SERVER_SSH:$SERVER_PATH/"
+
+echo ""
+echo "Dist push complete"

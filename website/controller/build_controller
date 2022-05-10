@@ -1,4 +1,0 @@
-#!/bin/sh
-cd ./website/controller
-go build -ldflags '-linkmode external -extldflags "-fno-PIC -static"' -o exia-controller
-

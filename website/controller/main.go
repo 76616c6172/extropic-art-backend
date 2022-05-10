@@ -40,7 +40,7 @@ func api_0_status(w http.ResponseWriter, r *http.Request) {
 func main() {
 	// TESTING: Play with SQLite
 	fmt.Println("Testing SQLite db..")
-	internals.Testing()
+	internals.JobdbInit()
 	os.Exit(0)
 
 	// Handle requests for assets, everything in ../view/dist is accessible to the public

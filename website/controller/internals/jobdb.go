@@ -9,16 +9,20 @@ import (
 )
 
 // WIP manage jobdb database
-func Testing() {
+// Initiates the jobs database using SQLite
 
-	db, err := sql.Open("sqlite3", "../model/jobdb/jobs.db")
+var JOBDB *sql.DB // This pointer is shared within the module to do database operations
+
+func JobdbInit() {
+	var err error
+	JOBDB, err = sql.Open("sqlite3", "../model/jobdb/jobs.db")
 	if err != nil {
 		log.Fatal(err) // TODO: Maybe handle this better
 	}
-	defer db.Close() // close db before returning from this function
+	//defer db.Close() // close db before returning from this function
 
 	// Create table if it doesn't exist
-	stmnt, err := db.Prepare(`
+	stmnt, err := JOBDB.Prepare(`
 CREATE TABLE IF NOT EXISTS "jobs" (
  "jobid" INTEGER PRIMARY KEY AUTOINCREMENT,
  "prompt" TEXT,

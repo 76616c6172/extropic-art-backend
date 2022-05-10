@@ -83,7 +83,6 @@ func InsertNewJob(prompt string, job_params interface{}) (int, error) {
 	// Execute the statement
 	result, err := stmnt.Exec(prompt, "queued", job_params_str, 0, 0, "CURRENT_TIMESTAMP", "CURRENT_TIMESTAMP", "")
 	if err != nil {
-		fmt.Println("3")
 		return -1, err
 	}
 
@@ -102,5 +101,5 @@ func EntryPointForTesting() {
 		log.Fatal(err)
 	}
 
-	fmt.Println(jobnumber)
+	fmt.Println(jobnumber) // debug just testing
 }

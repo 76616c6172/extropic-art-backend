@@ -73,7 +73,7 @@ func InsertNewJob(prompt string, job_params interface{}) (int, error) {
 	*/
 
 	// Prepare the stament
-	stmnt, err := JOBDB.Prepare(` INSERT INTO "jobs" (jobid, prompt, status, job_params, iteration_status, iteration_max, time_created, time_last_updated, time_completed) values (?, ?, ?, ?, ?, ?, ?, ?, ?);`)
+	stmnt, err := JOBDB.Prepare(` INSERT INTO "jobs" (prompt, status, job_params, iteration_status, iteration_max, time_created, time_last_updated, time_completed) values (?, ?, ?, ?, ?, ?, ?, ?);`)
 	if err != nil {
 		return -1, err
 	}
@@ -81,7 +81,7 @@ func InsertNewJob(prompt string, job_params interface{}) (int, error) {
 	// for reference the jobs schema is:
 	//INSERT INTO "jobs" (jobid, prompt, status, job_params, iteration_status, iteration_max, time_created, time_last_updated, time_completed)
 	// Execute the statement
-	result, err := stmnt.Exec(9, prompt, "queued", job_params_str, 0, 0, "CURRENT_TIMESTAMP", "CURRENT_TIMESTAMP", "")
+	result, err := stmnt.Exec(prompt, "queued", job_params_str, 0, 0, "CURRENT_TIMESTAMP", "CURRENT_TIMESTAMP", "")
 	if err != nil {
 		fmt.Println("3")
 		return -1, err

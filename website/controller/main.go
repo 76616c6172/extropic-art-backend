@@ -2,6 +2,8 @@ package main
 
 import (
 	"exia/controller/internals"
+	"fmt"
+	"os"
 
 	"net/http"
 )
@@ -36,6 +38,10 @@ func api_0_status(w http.ResponseWriter, r *http.Request) {
 
 // This is the main function :D
 func main() {
+	// TESTING: Play with SQLite
+	fmt.Println("Testing SQLite db..")
+	internals.Testing()
+	os.Exit(0)
 
 	// Handle requests for assets, everything in ../view/dist is accessible to the public
 	http.Handle("/", http.FileServer(http.Dir("../view/dist"))) //serves requests to www.url/assets/

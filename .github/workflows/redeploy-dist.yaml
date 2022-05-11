@@ -1,4 +1,4 @@
-# Adds ssh keys to runner and redeploys local folder
+# Redeploy website/view/dist to production on every push to master
 name: Actions Test
 
 on:

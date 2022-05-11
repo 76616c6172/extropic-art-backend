@@ -1,7 +1,9 @@
 package main
 
 import (
-	"exia/controller/internals"
+	"exia/controller/xapi"
+	"exia/controller/xdb"
+	_ "exia/controller/xdb"
 
 	"net/http"
 )
@@ -15,9 +17,9 @@ func api_0_jobs(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "GET": // Return info about existing jobs (I would like to make this GET but the frontend requires POST)
-		internals.HandleJobsApiGet(w, r)
+		xapi.HandleJobsApiGet(w, r)
 	case "POST": // take in new jobs
-		internals.HandleJobsApiPost(w, r)
+		xapi.HandleJobsApiPost(w, r)
 		// TODO: deal with accepting new jobs
 	}
 }
@@ -25,17 +27,22 @@ func api_0_jobs(w http.ResponseWriter, r *http.Request) {
 // Answers calls to the endpoint /api/0/img
 // TODO: requires a jobid and sends back the latest image for that job id.
 func api_0_img(w http.ResponseWriter, r *http.Request) {
-	internals.HandleImgRequests(w, r) // TODO: Return the correct image based on the request (request with jobid)
+	xapi.HandleImgRequests(w, r) // TODO: Return the correct image based on the request (request with jobid)
 }
 
 // Answers calls to the endpoint /api/0/all
 // This answers with a json containing all information the view needs when it first loads
 func api_0_status(w http.ResponseWriter, r *http.Request) {
-	internals.HandleStatusRequest(w, r)
+	xapi.HandleStatusRequest(w, r)
 }
 
 // This is the main function :D
 func main() {
+	// Initialize the jobs database
+	xdb.JobdbInit()
+
+	// TESTING: Play with SQLite
+	//xdb.EntryPointForTesting() //testing
 
 	// Handle requests for assets, everything in ../view/dist is accessible to the public
 	http.Handle("/", http.FileServer(http.Dir("../view/dist"))) //serves requests to www.url/assets/

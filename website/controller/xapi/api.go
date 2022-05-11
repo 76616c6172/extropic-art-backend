@@ -2,6 +2,7 @@ package xapi
 
 import (
 	"encoding/json"
+	"exia/controller/xdb"
 	"fmt"
 	"io"
 	"log"
@@ -40,11 +41,6 @@ type testJob struct {
 	Iteration_max    int    `json:"iteration_max"`
 }
 
-// Schema for request sent to img endpoint by client
-type imgRequest struct {
-	Jobid string `json:"jobid"`
-}
-
 // Schema for the status object returned by the status endpoint
 type status struct {
 	Gpu            string    `json:"gpu"`
@@ -62,55 +58,25 @@ func HandleStatusRequest(w http.ResponseWriter, r *http.Request) {
 			Gpu: "ready", // busy, offline
 		}
 
-		// Query jobdb for the last 10 jobs
-		/*
-			lastTenJobs, err := GetJobsBetweenAandZ(0, 10)
-			var testJob testJob
-			for i, v := range lastTenJobs {
-				if len(v) < 1 {
-					continue // skip empty rows
-				}
-				//convert v into a testJob
-				testJob.Jobid = v.Jobid
-				testJob.Prompt = v.Prompt
-				// and so on..
-				responseObject.Completed_jobs = append(responseObject.Completed_jobs, testJob)
+		// TODO: dumping entire database into memory every time won't scale
+		allJobs, err := xdb.GetAllJobs()
+		if err != nil {
+			log.Println(err)
+			//TODO: et response code to 500 to indicate server error
+			json.NewEncoder(w).Encode(responseObject) // send back the json as a the response
+		}
+
+		var respJob testJob
+		for i := 0; i < 10; i++ {
+			if i < len(allJobs) { // sanity check if we have a fresh database with less than 10 entries
+				respJob.Jobid = allJobs[i].Jobid
+				respJob.Prompt = allJobs[i].Prompt
+				respJob.Job_status = allJobs[i].Status
+				respJob.Iteration_max = allJobs[i].Iteration_max
+				respJob.Iteration_status = allJobs[i].Iteration_status
+				responseObject.Completed_jobs = append(responseObject.Completed_jobs, respJob)
 			}
-			/*
-
-			/* // TESTING: hardcoded job response for testing frontend, no longer needed
-			// Add one job for testing
-			testJob.Jobid = "1"
-			testJob.Prompt = "3d render of celestial space nebula, cosmic, space station, unreal engine 3, photorealistic materials, trending on Artstation"
-			testJob.Job_status = "completed"
-			testJob.Iteration_max = 240
-			testJob.Iteration_status = 240
-			responseObject.Completed_jobs = append(responseObject.Completed_jobs, testJob)
-
-			// Add another job for testing
-			testJob.Jobid = "2"
-			testJob.Prompt = "Space panorama of moon-shaped burning wool, large as the moon, races towards  the blue planet earth, nasa earth, trending on artstation"
-			testJob.Job_status = "completed"
-			testJob.Iteration_max = 240
-			testJob.Iteration_status = 240
-			responseObject.Completed_jobs = append(responseObject.Completed_jobs, testJob)
-
-			// Add another job for testing
-			testJob.Jobid = "3"
-			testJob.Prompt = "stripped tree bark texture, closeup, PBR texture"
-			testJob.Job_status = "processing"
-			testJob.Iteration_max = 240
-			testJob.Iteration_status = 225
-			responseObject.Completed_jobs = append(responseObject.Completed_jobs, testJob)
-
-			// Add another job for testing
-			testJob.Jobid = "4"
-			testJob.Prompt = "Mandelbulber fractal, infinite 3d fractal, high resolution 4k"
-			testJob.Job_status = "queued"
-			testJob.Iteration_max = 240
-			testJob.Iteration_status = 0
-			responseObject.Completed_jobs = append(responseObject.Completed_jobs, testJob)
-		*/
+		}
 
 		json.NewEncoder(w).Encode(responseObject) // send back the json as a the response
 	}

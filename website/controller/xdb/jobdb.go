@@ -110,6 +110,56 @@ func InsertNewJob(prompt string, job_params interface{}) (int, error) {
 	return int(numberOfNewJob), nil
 }
 
+/*
+// Returns the newest job in the database
+func GetLatestJob() (Job, error) {
+	var j Job
+
+	// rows, err := JOBDB.Query(`SELECT * FROM "jobs" ORDER BY jobid DESC LIMIT 1 ;`) // Query the database
+	r, err := JOBDB.Query(`SELECT from sqlite_sequence where name='jobs';`)
+	if err != nil {
+		return j, err
+	}
+	defer r.Close()
+
+	str := ""
+	r.Scan(&str)
+	fmt.Println(str)
+
+	/*
+		rows.Next()
+		err = rows.Scan(&j)
+		fmt.Println(j.Jobid, j.Prompt)
+		if err != nil {
+			return j, err
+		}
+	return j, err
+}
+*/
+
+// Dump entire jobdb into memory
+// Returns a slice of all jobs
+func GetAllJobs() ([]Job, error) {
+	var jobs []Job
+
+	rows, err := JOBDB.Query(`SELECT * FROM "jobs" ORDER BY jobid DESC;`) // Query the database
+	if err != nil {
+		return jobs, err
+	}
+
+	// Iterate over the rows and add them to the slice
+	var j Job
+	for rows.Next() {
+		err = rows.Scan(&j.Jobid, &j.Prompt, &j.Status, &j.Job_params, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
+		if err != nil {
+			return jobs, err
+		}
+		jobs = append(jobs, j)
+	}
+
+	return jobs, err
+}
+
 // Queries jobdb and returns a slice of all jobs in the set of [a,...,b]
 // returns an error if the query fails
 func GetJobsBetweenTwoJobids(a int, b int) ([]Job, error) {
@@ -126,10 +176,7 @@ func GetJobsBetweenTwoJobids(a int, b int) ([]Job, error) {
 	// Unmarshal the results rnto a slice of Jobs
 	var jobs []Job
 	var tempJob Job
-	var i int
-	maxNumberOfResults := b - a + 1
-	for { // iterate through the rows until we get to the end
-		rows.Next()
+	for rows.Next() {
 
 		err = rows.Scan(&tempJob.Jobid, &tempJob.Prompt, &tempJob.Status, &tempJob.Job_params, &tempJob.Iteration_status, &tempJob.Iteration_max, &tempJob.Time_created, &tempJob.Time_last_updated, &tempJob.Time_completed)
 		if err != nil {
@@ -137,10 +184,6 @@ func GetJobsBetweenTwoJobids(a int, b int) ([]Job, error) {
 		}
 		jobs = append(jobs, tempJob)
 
-		i++
-		if i > maxNumberOfResults-1 { // stop scanning when we have reached the end of the results
-			break
-		}
 	}
 
 	return jobs, nil
@@ -149,14 +192,8 @@ func GetJobsBetweenTwoJobids(a int, b int) ([]Job, error) {
 // Called by the main function so we can test the module
 func EntryPointForTesting() {
 
-	InsertNewJob("test", "")
-
-	lastJobs, err := GetJobsBetweenTwoJobids(21, 32)
-	if err != nil {
-		log.Fatal(err)
-	}
-	for i, v := range lastJobs {
+	j, _ := GetAllJobs()
+	for i, v := range j {
 		fmt.Println(i, v.Prompt, v.Jobid)
 	}
-
 }

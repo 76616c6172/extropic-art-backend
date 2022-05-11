@@ -6,7 +6,6 @@ import (
 	_ "exia/controller/xdb"
 
 	"net/http"
-	"os"
 )
 
 const WEBSERVER_PORT = ":8080"
@@ -43,8 +42,7 @@ func main() {
 	xdb.JobdbInit()
 
 	// TESTING: Play with SQLite
-	xdb.EntryPointForTesting() //testing
-	os.Exit(0)                 // exit for now since we're just testing
+	//xdb.EntryPointForTesting() //testing
 
 	// Handle requests for assets, everything in ../view/dist is accessible to the public
 	http.Handle("/", http.FileServer(http.Dir("../view/dist"))) //serves requests to www.url/assets/

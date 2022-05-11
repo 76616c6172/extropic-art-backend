@@ -190,7 +190,7 @@ func GetJobsBetweenTwoJobids(a int, b int) ([]Job, error) {
 }
 
 // Called by the main function so we can test the module
-func EntryPointForTesting() {
+func EntryPointForTesting() { //debug
 
 	j, _ := GetAllJobs()
 	for i, v := range j {

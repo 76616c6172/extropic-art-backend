@@ -1,4 +1,4 @@
-package internals
+package xapi
 
 import (
 	"encoding/json"
@@ -48,7 +48,6 @@ type imgRequest struct {
 // Schema for the status object returned by the status endpoint
 type status struct {
 	Gpu            string    `json:"gpu"`
-	Current_job    string    `json:"current_job"`
 	Completed_jobs []testJob `json:"completed_jobs"`
 	//Description string `json:"Description"`
 }
@@ -59,43 +58,59 @@ func HandleStatusRequest(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "GET" { // send back the response
 
-		var responseObject = status{
+		var responseObject = status{ // We append to this object as we go and send it back to the client
 			Gpu: "ready", // busy, offline
 		}
 
-		var testJob testJob
+		// Query jobdb for the last 10 jobs
+		/*
+			lastTenJobs, err := GetJobsBetweenAandZ(0, 10)
+			var testJob testJob
+			for i, v := range lastTenJobs {
+				if len(v) < 1 {
+					continue // skip empty rows
+				}
+				//convert v into a testJob
+				testJob.Jobid = v.Jobid
+				testJob.Prompt = v.Prompt
+				// and so on..
+				responseObject.Completed_jobs = append(responseObject.Completed_jobs, testJob)
+			}
+			/*
 
-		// Add one job for testing
-		testJob.Jobid = "1"
-		testJob.Prompt = "3d render of celestial space nebula, cosmic, space station, unreal engine 3, photorealistic materials, trending on Artstation"
-		testJob.Job_status = "completed"
-		testJob.Iteration_max = 240
-		testJob.Iteration_status = 240
-		responseObject.Completed_jobs = append(responseObject.Completed_jobs, testJob)
+			/* // TESTING: hardcoded job response for testing frontend, no longer needed
+			// Add one job for testing
+			testJob.Jobid = "1"
+			testJob.Prompt = "3d render of celestial space nebula, cosmic, space station, unreal engine 3, photorealistic materials, trending on Artstation"
+			testJob.Job_status = "completed"
+			testJob.Iteration_max = 240
+			testJob.Iteration_status = 240
+			responseObject.Completed_jobs = append(responseObject.Completed_jobs, testJob)
 
-		// Add another job for testing
-		testJob.Jobid = "2"
-		testJob.Prompt = "Space panorama of moon-shaped burning wool, large as the moon, races towards  the blue planet earth, nasa earth, trending on artstation"
-		testJob.Job_status = "completed"
-		testJob.Iteration_max = 240
-		testJob.Iteration_status = 240
-		responseObject.Completed_jobs = append(responseObject.Completed_jobs, testJob)
+			// Add another job for testing
+			testJob.Jobid = "2"
+			testJob.Prompt = "Space panorama of moon-shaped burning wool, large as the moon, races towards  the blue planet earth, nasa earth, trending on artstation"
+			testJob.Job_status = "completed"
+			testJob.Iteration_max = 240
+			testJob.Iteration_status = 240
+			responseObject.Completed_jobs = append(responseObject.Completed_jobs, testJob)
 
-		// Add another job for testing
-		testJob.Jobid = "3"
-		testJob.Prompt = "stripped tree bark texture, closeup, PBR texture"
-		testJob.Job_status = "processing"
-		testJob.Iteration_max = 240
-		testJob.Iteration_status = 225
-		responseObject.Completed_jobs = append(responseObject.Completed_jobs, testJob)
+			// Add another job for testing
+			testJob.Jobid = "3"
+			testJob.Prompt = "stripped tree bark texture, closeup, PBR texture"
+			testJob.Job_status = "processing"
+			testJob.Iteration_max = 240
+			testJob.Iteration_status = 225
+			responseObject.Completed_jobs = append(responseObject.Completed_jobs, testJob)
 
-		// Add another job for testing
-		testJob.Jobid = "4"
-		testJob.Prompt = "Mandelbulber fractal, infinite 3d fractal, high resolution 4k"
-		testJob.Job_status = "queued"
-		testJob.Iteration_max = 240
-		testJob.Iteration_status = 0
-		responseObject.Completed_jobs = append(responseObject.Completed_jobs, testJob)
+			// Add another job for testing
+			testJob.Jobid = "4"
+			testJob.Prompt = "Mandelbulber fractal, infinite 3d fractal, high resolution 4k"
+			testJob.Job_status = "queued"
+			testJob.Iteration_max = 240
+			testJob.Iteration_status = 0
+			responseObject.Completed_jobs = append(responseObject.Completed_jobs, testJob)
+		*/
 
 		json.NewEncoder(w).Encode(responseObject) // send back the json as a the response
 	}

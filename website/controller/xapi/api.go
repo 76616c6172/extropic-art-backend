@@ -46,7 +46,6 @@ type status struct {
 
 // Deals with requests to the status endpoint
 func HandleStatusRequest(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*") // TESTING: allow CORS for testing purposes
 
 	if r.Method == "GET" { // send back the response
 
@@ -82,8 +81,6 @@ func HandleStatusRequest(w http.ResponseWriter, r *http.Request) {
 // Obtains the coorect image for a given job and sends it back
 func HandleImgRequests(w http.ResponseWriter, r *http.Request) {
 
-	w.Header().Set("Access-Control-Allow-Origin", "*") // TESTING: allow CORS for testing purposes
-
 	input := fmt.Sprintln(r.URL)
 	inputstring := strings.TrimLeft(input, "/api/0/img?jobid=")
 	inputstring2 := strings.TrimSpace(inputstring)
@@ -113,40 +110,39 @@ func HandleImgRequests(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 	}
-
 }
 
 // takes /api/0/jobs=?jobid="yourjodidhere"
 // sends back json object with info about the job
 func HandleJobsApiGet(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*") // TESTING: allow CORS for testing purposes
 
-	// Get the jobid
+	// 1. Determine the jobid from the request
 	input := fmt.Sprintln(r.URL)
 	inputstring := strings.TrimLeft(input, "/api/0/jobs?jobid=")
 	inputstring2 := strings.TrimSpace(inputstring)
 
+	// 2. Sanitize the input
 	sanitized_input, err := strconv.Atoi(inputstring2)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	var jobResponse apiJob
-	var j xdb.Job
-	j, err = xdb.GetJobByJobid(sanitized_input)
+	// 3. Build the response object
+	var responseJob apiJob
+	var realJob xdb.Job
+	realJob, err = xdb.GetJobByJobid(sanitized_input)
 	if err != nil {
 		log.Println(err)
 		return
 	}
+	responseJob.Jobid = realJob.Jobid
+	responseJob.Prompt = realJob.Prompt
+	responseJob.Iteration_status = realJob.Iteration_status
+	responseJob.Iteration_max = realJob.Iteration_max
 
-	// Build the response
-	jobResponse.Jobid = j.Jobid
-	jobResponse.Prompt = j.Prompt
-	jobResponse.Iteration_status = j.Iteration_status
-	jobResponse.Iteration_max = j.Iteration_max
-
-	json.NewEncoder(w).Encode(jobResponse) // send back the json as a the response
+	// 4. Send back the response
+	json.NewEncoder(w).Encode(responseJob)
 }
 
 // Deals with POST requests made to the jobs endpoint (POST new jobs)

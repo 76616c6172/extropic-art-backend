@@ -4,6 +4,8 @@ import (
 	"exia/controller/xapi"
 	"exia/controller/xdb"
 	_ "exia/controller/xdb"
+	"log"
+	"os"
 
 	"net/http"
 )
@@ -45,6 +47,14 @@ func api_0_status(w http.ResponseWriter, r *http.Request) {
 func main() {
 	// Initialize the jobs database
 	xdb.JobdbInit()
+
+	// Select the logfile
+	logFile, err := os.OpenFile(("./logs/exia.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatal("main: error opening logfile")
+	}
+	defer logFile.Close()
+	log.SetOutput(logFile)
 
 	// TESTING: Play with SQLite
 	//xdb.EntryPointForTesting() //testing

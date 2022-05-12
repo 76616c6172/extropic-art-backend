@@ -13,6 +13,7 @@ import (
 )
 
 const GPU_STATUS string = "offline" // can be offline, online, or busy
+const MAX_PROMPT_LENGTH = 600
 
 type newjob struct {
 	Prompt string `json:"prompt"`
@@ -113,6 +114,7 @@ func HandleImgRequests(w http.ResponseWriter, r *http.Request) {
 }
 
 // takes /api/0/jobs=?jobid="yourjodidhere"
+// queries the jobs.db and sends back info about the job
 // sends back json object with info about the job
 func HandleJobsApiGet(w http.ResponseWriter, r *http.Request) {
 
@@ -146,6 +148,7 @@ func HandleJobsApiGet(w http.ResponseWriter, r *http.Request) {
 }
 
 // Deals with POST requests made to the jobs endpoint (POST new jobs)
+// Sends the job to jobs.db
 func HandleJobsApiPost(w http.ResponseWriter, r *http.Request) {
 	//w.Header().Set("Access-Control-Allow-Origin", "https://www.exia.art") // TESTING: allow CORS for testing purposes
 	//w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -160,14 +163,28 @@ func HandleJobsApiPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 1. Santizie and check the input
+	if len(jobRequest.Prompt) > MAX_PROMPT_LENGTH {
+		log.Println("JobsApiPost: Prompt is too long")
+		return
+	}
+
+	// 2. Create the job in the database
+	newJobid, err := xdb.InsertNewJob(jobRequest.Prompt, "")
+	if err != nil {
+		log.Println("JobsApiPost: err")
+		return
+	}
+
+	// 3. Send back the jobid of the newly created job to the client
 	type jobResponse struct {
-		Jobid      string `json:"jobid"`
+		Jobid      int    `json:"jobid"`
 		Prompt     string `json:"prompt"`
 		Job_status string `json:"job_status"`
 	}
 
 	var j jobResponse
-	j.Jobid = ""                 // Placeholder
+	j.Jobid = newJobid           // Placeholder
 	j.Prompt = jobRequest.Prompt // TODO: Validate and sanitize user input first
 	j.Job_status = "accepted"    //pending? rejected?
 

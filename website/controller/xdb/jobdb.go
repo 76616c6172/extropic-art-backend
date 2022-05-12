@@ -98,7 +98,7 @@ func InsertNewJob(prompt string, job_params interface{}) (int, error) {
 
 	// Execute the statement
 	// for reference the jobs schema is:
-	//INSERT INTO "jobs" (jobid, prompt, status, job_params, iteration_status, iteration_max, time_created, time_last_updated, time_completed)
+	//INSERT INTO "jobs" (prompt, status, job_params, iteration_status, iteration_max, time_created, time_last_updated, time_completed)
 	result, err := stmnt.Exec(prompt, "queued", job_params_str, 0, iteration_max, unixtime, unixtime, "")
 	if err != nil {
 		return -1, err

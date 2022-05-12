@@ -22,7 +22,7 @@
         </div>
       </div>
       <div class="row justify-content-center bg-light">
-        <div class="col-lg-6 col-sm-12"><Carousel /></div>
+        <div class="col-lg-6 col-sm-12"><!-- <Carousel />--></div>
       </div>
     </div>
   </div>
@@ -33,7 +33,7 @@ import { default as Typing } from "../components/miscellaneous/TypingComponent.v
 import { default as Instructions } from "../components/miscellaneous/InstructionsComponent.vue";
 import { default as Prompt } from "../components/content/PromptComponent.vue";
 import { default as StatusItemList } from "./content/StatusItemListComponent.vue";
-import { default as Carousel } from "./content/CarouselComponent.vue";
+// import { default as Carousel } from "./content/CarouselComponent.vue";
 
 export default {
   name: "HomeComponent",
@@ -42,7 +42,7 @@ export default {
     Instructions,
     Prompt,
     StatusItemList,
-    Carousel,
+    // Carousel,
   },
   props: {
     msg: String,

@@ -94,11 +94,12 @@ func InsertNewJob(prompt string, job_params interface{}) (int, error) {
 	}
 
 	unixtime := strconv.Itoa(int(time.Now().Unix()))
+	iteration_max := 240 // TODO: make this check if the user provided different values first
 
 	// Execute the statement
 	// for reference the jobs schema is:
 	//INSERT INTO "jobs" (jobid, prompt, status, job_params, iteration_status, iteration_max, time_created, time_last_updated, time_completed)
-	result, err := stmnt.Exec(prompt, "queued", job_params_str, 0, 0, unixtime, unixtime, "")
+	result, err := stmnt.Exec(prompt, "queued", job_params_str, 0, iteration_max, unixtime, unixtime, "")
 	if err != nil {
 		return -1, err
 	}

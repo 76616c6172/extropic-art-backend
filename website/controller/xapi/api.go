@@ -137,16 +137,19 @@ func HandleJobsApiGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 3. Build the response object
-	var responseJob apiJob
+	// 2. Get the row from the database
 	var realJob xdb.Job
 	realJob, err = xdb.GetJobByJobid(sanitized_input)
 	if err != nil {
 		log.Println(err)
 		return
 	}
+
+	// 3. Build the response object
+	var responseJob apiJob
 	responseJob.Jobid = realJob.Jobid
 	responseJob.Prompt = realJob.Prompt
+	responseJob.Job_status = realJob.Status
 	responseJob.Iteration_status = realJob.Iteration_status
 	responseJob.Iteration_max = realJob.Iteration_max
 

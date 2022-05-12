@@ -1,17 +1,19 @@
 <template>
   <div class="mt-5 mb-4">
-    <h2 class="text-start mt-5 mb-4">
-      <strong> ImageList</strong>
-    </h2>
-    <form class="col-4 mb-3 mb-lg-0">
-      <input
-        v-model="searchQuery"
-        type="search"
-        class="form-control"
-        placeholder="Search prompt"
-        aria-label="Search"
-      />
-    </form>
+    <div class="row">
+      <h2 class="text-start mt-5 mb-4">
+        <strong> ImageList</strong>
+      </h2>
+      <form class="col-4 mb-3 mb-lg-0">
+        <input
+          v-model="searchQuery"
+          type="search"
+          class="form-control"
+          placeholder="Search..."
+          aria-label="Search"
+        />
+      </form>
+    </div>
     <ul class="list-group-flush" style="padding-left: 0 !important">
       <StatusItem
         v-for="(job, index) in getSearchedProducts"
@@ -40,8 +42,9 @@ export default {
     loadJobs(jobs) {
       if (this.jobs.length == 0) {
         jobs.forEach((job) => {
-          this.jobs.push(job);
+          job.prompt != "" ? this.jobs.push(job) : "";
         });
+        this.jobs = this.jobs.sort((job) => job.job_status == "completed");
       }
     },
   },
@@ -60,6 +63,7 @@ export default {
   watch: {
     getJobsFromStore: {
       handler(jobs) {
+        // console.log("here");
         if (jobs) {
           this.loadJobs(jobs);
         }

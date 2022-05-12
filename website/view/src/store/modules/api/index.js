@@ -29,12 +29,12 @@ const actions = {
     }
   },
   // Send Job
-  async sendNewJob(newJobObj) {
-    console.log(newJobObj);
+  async sendNewJob({ commit }, newJobObj) {
     try {
       return await axios.post(`${url}/jobs`, newJobObj).then((response) => {
         if (response.status == 200) {
-          console.log(response);
+          const payload = response.data;
+          commit("SEND_NEW_JOB", payload);
         }
       });
     } catch (error) {
@@ -55,7 +55,11 @@ const mutations = {
   },
   FETCH_SELECTED_JOB(state, payload) {
     state.selectedJob = payload;
-    console.log(state.selectedJob);
+  },
+  SEND_NEW_JOB(state, payload) {
+    state.jobs.push(payload);
+    console.log("SEND_NEW_NOB");
+    console.log(state.jobs);
   },
 };
 

@@ -38,6 +38,13 @@ type apiJob struct {
 	Iteration_max    int    `json:"iteration_max"`
 }
 
+// This is the response object sent back when POSTING a new job
+type jobResponse struct {
+	Jobid      int    `json:"jobid"`
+	Prompt     string `json:"prompt"`
+	Job_status string `json:"job_status"`
+}
+
 // Schema for the status object returned by the status endpoint
 type status struct {
 	Gpu            string   `json:"gpu"`
@@ -165,7 +172,18 @@ func HandleJobsApiPost(w http.ResponseWriter, r *http.Request) {
 
 	// 1. Santizie and check the input
 	if len(jobRequest.Prompt) > MAX_PROMPT_LENGTH {
-		log.Println("JobsApiPost: Prompt is too long")
+		log.Println("JobsApiPost: Prompt is of length < 1")
+		return
+	}
+	if len(jobRequest.Prompt) < 1 { // send back an error response
+		var j jobResponse
+		j.Jobid = -1                 // Placeholder
+		j.Prompt = jobRequest.Prompt // TODO: Validate and sanitize user input first
+		j.Job_status = "Rejected"    //pending? rejected?
+
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("500 - Something bad happened!"))
+		json.NewEncoder(w).Encode(j) // send back the json as a the response
 		return
 	}
 
@@ -177,11 +195,6 @@ func HandleJobsApiPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 3. Send back the jobid of the newly created job to the client
-	type jobResponse struct {
-		Jobid      int    `json:"jobid"`
-		Prompt     string `json:"prompt"`
-		Job_status string `json:"job_status"`
-	}
 
 	var j jobResponse
 	j.Jobid = newJobid           // Placeholder

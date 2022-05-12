@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 	"time"
 
@@ -137,6 +138,25 @@ func GetLatestJob() (Job, error) {
 }
 */
 
+// Get job by jobid
+// Returns the job with the given jobid
+func GetJobByJobid(jobid int) (Job, error) {
+	var j Job
+
+	row, err := JOBDB.Query(`SELECT * FROM "jobs" WHERE jobid = ?;`, jobid) // Query the database
+	if err != nil {
+		return j, err
+	}
+
+	row.Next()
+	err = row.Scan(&j.Jobid, &j.Prompt, &j.Status, &j.Job_params, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
+	if err != nil {
+		return j, err
+	}
+
+	return j, err
+}
+
 // Dump entire jobdb into memory
 // Returns a slice of all jobs
 func GetAllJobs() ([]Job, error) {
@@ -192,8 +212,12 @@ func GetJobsBetweenTwoJobids(a int, b int) ([]Job, error) {
 // Called by the main function so we can test the module
 func EntryPointForTesting() { //debug
 
-	j, _ := GetAllJobs()
-	for i, v := range j {
-		fmt.Println(i, v.Prompt, v.Jobid)
+	j, err := GetJobByJobid(1)
+	if err != nil {
+		log.Fatal(err)
 	}
+
+	fmt.Println(j.Jobid)
+	fmt.Println(j.Prompt)
+	os.Exit(0)
 }

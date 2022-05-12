@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -17,13 +18,8 @@ type newjob struct {
 	Prompt string `json:"prompt"`
 }
 
-// Schema for request sent to job endpoint by client
-type job struct {
-	Jobid  string `json:"jobid"`
-	Prompt string `json:"prompt"`
-}
-
-// Schema for request sent to job endpoint by client
+// This is the response object of he /api/0/jobs endpoint
+// For reference here is the Schema for request sent to job endpoint by client
 /*
 {
   "jobid": "1",
@@ -33,7 +29,7 @@ type job struct {
   "iteration_max": "240",
 }
 */
-type testJob struct {
+type apiJob struct {
 	Jobid            string `json:"jobid"`
 	Prompt           string `json:"prompt"`
 	Job_status       string `json:"job_status"`
@@ -43,8 +39,8 @@ type testJob struct {
 
 // Schema for the status object returned by the status endpoint
 type status struct {
-	Gpu            string    `json:"gpu"`
-	Completed_jobs []testJob `json:"completed_jobs"`
+	Gpu            string   `json:"gpu"`
+	Completed_jobs []apiJob `json:"completed_jobs"`
 	//Description string `json:"Description"`
 }
 
@@ -58,7 +54,7 @@ func HandleStatusRequest(w http.ResponseWriter, r *http.Request) {
 			Gpu: "ready", // busy, offline
 		}
 
-		// TODO: dumping entire database into memory every time won't scale
+		// TODO: dumping entire database into memory every time won't scale so get only the last 10!
 		allJobs, err := xdb.GetAllJobs()
 		if err != nil {
 			log.Println(err)
@@ -66,7 +62,7 @@ func HandleStatusRequest(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(responseObject) // send back the json as a the response
 		}
 
-		var respJob testJob
+		var respJob apiJob
 		for i := 0; i < 10; i++ {
 			if i < len(allJobs) { // sanity check if we have a fresh database with less than 10 entries
 				respJob.Jobid = allJobs[i].Jobid
@@ -130,41 +126,27 @@ func HandleJobsApiGet(w http.ResponseWriter, r *http.Request) {
 	inputstring := strings.TrimLeft(input, "/api/0/jobs?jobid=")
 	inputstring2 := strings.TrimSpace(inputstring)
 
-	type newJob struct {
-		Jobid      string `json:"jobid"`
-		Prompt     string `json:"prompt"`
-		Job_status string `json:"job_status"`
+	sanitized_input, err := strconv.Atoi(inputstring2)
+	if err != nil {
+		log.Println(err)
+		return
 	}
 
-	var j newJob
-	// TODO: do this for real not just hardcode
-	if inputstring2 == "1" {
+	var jobResponse apiJob
+	var j xdb.Job
+	j, err = xdb.GetJobByJobid(sanitized_input)
+	if err != nil {
+		log.Println(err)
+		return
+	}
 
-		j.Jobid = inputstring2
-		j.Prompt = "3d render of celestial space nebula, cosmic, space station, unreal engine 3, photorealistic materials, trending on Artstation"
-		j.Job_status = "completed" //pending? rejected?
+	// Build the response
+	jobResponse.Jobid = j.Jobid
+	jobResponse.Prompt = j.Prompt
+	jobResponse.Iteration_status = j.Iteration_status
+	jobResponse.Iteration_max = j.Iteration_max
 
-		json.NewEncoder(w).Encode(j) // send back the json as a the response
-	}
-	if inputstring2 == "2" {
-		j.Jobid = inputstring2
-		j.Prompt = "Space panorama of moon-shaped burning wool, large as the moon, races towards  the blue planet earth, nasa earth, trending on artstation"
-		j.Job_status = "completed"   //pending? rejected?
-		json.NewEncoder(w).Encode(j) // send back the json as a the response
-	}
-	if inputstring2 == "3" {
-		j.Jobid = "3"
-		j.Prompt = "stripped tree bark texture, closeup, PBR texture"
-		j.Job_status = "225/240"
-		json.NewEncoder(w).Encode(j) // send back the json as a the response
-	}
-	if inputstring2 == "4" {
-		// Add another job for testing
-		j.Jobid = "4"
-		j.Prompt = "Mandelbulber fractal, infinite 3d fractal, high resolution 4k"
-		j.Job_status = "queued"
-		json.NewEncoder(w).Encode(j) // send back the json as a the response
-	}
+	json.NewEncoder(w).Encode(j) // send back the json as a the response
 }
 
 // Deals with POST requests made to the jobs endpoint (POST new jobs)

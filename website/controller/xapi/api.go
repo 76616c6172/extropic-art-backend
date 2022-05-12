@@ -146,7 +146,7 @@ func HandleJobsApiGet(w http.ResponseWriter, r *http.Request) {
 	jobResponse.Iteration_status = j.Iteration_status
 	jobResponse.Iteration_max = j.Iteration_max
 
-	json.NewEncoder(w).Encode(j) // send back the json as a the response
+	json.NewEncoder(w).Encode(jobResponse) // send back the json as a the response
 }
 
 // Deals with POST requests made to the jobs endpoint (POST new jobs)

@@ -30,7 +30,8 @@ export default {
   },
   methods: {
     onClickSendNewJob() {
-      if (this.vPrompt != "") {
+      var regex = /^\s+$/;
+      if (this.vPrompt != "" && !this.vPrompt.match(regex)) {
         this.$store.dispatch("sendNewJob", { prompt: this.vPrompt });
         this.vPrompt = "";
       }

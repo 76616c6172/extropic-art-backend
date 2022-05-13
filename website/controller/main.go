@@ -4,6 +4,8 @@ import (
 	"exia/controller/xapi"
 	"exia/controller/xdb"
 	_ "exia/controller/xdb"
+	"log"
+	"os"
 
 	"net/http"
 )
@@ -12,8 +14,9 @@ const WEBSERVER_PORT = ":8080"
 
 // Answers calls to the endpoint /api/0/jobs
 func api_0_jobs(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin")) // FIXME
-	w.Header().Set("Access-Control-Allow-Headers", "*")                   //FIXME because I don't get it
+	//w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin")) // No longer needed
+	w.Header().Set("Access-Control-Allow-Origin", "*")  // TESTING: allow CORS for testing purposes
+	w.Header().Set("Access-Control-Allow-Headers", "*") //FIXME because I don't get it
 
 	switch r.Method {
 	case "GET": // Return info about existing jobs (I would like to make this GET but the frontend requires POST)
@@ -27,12 +30,16 @@ func api_0_jobs(w http.ResponseWriter, r *http.Request) {
 // Answers calls to the endpoint /api/0/img
 // TODO: requires a jobid and sends back the latest image for that job id.
 func api_0_img(w http.ResponseWriter, r *http.Request) {
-	xapi.HandleImgRequests(w, r) // TODO: Return the correct image based on the request (request with jobid)
+	w.Header().Set("Access-Control-Allow-Origin", "*")  // TESTING: allow CORS for testing purposes
+	w.Header().Set("Access-Control-Allow-Headers", "*") //FIXME because I don't get it
+	xapi.HandleImgRequests(w, r)                        // TODO: Return the correct image based on the request (request with jobid)
 }
 
 // Answers calls to the endpoint /api/0/all
 // This answers with a json containing all information the view needs when it first loads
 func api_0_status(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")  // TESTING: allow CORS for testing purposes
+	w.Header().Set("Access-Control-Allow-Headers", "*") //FIXME because I don't get it
 	xapi.HandleStatusRequest(w, r)
 }
 
@@ -40,6 +47,14 @@ func api_0_status(w http.ResponseWriter, r *http.Request) {
 func main() {
 	// Initialize the jobs database
 	xdb.JobdbInit()
+
+	// Select the logfile
+	logFile, err := os.OpenFile(("./logs/exia.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatal("main: error opening logfile")
+	}
+	defer logFile.Close()
+	log.SetOutput(logFile)
 
 	// TESTING: Play with SQLite
 	//xdb.EntryPointForTesting() //testing

@@ -8,22 +8,19 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 )
 
 const GPU_STATUS string = "offline" // can be offline, online, or busy
+const MAX_PROMPT_LENGTH = 600
 
 type newjob struct {
 	Prompt string `json:"prompt"`
 }
 
-// Schema for request sent to job endpoint by client
-type job struct {
-	Jobid  string `json:"jobid"`
-	Prompt string `json:"prompt"`
-}
-
-// Schema for request sent to job endpoint by client
+// This is the response object of he /api/0/jobs endpoint
+// For reference here is the Schema for request sent to job endpoint by client
 /*
 {
   "jobid": "1",
@@ -33,7 +30,7 @@ type job struct {
   "iteration_max": "240",
 }
 */
-type testJob struct {
+type apiJob struct {
 	Jobid            string `json:"jobid"`
 	Prompt           string `json:"prompt"`
 	Job_status       string `json:"job_status"`
@@ -41,16 +38,22 @@ type testJob struct {
 	Iteration_max    int    `json:"iteration_max"`
 }
 
+// This is the response object sent back when POSTING a new job
+type jobResponse struct {
+	Jobid      int    `json:"jobid"`
+	Prompt     string `json:"prompt"`
+	Job_status string `json:"job_status"`
+}
+
 // Schema for the status object returned by the status endpoint
 type status struct {
-	Gpu            string    `json:"gpu"`
-	Completed_jobs []testJob `json:"completed_jobs"`
+	Gpu            string   `json:"gpu"`
+	Completed_jobs []apiJob `json:"completed_jobs"`
 	//Description string `json:"Description"`
 }
 
 // Deals with requests to the status endpoint
 func HandleStatusRequest(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*") // TESTING: allow CORS for testing purposes
 
 	if r.Method == "GET" { // send back the response
 
@@ -58,7 +61,7 @@ func HandleStatusRequest(w http.ResponseWriter, r *http.Request) {
 			Gpu: "ready", // busy, offline
 		}
 
-		// TODO: dumping entire database into memory every time won't scale
+		// TODO: dumping entire database into memory every time won't scale so get only the last 10!
 		allJobs, err := xdb.GetAllJobs()
 		if err != nil {
 			log.Println(err)
@@ -66,7 +69,7 @@ func HandleStatusRequest(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(responseObject) // send back the json as a the response
 		}
 
-		var respJob testJob
+		var respJob apiJob
 		for i := 0; i < 10; i++ {
 			if i < len(allJobs) { // sanity check if we have a fresh database with less than 10 entries
 				respJob.Jobid = allJobs[i].Jobid
@@ -85,8 +88,6 @@ func HandleStatusRequest(w http.ResponseWriter, r *http.Request) {
 
 // Obtains the coorect image for a given job and sends it back
 func HandleImgRequests(w http.ResponseWriter, r *http.Request) {
-
-	w.Header().Set("Access-Control-Allow-Origin", "*") // TESTING: allow CORS for testing purposes
 
 	input := fmt.Sprintln(r.URL)
 	inputstring := strings.TrimLeft(input, "/api/0/img?jobid=")
@@ -117,57 +118,47 @@ func HandleImgRequests(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 	}
-
 }
 
 // takes /api/0/jobs=?jobid="yourjodidhere"
+// queries the jobs.db and sends back info about the job
 // sends back json object with info about the job
 func HandleJobsApiGet(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*") // TESTING: allow CORS for testing purposes
 
-	// Get the jobid
+	// 1. Determine the jobid from the request
 	input := fmt.Sprintln(r.URL)
 	inputstring := strings.TrimLeft(input, "/api/0/jobs?jobid=")
 	inputstring2 := strings.TrimSpace(inputstring)
 
-	type newJob struct {
-		Jobid      string `json:"jobid"`
-		Prompt     string `json:"prompt"`
-		Job_status string `json:"job_status"`
+	// 2. Sanitize the input
+	sanitized_input, err := strconv.Atoi(inputstring2)
+	if err != nil {
+		log.Println(err)
+		return
 	}
 
-	var j newJob
-	// TODO: do this for real not just hardcode
-	if inputstring2 == "1" {
+	// 2. Get the row from the database
+	var realJob xdb.Job
+	realJob, err = xdb.GetJobByJobid(sanitized_input)
+	if err != nil {
+		log.Println(err)
+		return
+	}
 
-		j.Jobid = inputstring2
-		j.Prompt = "3d render of celestial space nebula, cosmic, space station, unreal engine 3, photorealistic materials, trending on Artstation"
-		j.Job_status = "completed" //pending? rejected?
+	// 3. Build the response object
+	var responseJob apiJob
+	responseJob.Jobid = realJob.Jobid
+	responseJob.Prompt = realJob.Prompt
+	responseJob.Job_status = realJob.Status
+	responseJob.Iteration_status = realJob.Iteration_status
+	responseJob.Iteration_max = realJob.Iteration_max
 
-		json.NewEncoder(w).Encode(j) // send back the json as a the response
-	}
-	if inputstring2 == "2" {
-		j.Jobid = inputstring2
-		j.Prompt = "Space panorama of moon-shaped burning wool, large as the moon, races towards  the blue planet earth, nasa earth, trending on artstation"
-		j.Job_status = "completed"   //pending? rejected?
-		json.NewEncoder(w).Encode(j) // send back the json as a the response
-	}
-	if inputstring2 == "3" {
-		j.Jobid = "3"
-		j.Prompt = "stripped tree bark texture, closeup, PBR texture"
-		j.Job_status = "225/240"
-		json.NewEncoder(w).Encode(j) // send back the json as a the response
-	}
-	if inputstring2 == "4" {
-		// Add another job for testing
-		j.Jobid = "4"
-		j.Prompt = "Mandelbulber fractal, infinite 3d fractal, high resolution 4k"
-		j.Job_status = "queued"
-		json.NewEncoder(w).Encode(j) // send back the json as a the response
-	}
+	// 4. Send back the response
+	json.NewEncoder(w).Encode(responseJob)
 }
 
 // Deals with POST requests made to the jobs endpoint (POST new jobs)
+// Sends the job to jobs.db
 func HandleJobsApiPost(w http.ResponseWriter, r *http.Request) {
 	//w.Header().Set("Access-Control-Allow-Origin", "https://www.exia.art") // TESTING: allow CORS for testing purposes
 	//w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -182,14 +173,34 @@ func HandleJobsApiPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	type jobResponse struct {
-		Jobid      string `json:"jobid"`
-		Prompt     string `json:"prompt"`
-		Job_status string `json:"job_status"`
+	// 1. Santizie and check the input
+	if len(jobRequest.Prompt) > MAX_PROMPT_LENGTH {
+		log.Println("JobsApiPost: Prompt is of length < 1")
+		return
+	}
+	if len(jobRequest.Prompt) < 1 { // send back an error response
+		var j jobResponse
+		j.Jobid = -1                 // Placeholder
+		j.Prompt = jobRequest.Prompt // TODO: Validate and sanitize user input first
+		j.Job_status = "Rejected"    //pending? rejected?
+
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("500 - Something bad happened!"))
+		json.NewEncoder(w).Encode(j) // send back the json as a the response
+		return
 	}
 
+	// 2. Create the job in the database
+	newJobid, err := xdb.InsertNewJob(jobRequest.Prompt, "")
+	if err != nil {
+		log.Println("JobsApiPost: err")
+		return
+	}
+
+	// 3. Send back the jobid of the newly created job to the client
+
 	var j jobResponse
-	j.Jobid = ""                 // Placeholder
+	j.Jobid = newJobid           // Placeholder
 	j.Prompt = jobRequest.Prompt // TODO: Validate and sanitize user input first
 	j.Job_status = "accepted"    //pending? rejected?
 

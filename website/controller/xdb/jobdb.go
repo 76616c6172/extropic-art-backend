@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 	"time"
 
@@ -93,11 +94,12 @@ func InsertNewJob(prompt string, job_params interface{}) (int, error) {
 	}
 
 	unixtime := strconv.Itoa(int(time.Now().Unix()))
+	iteration_max := 240 // TODO: make this check if the user provided different values first
 
 	// Execute the statement
 	// for reference the jobs schema is:
-	//INSERT INTO "jobs" (jobid, prompt, status, job_params, iteration_status, iteration_max, time_created, time_last_updated, time_completed)
-	result, err := stmnt.Exec(prompt, "queued", job_params_str, 0, 0, unixtime, unixtime, "")
+	//INSERT INTO "jobs" (prompt, status, job_params, iteration_status, iteration_max, time_created, time_last_updated, time_completed)
+	result, err := stmnt.Exec(prompt, "queued", job_params_str, 0, iteration_max, unixtime, unixtime, "")
 	if err != nil {
 		return -1, err
 	}
@@ -136,6 +138,25 @@ func GetLatestJob() (Job, error) {
 	return j, err
 }
 */
+
+// Get job by jobid
+// Returns the job with the given jobid
+func GetJobByJobid(jobid int) (Job, error) {
+	var j Job
+
+	row, err := JOBDB.Query(`SELECT * FROM "jobs" WHERE jobid = ?;`, jobid) // Query the database
+	if err != nil {
+		return j, err
+	}
+
+	row.Next()
+	err = row.Scan(&j.Jobid, &j.Prompt, &j.Status, &j.Job_params, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
+	if err != nil {
+		return j, err
+	}
+
+	return j, err
+}
 
 // Dump entire jobdb into memory
 // Returns a slice of all jobs
@@ -192,8 +213,12 @@ func GetJobsBetweenTwoJobids(a int, b int) ([]Job, error) {
 // Called by the main function so we can test the module
 func EntryPointForTesting() { //debug
 
-	j, _ := GetAllJobs()
-	for i, v := range j {
-		fmt.Println(i, v.Prompt, v.Jobid)
+	j, err := GetJobByJobid(1)
+	if err != nil {
+		log.Fatal(err)
 	}
+
+	fmt.Println(j.Jobid)
+	fmt.Println(j.Prompt)
+	os.Exit(0)
 }

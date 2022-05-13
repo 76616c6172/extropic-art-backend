@@ -16,7 +16,7 @@
     </div>
     <ul class="list-group-flush" style="padding-left: 0 !important">
       <StatusItem
-        v-for="(job, index) in getSearchedProducts"
+        v-for="(job, index) in getFilteredJobs"
         :key="index"
         :job="job"
       />
@@ -34,41 +34,41 @@ export default {
   },
   data() {
     return {
-      jobs: [],
       searchQuery: "",
     };
   },
   methods: {
-    loadJobs(jobs) {
-      if (this.jobs.length == 0) {
-        jobs.forEach((job) => {
-          job.prompt != "" ? this.jobs.push(job) : "";
-        });
-        this.jobs = this.jobs.sort((job) => job.job_status == "completed");
-      }
-    },
-  },
-  computed: {
-    getJobsFromStore() {
-      return this.$store.getters.getJobs;
-    },
-    getSearchedProducts() {
-      return this.jobs.filter((job) => {
+    getFoundJobs(jobs) {
+      return jobs.filter((job) => {
         return (
           job.prompt.toLowerCase().indexOf(this.searchQuery.toLowerCase()) != -1
         );
       });
     },
   },
+  computed: {
+    getJobs() {
+      return this.$store.getters.getJobs;
+    },
+    getFilteredJobs() {
+      let jobs = this.getJobs;
+      jobs.sort((job) => job.job_status == "completed");
+      return this.getFoundJobs(jobs);
+    },
+  },
   watch: {
-    getJobsFromStore: {
+    getFilteredJobs: {
       handler(jobs) {
-        // console.log("here");
         if (jobs) {
-          this.loadJobs(jobs);
+          jobs.forEach((job) => {
+            if (job.job_status == "accepted") {
+              setTimeout(() => {
+                this.$store.dispatch("fetchJobs");
+              }, 1500);
+            }
+          });
         }
       },
-      immediate: true,
     },
   },
   async mounted() {

@@ -58,8 +58,6 @@ const mutations = {
   },
   SEND_NEW_JOB(state, payload) {
     state.jobs.push(payload);
-    console.log("SEND_NEW_NOB");
-    console.log(state.jobs);
   },
 };
 

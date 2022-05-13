@@ -31,6 +31,7 @@ export default {
   methods: {
     onClickSendNewJob() {
       this.$store.dispatch("sendNewJob", { prompt: this.vPrompt });
+      this.vPrompt = "";
     },
   },
 };

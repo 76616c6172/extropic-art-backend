@@ -183,7 +183,7 @@ func GetAllJobs() ([]Job, error) {
 
 // Queries jobdb and returns a slice of all jobs in the set of [a,...,b]
 // returns an error if the query fails
-func GetJobsBetweenTwoJobids(a int, b int) ([]Job, error) {
+func GetJobsByXY(a int, b int) ([]Job, error) {
 	if a == 0 { // FIXME: Handle the edge case, idk why 0 is not allowed in the query
 		a = 1
 	}

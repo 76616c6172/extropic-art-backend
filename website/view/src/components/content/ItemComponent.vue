@@ -1,6 +1,8 @@
 <template>
   <li
-    @click="onClickSetSelected(job.jobid)"
+    @click="onClickSetSelected()"
+    :disabled="job.job_status != 'completed'"
+    :class="[job.job_status != 'completed' ? 'disabled' : '']"
     class="list-group-item list-group-item-action"
   >
     <div class="row">
@@ -8,48 +10,29 @@
         <p class="text-start">{{ job.prompt }}</p>
       </div>
       <div class="col-lg-2 col-md-2">
-        <div
-          :class="getJobBorderClass(job.job_status)"
-          class="badge border text-secondary"
-        >
+        <div :class="getJobBorderClass" class="badge border text-secondary">
           {{ job.job_status }}
         </div>
-        <!-- {{ job.iteration_status }}/{{ job.iteration_max }} -->
         <div class="progress mt-1">
           <div
-            :style="`width: ${getProgressbarPercent(
-              job.iteration_status,
-              job.iteration_max
-            )}%;`"
+            :style="`width: ${getProgressbarPercent}%;`"
             class="progress-bar progress-bar-animated"
             role="progressbar"
-            :aria-valuenow="
-              getProgressbarPercent(job.iteration_status, job.iteration_max)
-            "
+            :aria-valuenow="getProgressbarPercent"
             aria-valuemin="0"
             aria-valuemax="100"
           >
-            {{
-              `${getProgressbarPercent(
-                job.iteration_status,
-                job.iteration_max
-              )}%`
-            }}
+            {{ `${getProgressbarPercent}%` }}
           </div>
         </div>
       </div>
     </div>
   </li>
-  <ConfirmDialogue ref="confirmDialogue" />
 </template>
 
 <script>
-import ConfirmDialogue from "../modal/Confirmdialogue.vue";
 export default {
-  name: "StatusItemComponent",
-  components: {
-    ConfirmDialogue,
-  },
+  name: "ItemComponent",
   props: {
     job: {
       type: Object,
@@ -77,25 +60,20 @@ export default {
     },
   },
   methods: {
-    onClickSetSelected(jobId) {
-      this.$store.dispatch("getSelectedJob", jobId);
-      this.buildModalDialogue();
-    },
-    async buildModalDialogue() {
-      console.log("triggered");
-      const ok = await this.$refs.confirmDialogue.show({
-        title: this.getSelectedJob.prompt,
-        image: this.getSelectedJob.img,
-        message: "",
-        okButton: "Löschen",
-      });
-      if (ok) {
-        // this.$store.dispatch("deleteTodo", "todoObj._id");
+    onClickSetSelected(e) {
+      if (this.job.job_status != "completed") {
+        e.preventDefault();
       }
+      this.$store.dispatch("getSelectedJob", this.job.jobid);
     },
-    getJobBorderClass(jobStatus) {
+  },
+  computed: {
+    getSelectedJob() {
+      return this.$store.getters.getSelectedJob;
+    },
+    getJobBorderClass() {
       let returnJobStatus;
-      switch (jobStatus) {
+      switch (this.job.job_status) {
         case "completed":
           returnJobStatus = "border-success";
           break;
@@ -110,13 +88,8 @@ export default {
       }
       return returnJobStatus;
     },
-    getProgressbarPercent(iterationStatus, iterationMax) {
-      return (iterationStatus / iterationMax) * 100;
-    },
-  },
-  computed: {
-    getSelectedJob() {
-      return this.$store.getters.getSelectedJob;
+    getProgressbarPercent() {
+      return (this.job.iteration_status / this.job.iteration_max) * 100;
     },
   },
 };

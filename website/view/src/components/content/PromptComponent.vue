@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="pb-5">
     <div class="input-group">
       <input
         @keyup.enter="onClickSendNewJob()"

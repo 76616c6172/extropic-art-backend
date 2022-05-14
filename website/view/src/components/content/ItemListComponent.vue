@@ -15,22 +15,18 @@
       </form>
     </div>
     <ul class="list-group-flush" style="padding-left: 0 !important">
-      <StatusItem
-        v-for="(job, index) in getFilteredJobs"
-        :key="index"
-        :job="job"
-      />
+      <Item v-for="(job, index) in getFilteredJobs" :key="index" :job="job" />
     </ul>
   </div>
 </template>
 
 <script>
-import { default as StatusItem } from "./StatusItemComponent.vue";
+import { default as Item } from "./ItemComponent.vue";
 
 export default {
   name: "StatusListComponent",
   components: {
-    StatusItem,
+    Item,
   },
   data() {
     return {

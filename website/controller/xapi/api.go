@@ -120,41 +120,96 @@ func HandleImgRequests(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// takes /api/0/jobs=?jobid="yourjodidhere"
 // queries the jobs.db and sends back info about the job
-// sends back json object with info about the job
+// takes /api/0/jobs=?jobid="yourjodidhere"
+// OR /api/0/jobx=3&joby=4
+// Sendsback array of jobs between [3 .. 4]
 func HandleJobsApiGet(w http.ResponseWriter, r *http.Request) {
 
-	// 1. Determine the jobid from the request
-	input := fmt.Sprintln(r.URL)
-	inputstring := strings.TrimLeft(input, "/api/0/jobs?jobid=")
-	inputstring2 := strings.TrimSpace(inputstring)
+	// WIP: working on new feature
 
-	// 2. Sanitize the input
-	sanitized_input, err := strconv.Atoi(inputstring2)
-	if err != nil {
-		log.Println(err)
-		return
+	if r.Method == "GET" {
+		str_a := strings.TrimLeft(r.URL.String(), "/api/0/")
+
+		// CHeck if we have a jobid
+		if strings.Contains(str_a, "jobs?jobid") {
+
+			// 1. Determine the jobid from the request
+			input := fmt.Sprintln(r.URL)
+			inputstring := strings.TrimLeft(input, "/api/0/jobs?jobid=")
+			inputstring2 := strings.TrimSpace(inputstring)
+
+			// 2. Sanitize the input
+			sanitized_input, err := strconv.Atoi(inputstring2)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			// 2. Get the row from the database
+			var realJob xdb.Job
+			realJob, err = xdb.GetJobByJobid(sanitized_input)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			// 3. Build the response object
+			var responseJob apiJob
+			responseJob.Jobid = realJob.Jobid
+			responseJob.Prompt = realJob.Prompt
+			responseJob.Job_status = realJob.Status
+			responseJob.Iteration_status = realJob.Iteration_status
+			responseJob.Iteration_max = realJob.Iteration_max
+
+			// 4. Send back the response
+			json.NewEncoder(w).Encode(responseJob)
+			return
+		} else { // assume the client wants multiple jobs jobx=1&joby=2
+			b_str := strings.TrimLeft(str_a, "jobs?jobx=")
+			c_str := strings.Split(b_str, "&")
+			x_str := strings.TrimRight(c_str[0], "&")
+			y_str := strings.TrimLeft(c_str[1], "joby=")
+
+			// 1. Sanitize the input
+			x, err := strconv.Atoi(x_str)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+			y, err := strconv.Atoi(y_str)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+			var realJobs []xdb.Job
+
+			// 2. Query the database
+			realJobs, err = xdb.GetJobsByXY(x, y)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			// 3. Build the resposne
+			var responseJobs []apiJob
+			var responseJob apiJob
+
+			for _, v := range realJobs {
+				responseJob.Jobid = v.Jobid
+				responseJob.Prompt = v.Prompt
+				responseJob.Job_status = v.Status
+				responseJob.Iteration_status = v.Iteration_status
+				responseJob.Iteration_max = v.Iteration_max
+				responseJobs = append(responseJobs, responseJob)
+			}
+
+			// 4. Send back the response
+			json.NewEncoder(w).Encode(responseJobs)
+			return
+		}
 	}
 
-	// 2. Get the row from the database
-	var realJob xdb.Job
-	realJob, err = xdb.GetJobByJobid(sanitized_input)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	// 3. Build the response object
-	var responseJob apiJob
-	responseJob.Jobid = realJob.Jobid
-	responseJob.Prompt = realJob.Prompt
-	responseJob.Job_status = realJob.Status
-	responseJob.Iteration_status = realJob.Iteration_status
-	responseJob.Iteration_max = realJob.Iteration_max
-
-	// 4. Send back the response
-	json.NewEncoder(w).Encode(responseJob)
 }
 
 // Deals with POST requests made to the jobs endpoint (POST new jobs)

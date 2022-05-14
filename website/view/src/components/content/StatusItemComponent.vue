@@ -147,4 +147,11 @@ p {
   -o-text-overflow: ellipsis; /* Opera < 11*/
   text-overflow: ellipsis; /* IE, Safari (WebKit), Opera >= 11, FF > 6 */
 }
+.progress {
+  background: transparent;
+}
+.progress-bar {
+  color: gray;
+  background-color: #eee;
+}
 </style>

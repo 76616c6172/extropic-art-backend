@@ -13,7 +13,7 @@
       </div>
       <div class="row justify-content-center bg-light">
         <div class="col-lg-6 col-sm-12">
-          <StatusItemList />
+          <ItemList />
         </div>
       </div>
       <div class="row justify-content-center bg-light">
@@ -21,8 +21,10 @@
           <Prompt />
         </div>
       </div>
-      <div class="row justify-content-center bg-light">
-        <div class="col-lg-6 col-sm-12"><!-- <Carousel />--></div>
+      <div class="row justify-content-center">
+        <div class="col-lg-6 col-sm-12">
+          <Image />
+        </div>
       </div>
     </div>
   </div>
@@ -32,8 +34,8 @@
 import { default as Typing } from "../components/miscellaneous/TypingComponent.vue";
 import { default as Instructions } from "../components/miscellaneous/InstructionsComponent.vue";
 import { default as Prompt } from "../components/content/PromptComponent.vue";
-import { default as StatusItemList } from "./content/StatusItemListComponent.vue";
-// import { default as Carousel } from "./content/CarouselComponent.vue";
+import { default as ItemList } from "./content/ItemListComponent.vue";
+import { default as Image } from "./content/ImageComponent.vue";
 
 export default {
   name: "HomeComponent",
@@ -41,8 +43,8 @@ export default {
     Typing,
     Instructions,
     Prompt,
-    StatusItemList,
-    // Carousel,
+    ItemList,
+    Image,
   },
   props: {
     msg: String,

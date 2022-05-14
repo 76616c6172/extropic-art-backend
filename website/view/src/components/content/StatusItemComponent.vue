@@ -8,14 +8,35 @@
         <p class="text-start">{{ job.prompt }}</p>
       </div>
       <div class="col-lg-2 col-md-2">
-        <span
+        <div
           :class="getJobBorderClass(job.job_status)"
           class="badge border text-secondary"
-          >{{ job.job_status }}
-        </span>
-        <span class="badge border text-secondary"
-          >{{ job.iteration_status }}/{{ job.iteration_max }}
-        </span>
+        >
+          {{ job.job_status }}
+        </div>
+        <!-- {{ job.iteration_status }}/{{ job.iteration_max }} -->
+        <div class="progress mt-1">
+          <div
+            :style="`width: ${getProgressbarPercent(
+              job.iteration_status,
+              job.iteration_max
+            )}%;`"
+            class="progress-bar progress-bar-animated"
+            role="progressbar"
+            :aria-valuenow="
+              getProgressbarPercent(job.iteration_status, job.iteration_max)
+            "
+            aria-valuemin="0"
+            aria-valuemax="100"
+          >
+            {{
+              `${getProgressbarPercent(
+                job.iteration_status,
+                job.iteration_max
+              )}%`
+            }}
+          </div>
+        </div>
       </div>
     </div>
   </li>
@@ -88,6 +109,9 @@ export default {
           break;
       }
       return returnJobStatus;
+    },
+    getProgressbarPercent(iterationStatus, iterationMax) {
+      return (iterationStatus / iterationMax) * 100;
     },
   },
   computed: {

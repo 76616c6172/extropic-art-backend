@@ -10,7 +10,7 @@
           {{ job.prompt }}
         </p>
       </div>
-      <div class="col-lg-2 col-md-2">
+      <div class="col-lg-2 col-md-2 cursor-default">
         <div :class="getJobBorderClass" class="badge border text-secondary">
           {{ job.job_status }}
         </div>
@@ -108,6 +108,9 @@ export default {
 </script>
 
 <style scoped>
+.cursor-default {
+  cursor: default;
+}
 li.list-group-item {
   background: transparent;
   cursor: pointer;

@@ -1,13 +1,14 @@
 <template>
   <li
-    @click="onClickSetSelected()"
     :disabled="job.job_status != 'completed'"
     :class="[job.job_status != 'completed' ? 'disabled' : '']"
     class="list-group-item list-group-item-action"
   >
     <div class="row">
       <div class="col-lg-10 col-md-10">
-        <p class="text-start">{{ job.prompt }}</p>
+        <p @click="onClickSetSelected($event)" class="text-start">
+          {{ job.prompt }}
+        </p>
       </div>
       <div class="col-lg-2 col-md-2">
         <div :class="getJobBorderClass" class="badge border text-secondary">
@@ -61,6 +62,19 @@ export default {
   },
   methods: {
     onClickSetSelected(e) {
+      // show active (selected li)
+      let selectedLi =
+        e.originalTarget.parentElement.parentElement.parentElement;
+      let ulChildren =
+        document.getElementsByClassName("list-group-flush")[0].children;
+      let liActiveClass = "item-group-active";
+
+      for (let i = 0; i < ulChildren.length; i++) {
+        ulChildren[i].classList.remove(liActiveClass);
+      }
+
+      selectedLi.classList.add(liActiveClass);
+
       if (this.job.job_status != "completed") {
         e.preventDefault();
       }
@@ -98,14 +112,18 @@ export default {
 <style scoped>
 li.list-group-item {
   background: transparent;
-  padding: 20px 0px 15px 0px;
   cursor: pointer;
   transition: 0.1s background ease-out;
   --color-highlight: 204, 204, 204;
 }
+li p {
+  padding: 2px 0px 20px 0px;
+  margin: 0;
+}
 li.list-group-item:hover,
 li.list-group-item:active,
-li.list-group-item:focus {
+li.list-group-item:focus,
+li.list-group-item.item-group-active {
   background: #dedede;
   background-color: rgba(var(--color-highlight), 0.1);
 }

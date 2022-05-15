@@ -48,6 +48,23 @@ const actions = {
     payload.img = `${url}/img?${jobId}`;
     commit("FETCH_SELECTED_JOB", payload);
   },
+  async getSelectedImg() {
+    let imgURL = state.selectedJob.img_path;
+    try {
+      return await axios
+        .get(`${imgURL}`, { responseType: "blob" })
+        .then((response) => {
+          if (response.status == 200) {
+            return new Promise((resolve) => {
+              const payload = response.data;
+              resolve(payload);
+            });
+          }
+        });
+    } catch (error) {
+      console.log(error);
+    }
+  },
 };
 const mutations = {
   FETCH_JOBS(state, payload) {

@@ -36,6 +36,7 @@ type apiJob struct {
 	Job_status       string `json:"job_status"`
 	Iteration_status int    `json:"iteration_status"`
 	Iteration_max    int    `json:"iteration_max"`
+	Img_path         string `json:"img_path"`
 }
 
 // This is the response object sent back when POSTING a new job
@@ -77,6 +78,7 @@ func HandleStatusRequest(w http.ResponseWriter, r *http.Request) {
 				respJob.Job_status = allJobs[i].Status
 				respJob.Iteration_max = allJobs[i].Iteration_max
 				respJob.Iteration_status = allJobs[i].Iteration_status
+				respJob.Img_path = "https://exia.art/api/0/img?jobid=" + respJob.Jobid
 				responseObject.Completed_jobs = append(responseObject.Completed_jobs, respJob)
 			}
 		}

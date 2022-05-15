@@ -62,9 +62,7 @@ export default {
   },
   methods: {
     onClickSetSelected(e) {
-      // show active (selected li)
-      let selectedLi =
-        e.originalTarget.parentElement.parentElement.parentElement;
+      let selectedLi = e.target.parentElement.parentElement.parentElement;
       let ulChildren =
         document.getElementsByClassName("list-group-flush")[0].children;
       let liActiveClass = "item-group-active";

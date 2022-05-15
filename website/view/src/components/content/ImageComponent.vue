@@ -4,7 +4,7 @@
       <div v-if="isLoading" class="spinner-border text-secondary" role="status">
         <span class="visually-hidden">Loading...</span>
       </div>
-      <img :src="imgObjectURL" class="img-fluid" alt="" />
+      <img :src="imgObjectURL" class="img-fluid img-thumbnail" alt="" />
     </div>
   </div>
 </template>
@@ -14,7 +14,8 @@ export default {
   name: "ImageComponent",
   data() {
     return {
-      imgObjectURL: "",
+      imgObjectURL:
+        "https://via.placeholder.com/1920x1024.png?text=This%20is%20zen%27s%20placeholder",
       isLoading: false,
     };
   },

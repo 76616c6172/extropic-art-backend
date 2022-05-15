@@ -4,8 +4,10 @@
       <!-- <div v-if="isLoading" class="spinner-border text-secondary" role="status">
         <span class="visually-hidden">Loading...</span>
       </div> -->
-      <div v-if="isLoading" class="loader">Loading...</div>
-      <img :src="imgObjectURL" class="img-fluid img-thumbnail" alt="" />
+      <div class="imgContainer">
+        <div v-if="isLoading" class="loader">Loading...</div>
+        <img :src="imgObjectURL" class="img-fluid img-thumbnail" alt="" />
+      </div>
     </div>
   </div>
 </template>
@@ -23,6 +25,8 @@ export default {
   methods: {
     createImgObjectURL() {
       this.isLoading = true;
+      this.imgObjectURL =
+        "https://via.placeholder.com/1920x1024.png?text=Loading%20image";
       this.$store
         .dispatch("getSelectedImg")
         .then((response) => {
@@ -53,6 +57,10 @@ export default {
 </script>
 
 <style>
+.imgContainer {
+  position: relative;
+}
+
 .loader,
 .loader:before,
 .loader:after {
@@ -65,10 +73,14 @@ export default {
   animation: load7 1.8s infinite ease-in-out;
 }
 .loader {
-  color: #2ec27e;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  color: #327959;
   font-size: 10px;
   margin: 80px auto;
-  position: relative;
   text-indent: -9999em;
   -webkit-transform: translateZ(0);
   -ms-transform: translateZ(0);

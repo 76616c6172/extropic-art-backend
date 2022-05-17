@@ -4,11 +4,13 @@
       <input
         @keyup.enter="onClickSendNewJob()"
         v-model="vPrompt"
+        ref="inputPrompt"
         type="text"
         class="form-control"
         placeholder="Enter your prompt"
         aria-label="Enter your prompt"
       />
+      <!-- <span v-if="showCursor" class="blink">|</span> -->
       <button
         @click="onClickSendNewJob()"
         class="btn btn-outline-secondary"
@@ -28,6 +30,12 @@ export default {
       vPrompt: "",
     };
   },
+  props: {
+    showCursor: {
+      type: Boolean,
+      required: true,
+    },
+  },
   methods: {
     onClickSendNewJob() {
       var regex = /^\s+$/;
@@ -35,6 +43,18 @@ export default {
         this.$store.dispatch("sendNewJob", { prompt: this.vPrompt });
         this.vPrompt = "";
       }
+    },
+  },
+  computed: {
+    setAutofocus() {
+      return this.showCursor ? this.$refs.inputPrompt.focus() : "";
+    },
+  },
+  watch: {
+    showCursor: {
+      handler() {
+        this.setAutofocus;
+      },
     },
   },
 };

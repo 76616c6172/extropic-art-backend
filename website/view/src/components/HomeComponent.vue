@@ -3,7 +3,7 @@
     <div class="mt-5">
       <div class="row justify-content-center">
         <div class="col-lg-6 col-sm-12">
-          <Typing />
+          <Typing @set-cursor="setCursor()" />
         </div>
       </div>
       <div class="row justify-content-center">
@@ -18,7 +18,7 @@
       </div>
       <div class="row justify-content-center bg-light">
         <div class="col-lg-6 col-sm-12">
-          <Prompt />
+          <Prompt :showCursor="showCursor" />
         </div>
       </div>
       <div class="row justify-content-center">
@@ -48,6 +48,16 @@ export default {
   },
   props: {
     msg: String,
+  },
+  data() {
+    return {
+      showCursor: false,
+    };
+  },
+  methods: {
+    setCursor() {
+      this.showCursor = true;
+    },
   },
 };
 </script>

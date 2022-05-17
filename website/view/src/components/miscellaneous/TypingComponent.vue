@@ -5,7 +5,7 @@
     </h1>
     <p class="text-start">
       {{ getText() }}
-      <span class="blink">|</span>
+      <span v-if="showCursor" class="blink">|</span>
     </p>
   </div>
 </template>
@@ -16,25 +16,33 @@ export default {
   data() {
     return {
       i: 0,
-      txtOut: "",
-      txtIn:
+      textOutput: "",
+      textInput:
         "We leverage an AI Image generating technique called CLIP-Guided Diffusion to allow you to create compelling and beautiful images from just text inputs. Made with love by Zen and Valar!.",
     };
   },
   methods: {
     getText() {
-      return this.txtOut;
+      return this.textOutput;
     },
     delay(ms) {
       return new Promise((resolve) => setTimeout(resolve, ms));
     },
     async setText() {
-      if (this.i <= this.txtIn.length) {
-        this.txtOut += this.txtIn.charAt(this.i);
+      if (this.i <= this.textInput.length) {
+        this.textOutput += this.textInput.charAt(this.i);
         await this.delay(40);
         this.i++;
         this.setText();
       }
+    },
+  },
+  computed: {
+    showCursor() {
+      if (this.i == this.textOutput.length + 1) {
+        this.$emit("set-cursor");
+      }
+      return this.i <= this.textOutput.length ? true : false;
     },
   },
   mounted() {

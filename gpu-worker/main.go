@@ -22,6 +22,7 @@ type job struct {
 func api_0_worker(w http.ResponseWriter, r *http.Request) {
 
 	// define the struct for the response
+	var jobRequest job // holds the request from the client
 	m := struct {
 		Accepted bool `json:"accepted"`
 	}{
@@ -32,7 +33,6 @@ func api_0_worker(w http.ResponseWriter, r *http.Request) {
 
 		// Read the request
 		jsonDecoder := json.NewDecoder(r.Body)
-		var jobRequest job
 		err := jsonDecoder.Decode(&jobRequest)
 		if err != nil {
 			log.Println(err) // maybe handle this better

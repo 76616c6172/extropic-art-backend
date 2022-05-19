@@ -1,12 +1,26 @@
 <template>
   <div>
     <div class="mb-5 mt-5">
-      <!-- <div v-if="isLoading" class="spinner-border text-secondary" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </div> -->
       <div class="imgContainer">
-        <div v-if="isLoading" class="loader">Loading...</div>
-        <img :src="imgObjectURL" class="img-fluid img-thumbnail" alt="" />
+        <div class="imgRendered">
+          <div v-if="isLoading" class="loader">Loading...</div>
+          <img :src="imgObjectURL" class="img-fluid img-thumbnail" alt="" />
+        </div>
+        <div v-show="Object.keys(selectedJob).length !== 0" class="imgTextbox">
+          <div class="p-5 imgTextboxContent">
+            <hr />
+            <p class="fs-4">
+              {{ selectedJob.prompt }}
+            </p>
+            <hr />
+            <span>
+              <i class="fa-solid fa-link"></i>
+              <a :href="imgObjectURL" class="text-white" target="_blank">
+                Goto Image</a
+              >
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -20,6 +34,7 @@ export default {
       imgObjectURL:
         "https://via.placeholder.com/1920x1024.png?text=This%20is%20zen%27s%20placeholder",
       isLoading: false,
+      selectedJob: {},
     };
   },
   methods: {
@@ -40,6 +55,9 @@ export default {
           this.isLoading = false;
         });
     },
+    storeSelectedJob() {
+      this.selectedJob = this.$store.getters.getSelectedJob;
+    },
   },
   computed: {
     getSelectedJob() {
@@ -50,6 +68,7 @@ export default {
     getSelectedJob: {
       handler() {
         this.createImgObjectURL();
+        this.storeSelectedJob();
       },
     },
   },
@@ -60,7 +79,49 @@ export default {
 .imgContainer {
   position: relative;
 }
+.imgContainer:hover .imgTextbox {
+  opacity: 1;
+}
 
+.imgRendered {
+  z-index: 0;
+}
+.imgRendered img {
+  display: block;
+  position: relative;
+  max-height: 100%;
+  max-width: 100%;
+}
+
+.imgTextbox {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+  z-index: 1;
+  opacity: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  width: 100%;
+  height: 100%;
+  transition: 0.4s ease-in-out;
+  display: block;
+  transform: scale(1);
+  backface-visibility: hidden;
+  color: #f2f2f2;
+}
+
+.imgTextboxContent {
+  padding: 5px;
+  top: 50%;
+  left: 50%;
+  float: left;
+  display: block;
+  position: relative;
+  transform: translateX(-50%) translateY(-50%);
+}
+
+/* Loader Start */
 .loader,
 .loader:before,
 .loader:after {
@@ -122,4 +183,6 @@ export default {
     box-shadow: 0 2.5em 0 0;
   }
 }
+
+/* Loader End */
 </style>

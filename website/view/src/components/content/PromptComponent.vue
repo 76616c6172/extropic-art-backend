@@ -53,7 +53,9 @@ export default {
   watch: {
     showCursor: {
       handler() {
-        this.setAutofocus;
+        setTimeout(() => {
+          this.setAutofocus;
+        }, 1500);
       },
     },
   },

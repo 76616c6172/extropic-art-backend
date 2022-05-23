@@ -1,18 +1,20 @@
 <template>
-  <div class="mt-5 mb-4">
+  <div>
     <div class="row">
-      <h2 class="text-start mt-5 mb-4">
+      <h2 class="text-start">
         <strong> ImageList</strong>
       </h2>
-      <form class="col-4 mb-3 mb-lg-0">
-        <input
-          v-model="searchQuery"
-          type="search"
-          class="form-control"
-          placeholder="Search..."
-          aria-label="Search"
-        />
-      </form>
+      <div class="pt-3 pb-3">
+        <form class="col-4 mb-3 mb-lg-0">
+          <input
+            v-model="searchQuery"
+            type="search"
+            class="form-control"
+            placeholder="Search..."
+            aria-label="Search"
+          />
+        </form>
+      </div>
     </div>
     <ul class="list-group-flush" style="padding-left: 0 !important">
       <Item v-for="(job, index) in getFilteredJobs" :key="index" :job="job" />

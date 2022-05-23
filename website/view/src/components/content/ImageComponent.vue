@@ -1,25 +1,23 @@
 <template>
   <div>
-    <div class="mb-5 mt-5">
-      <div class="imgContainer">
-        <div class="imgRendered">
-          <div v-if="isLoading" class="loader">Loading...</div>
-          <img :src="imgObjectURL" class="img-fluid img-thumbnail" alt="" />
-        </div>
-        <div v-show="Object.keys(selectedJob).length !== 0" class="imgTextbox">
-          <div class="p-5 imgTextboxContent">
-            <hr />
-            <p class="fs-4">
-              {{ selectedJob.prompt }}
-            </p>
-            <hr />
-            <span>
-              <i class="fa-solid fa-link"></i>
-              <a :href="imgObjectURL" class="text-white" target="_blank">
-                Goto Image</a
-              >
-            </span>
-          </div>
+    <div class="imgContainer">
+      <div class="imgRendered">
+        <div v-if="isLoading" class="loader">Loading...</div>
+        <img :src="imgObjectURL" class="img-fluid img-thumbnail" alt="" />
+      </div>
+      <div v-show="Object.keys(selectedJob).length !== 0" class="imgTextbox">
+        <div class="p-5 imgTextboxContent">
+          <hr />
+          <p class="fs-4">
+            {{ selectedJob.prompt }}
+          </p>
+          <hr />
+          <span>
+            <i class="fa-solid fa-link"></i>
+            <a :href="imgObjectURL" class="text-white" target="_blank">
+              Goto Image</a
+            >
+          </span>
         </div>
       </div>
     </div>

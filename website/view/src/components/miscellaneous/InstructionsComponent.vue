@@ -1,5 +1,5 @@
 <template>
-  <div class="mb-5">
+  <div>
     <div class="text-start">
       <button
         @click="this.visible = !this.visible"
@@ -9,10 +9,7 @@
         How to
       </button>
     </div>
-    <div v-if="visible" class="mt-5 mb-5">
-      <h2 class="text-start">
-        <strong> How to </strong>
-      </h2>
+    <div v-if="visible" class="mt-5">
       <div class="row">
         <template v-for="(instruction, index) in instructions" :key="index">
           <div class="col-sm-1 col-lg-1 mt-2 mb-3">

@@ -1,5 +1,5 @@
 <template>
-  <div class="pb-5">
+  <div v-if="showCursor" class="pb-5 col-4 mb-3 mb-lg-0">
     <div class="input-group">
       <input
         @keyup.enter="onClickSendNewJob()"
@@ -10,14 +10,13 @@
         placeholder="Enter your prompt"
         aria-label="Enter your prompt"
       />
-      <!-- <span v-if="showCursor" class="blink">|</span> -->
-      <button
+      <!-- <button
         @click="onClickSendNewJob()"
         class="btn btn-outline-secondary"
         type="submit"
       >
-        Generate
-      </button>
+        Hit prompt!
+      </button> -->
     </div>
   </div>
 </template>
@@ -55,9 +54,11 @@ export default {
       handler() {
         setTimeout(() => {
           this.setAutofocus;
-        }, 1500);
+        }, 500);
       },
     },
   },
 };
 </script>
+
+<style scoped></style>

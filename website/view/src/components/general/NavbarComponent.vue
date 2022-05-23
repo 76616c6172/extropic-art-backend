@@ -1,6 +1,6 @@
 <template>
   <nav class="navbar navbar-expand-lg navbar-light fixed-top">
-    <div class="container">
+    <div class="container-fluid">
       <a class="navbar-brand" href="#">Exia</a>
       <button
         class="navbar-toggler"
@@ -15,7 +15,7 @@
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav">
+        <ul class="navbar-nav m-auto">
           <li class="nav-item">
             <router-link to="/" class="nav-link text-start active"
               >Home</router-link

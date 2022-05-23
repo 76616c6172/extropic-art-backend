@@ -6,24 +6,24 @@
           <Typing @set-cursor="setCursor()" />
         </div>
       </div>
-      <div class="row justify-content-center">
+      <div class="row justify-content-center pb-5">
         <div class="col-lg-6 col-sm-12">
           <Instructions />
         </div>
       </div>
-      <div class="row justify-content-center bg-light">
-        <div class="col-lg-6 col-sm-12">
-          <ItemList />
-        </div>
-      </div>
-      <div class="row justify-content-center bg-light">
+      <div class="row justify-content-center">
         <div class="col-lg-6 col-sm-12">
           <Prompt :showCursor="showCursor" />
         </div>
       </div>
-      <div class="row justify-content-center">
+      <div class="row justify-content-center bg-light pt-5 pb-5">
         <div class="col-lg-6 col-sm-12">
           <Image />
+        </div>
+      </div>
+      <div class="row justify-content-center pt-5">
+        <div class="col-lg-6 col-sm-12">
+          <ItemList />
         </div>
       </div>
     </div>

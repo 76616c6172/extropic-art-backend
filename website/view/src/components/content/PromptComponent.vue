@@ -1,6 +1,7 @@
 <template>
-  <div v-if="showCursor" class="pb-5 col-4 mb-3 mb-lg-0">
+  <div v-if="showCursor" class="pb-5 col-12 mb-3 mb-lg-0">
     <div class="input-group">
+      <i class="fa fa-arrow-right" aria-hidden="true"></i>
       <input
         @keyup.enter="onClickSendNewJob()"
         v-model="vPrompt"
@@ -10,13 +11,13 @@
         placeholder="Enter your prompt"
         aria-label="Enter your prompt"
       />
-      <!-- <button
+      <button
         @click="onClickSendNewJob()"
         class="btn btn-outline-secondary"
         type="submit"
       >
-        Hit prompt!
-      </button> -->
+        Generate
+      </button>
     </div>
   </div>
 </template>
@@ -61,4 +62,15 @@ export default {
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+.input-group i {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 4;
+}
+
+.input-group input {
+  padding-left: 30px;
+}
+</style>

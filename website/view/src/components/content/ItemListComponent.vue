@@ -1,15 +1,12 @@
 <template>
   <div>
     <div class="row">
-      <h2 class="text-start">
-        <strong> ImageList</strong>
-      </h2>
       <div class="pt-3 pb-3">
         <form class="col-4 mb-3 mb-lg-0">
           <input
             v-model="searchQuery"
             type="search"
-            class="form-control"
+            class="form-control bg-transparent text-white"
             placeholder="Search..."
             aria-label="Search"
           />
@@ -74,3 +71,8 @@ export default {
   },
 };
 </script>
+<style scoped>
+input {
+  border: none;
+}
+</style>

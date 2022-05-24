@@ -1,5 +1,5 @@
 <template>
-  <div v-if="showCursor" class="pb-5 col-12 mb-3 mb-lg-0">
+  <div v-if="showCursor" class="col-12 mb-3 mb-lg-0">
     <div class="input-group">
       <i class="fa fa-arrow-right" aria-hidden="true"></i>
       <input
@@ -7,17 +7,17 @@
         v-model="vPrompt"
         ref="inputPrompt"
         type="text"
-        class="form-control"
+        class="form-control bg-transparent text-white"
         placeholder="Enter your prompt"
         aria-label="Enter your prompt"
       />
-      <button
+      <!-- <button
         @click="onClickSendNewJob()"
         class="btn btn-outline-secondary"
         type="submit"
       >
-        Generate
-      </button>
+        Generate 
+      </button>-->
     </div>
   </div>
 </template>
@@ -72,5 +72,6 @@ export default {
 
 .input-group input {
   padding-left: 30px;
+  border: none;
 }
 </style>

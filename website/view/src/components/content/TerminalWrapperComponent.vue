@@ -3,6 +3,8 @@
     <div class="p-4 border rounded">
       <div class="ui-container">
         <div class="ui-circle ui-circle-red rounded-pill"></div>
+
+        <div class="ui-circle ui-circle-yellow rounded-pill"></div>
         <div class="ui-circle ui-circle-green rounded-pill"></div>
       </div>
       <ItemList />
@@ -50,5 +52,9 @@ export default {
 
 .ui-circle-green {
   background: #27c93f;
+}
+
+.ui-circle-yellow {
+  background: #ffbd2e;
 }
 </style>

@@ -3,7 +3,6 @@ package main
 import (
 	"exia/controller/xapi"
 	"exia/controller/xdb"
-	_ "exia/controller/xdb"
 	"log"
 	"os"
 

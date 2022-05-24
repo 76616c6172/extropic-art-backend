@@ -6,12 +6,15 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 )
 
 const WEBSERVER_PORT = ":8090"
 
 var IS_BUSY = false //set to true while the worker is busy
 
+// This infotion is sent by the scheduler
+// Then is used to run the model (disco.py python script)
 type job struct {
 	Prompt     string `json:"prompt"`
 	Job_params string `json:"job_params"` // TODO: should be a struct
@@ -55,12 +58,27 @@ func api_0_worker(w http.ResponseWriter, r *http.Request) {
 func runModel(prompt string) {
 
 	// build the parameters to call the script with
-	modelParameters := fmt.Sprintf("-text_prompts '{\"0\": [\"%s\"]}' --steps 240 --width_height '[1920, 1080]'", prompt)
+	modelParameters := fmt.Sprintf("--text_prompts '{\"0\": [\"%s\"]}' --steps 240 --width_height '[1920, 1080]'", prompt)
 	fmt.Println(modelParameters)
 
 	// call the python script with the prompt as agrument
-	//exec.Command("python3", "./disco.py", modelParameters).Run()
+	cmd := exec.Command("./disco.py", modelParameters)
+	cmd.Stdout = os.Stdout // debug print
+	cmd.Stderr = os.Stderr //debug print
 
+	err := cmd.Run() //wait for the command to finish
+	if err != nil {
+		log.Println(err) //TODO: notify the scheduler that something went wrong with this job
+	}
+
+	out, err := cmd.Output()
+	if err != nil {
+		log.Println(err) //TODO: notify the scheduler that something went wrong with this job
+	}
+	fmt.Println(out)
+
+	fmt.Println("model run complete, setting worker to available") // DEBUG
+	IS_BUSY = false
 }
 
 func main() {

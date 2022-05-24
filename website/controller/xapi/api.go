@@ -110,8 +110,8 @@ func HandleImgRequests(w http.ResponseWriter, r *http.Request) {
 	// TODO: Actually lookfor the image in SQLite database
 	// img, err := os.Open("./model/images/" + imgRequest.Jobid + ".png") // for now just get this image for testing
 	if err != nil {
-		fmt.Println(err) // perhaps handle this nicer
-		return
+		img, err = os.Open("../model/images/placeholder.png") // send placeholder image
+		log.Println(err)                                      // perhaps handle this nicer
 	}
 	defer img.Close()
 

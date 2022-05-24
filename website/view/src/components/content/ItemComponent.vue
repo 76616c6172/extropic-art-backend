@@ -6,8 +6,8 @@
   >
     <div class="row">
       <div class="col-lg-10 col-md-10">
-        <p @click="onClickSetSelected($event)" class="text-start">
-          {{ job.prompt }}
+        <p @click="onClickSetSelected($event)" class="text-start text-light">
+          <span class="prompt-prefix">#&nbsp;/&nbsp;</span>{{ job.prompt }}
         </p>
       </div>
       <div class="col-lg-2 col-md-2 cursor-default">
@@ -116,6 +116,7 @@ li.list-group-item {
   cursor: pointer;
   transition: 0.1s background ease-out;
   --color-highlight: 204, 204, 204;
+  border: none;
 }
 li p {
   padding: 2px 0px 20px 0px;
@@ -138,6 +139,10 @@ p {
   overflow: hidden; /* "overflow" value must be different from  visible"*/
   -o-text-overflow: ellipsis; /* Opera < 11*/
   text-overflow: ellipsis; /* IE, Safari (WebKit), Opera >= 11, FF > 6 */
+}
+
+p span.prompt-prefix {
+  color: gray;
 }
 .progress {
   background: transparent;

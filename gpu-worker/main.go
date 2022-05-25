@@ -42,9 +42,7 @@ func api_0_worker(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		fmt.Println(jobRequest.Prompt) // print prompt for testing
-
-		// Send back a response
+		//fmt.Println(jobRequest.Prompt) // print prompt for testing
 		json.NewEncoder(w).Encode(m) // send back the json as a the response
 		IS_BUSY = true
 		runModel(jobRequest.Prompt)

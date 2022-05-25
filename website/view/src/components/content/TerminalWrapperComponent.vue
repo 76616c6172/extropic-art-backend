@@ -1,6 +1,6 @@
 <template>
-  <div class="rounded terminalWrapper">
-    <div class="p-4 border rounded">
+  <div class="terminalWrapper rounded-3 shadow border border-4 border-white">
+    <div class="terminalWrapperBg p-4 rounded-3">
       <div class="ui-container">
         <div class="ui-circle ui-circle-red rounded-pill"></div>
 
@@ -33,6 +33,9 @@ export default {
 
 <style>
 .terminalWrapper {
+}
+
+.terminalWrapperBg {
   background: #191724;
 }
 

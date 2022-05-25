@@ -11,7 +11,7 @@
           <Instructions />
         </div>
       </div>
-      <div class="row justify-content-center bg-dark pt-5 pb-5">
+      <div class="row justify-content-center bg-light pt-5 pb-5">
         <div class="col-lg-6 col-sm-12">
           <TerminalWrapper :showCursor="showCursor" />
         </div>

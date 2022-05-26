@@ -7,7 +7,7 @@ const state = {
   selectedJob: [],
   jobRange: {
     jobx: 1,
-    joby: 10,
+    joby: 5,
   },
 };
 const getters = {
@@ -26,16 +26,16 @@ const actions = {
   setJobRange(_, scrollDirection) {
     switch (scrollDirection) {
       case "down":
-        state.jobRange.jobx += 1;
-        state.jobRange.joby += 10;
+        state.jobRange.jobx = state.jobRange.joby + 1;
+        state.jobRange.joby += 5;
         break;
       case "up":
         if (state.jobRange.jobx == 1) {
           state.jobRange.jobx = 1;
-          state.jobRange.joby = 10;
+          state.jobRange.joby = 5;
         } else {
-          state.jobRange.jobx -= 1;
-          state.jobRange.joby -= 10;
+          state.jobRange.jobx = state.jobRange.joby;
+          state.jobRange.joby -= 5;
         }
         break;
     }

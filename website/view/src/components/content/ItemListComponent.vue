@@ -61,6 +61,7 @@ export default {
         this.$store.dispatch("setJobRange", "down").then(() => {
           this.$store.dispatch("fetchJobs");
         });
+        return;
       }
     },
   },
@@ -90,7 +91,7 @@ export default {
     },
   },
   async mounted() {
-    this.$store.dispatch("fetchJobs", { jobx: 1, joby: 10 });
+    this.$store.dispatch("fetchJobs");
     document
       .getElementById("ul-list")
       .addEventListener("scroll", this.handleScroll);
@@ -104,7 +105,7 @@ export default {
 </script>
 <style scoped>
 ul {
-  max-height: 458px;
+  max-height: 400px;
   overflow-y: auto;
   overflow-x: hidden;
 }

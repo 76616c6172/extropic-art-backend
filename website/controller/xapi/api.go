@@ -163,6 +163,7 @@ func HandleJobsApiGet(w http.ResponseWriter, r *http.Request) {
 			responseJob.Job_status = realJob.Status
 			responseJob.Iteration_status = realJob.Iteration_status
 			responseJob.Iteration_max = realJob.Iteration_max
+			responseJob.Img_path = "https://exia.art/api/0/img?jobid=" + responseJob.Jobid
 
 			// 4. Send back the response
 			json.NewEncoder(w).Encode(responseJob)
@@ -203,6 +204,7 @@ func HandleJobsApiGet(w http.ResponseWriter, r *http.Request) {
 				responseJob.Job_status = v.Status
 				responseJob.Iteration_status = v.Iteration_status
 				responseJob.Iteration_max = v.Iteration_max
+				responseJob.Img_path = "https://exia.art/api/0/img?jobid=" + responseJob.Jobid
 				responseJobs = append(responseJobs, responseJob)
 			}
 

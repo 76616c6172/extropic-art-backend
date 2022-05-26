@@ -31,7 +31,7 @@ export default {
     async setText() {
       if (this.i <= this.textInput.length) {
         this.textOutput += this.textInput.charAt(this.i);
-        await this.delay(40);
+        await this.delay(20);
         this.i++;
         this.setText();
       }

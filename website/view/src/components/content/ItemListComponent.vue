@@ -13,7 +13,11 @@
         </form>
       </div>
     </div>
-    <ul class="list-group-flush" style="padding-left: 0 !important">
+    <ul
+      id="ul-list"
+      class="list-group-flush"
+      style="padding-left: 0 !important"
+    >
       <Item v-for="(job, index) in getFilteredJobs" :key="index" :job="job" />
     </ul>
   </div>
@@ -39,6 +43,25 @@ export default {
           job.prompt.toLowerCase().indexOf(this.searchQuery.toLowerCase()) != -1
         );
       });
+    },
+    handleScroll(event) {
+      let ulElement = event.srcElement;
+      let scrollTop = ulElement.scrollTop;
+      let containerHeight = ulElement.scrollHeight - ulElement.offsetHeight;
+
+      if (scrollTop == 0) {
+        // console.log("top");
+        this.$store.dispatch("setJobRange", "up").then(() => {
+          this.$store.dispatch("fetchJobs");
+        });
+      }
+
+      if (scrollTop == containerHeight) {
+        // console.log("bottom");
+        this.$store.dispatch("setJobRange", "down").then(() => {
+          this.$store.dispatch("fetchJobs");
+        });
+      }
     },
   },
   computed: {
@@ -67,11 +90,24 @@ export default {
     },
   },
   async mounted() {
-    this.$store.dispatch("fetchJobs");
+    this.$store.dispatch("fetchJobs", { jobx: 1, joby: 10 });
+    document
+      .getElementById("ul-list")
+      .addEventListener("scroll", this.handleScroll);
+  },
+  unmounted() {
+    document
+      .getElementById("ul-list")
+      .addEventListener("scroll", this.handleScroll);
   },
 };
 </script>
 <style scoped>
+ul {
+  max-height: 458px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
 input {
   border: none;
 }

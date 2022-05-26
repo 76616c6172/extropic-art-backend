@@ -49,7 +49,7 @@ defineRule("noWhitespace", (value) => {
 defineRule("commaSeperated", (value) => {
   const commaSeperatedRegex = new RegExp(/^([\S^,]+(,+)\S){1}/g);
   if (!commaSeperatedRegex.test(value)) {
-    return "Format: prompt1,prompt2,... (2 prompts min)";
+    return "Format: prompt1,prompt2,... (2 prompts min)!";
   }
   return true;
 });

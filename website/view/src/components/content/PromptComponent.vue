@@ -7,7 +7,7 @@
           <div class="w-100" ref="inputPrompt">
             <Field
               as="input"
-              rules="required|commaSeperated|minLength:1|maxLength:600"
+              rules="required|minLength:1|maxLength:600|noWhitespace|commaSeperated"
               name="vPrompt"
               type="input"
               class="form-control bg-transparent text-white"
@@ -55,14 +55,18 @@ export default {
   methods: {
     onSubmit(values, { resetForm }) {
       resetForm();
-      this.setPromptStatus();
-      this.$store.dispatch("sendNewJob", { prompt: values.vPrompt });
-    },
-    setPromptStatus() {
-      this.promptStatus = "Your prompt is being processed...";
-      setTimeout(() => {
-        this.promptStatus = "";
-      }, 3000);
+      this.promptStatus = "Processing prompt...";
+      this.$store
+        .dispatch("sendNewJob", { prompt: values.vPrompt })
+        .then(() => {
+          this.promptStatus = "Prompt added";
+        })
+        .finally(() => {
+          this.promptStatus = "";
+        })
+        .catch((error) => {
+          this.promptStatus = error;
+        });
     },
   },
   computed: {

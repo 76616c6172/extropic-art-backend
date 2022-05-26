@@ -38,10 +38,18 @@ defineRule("email", (value) => {
   return true;
 });
 
+defineRule("noWhitespace", (value) => {
+  const checkNoWhitespaceRegex = new RegExp(/([\S]+)/g);
+  if (!checkNoWhitespaceRegex.test(value)) {
+    return "No whitespaces";
+  }
+  return true;
+});
+
 defineRule("commaSeperated", (value) => {
-  const checkCommaRegex = new RegExp(/([^,]+)/g);
-  if (!checkCommaRegex.test(value)) {
-    return "Format: prompt 1, prompt 2, ...";
+  const commaSeperatedRegex = new RegExp(/^([\S^,]+(,+)\S){1}/g);
+  if (!commaSeperatedRegex.test(value)) {
+    return "prompt1,prompt2,... (min 1 prompt)";
   }
   return true;
 });

@@ -26,7 +26,7 @@ const actions = {
   setJobRange(_, scrollDirection) {
     switch (scrollDirection) {
       case "down":
-        state.jobRange.jobx = state.jobRange.joby + 1;
+        state.jobRange.jobx += 5;
         state.jobRange.joby += 5;
         break;
       case "up":

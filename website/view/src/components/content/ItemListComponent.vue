@@ -105,7 +105,7 @@ export default {
 </script>
 <style scoped>
 ul {
-  max-height: 400px;
+  max-height: 210px;
   overflow-y: auto;
   overflow-x: hidden;
 }

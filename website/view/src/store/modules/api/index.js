@@ -34,7 +34,7 @@ const actions = {
           state.jobRange.jobx = 1;
           state.jobRange.joby = 5;
         } else {
-          state.jobRange.jobx = state.jobRange.joby;
+          state.jobRange.jobx -= 5;
           state.jobRange.joby -= 5;
         }
         break;

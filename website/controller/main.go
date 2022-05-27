@@ -9,11 +9,11 @@ import (
 	"project-exia-monorepo/website/exdb"
 )
 
-const WEBSERVER_PORT = ":8080"
+const CONTROLLER_PORT = ":8080"
 
 // Answers calls to the endpoint /api/0/jobs
 func api_0_jobs(w http.ResponseWriter, r *http.Request) {
-	//w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin")) // No longer needed
+
 	w.Header().Set("Access-Control-Allow-Origin", "*")  // TESTING: allow CORS for testing purposes
 	w.Header().Set("Access-Control-Allow-Headers", "*") //FIXME because I don't get it
 
@@ -67,5 +67,5 @@ func main() {
 	http.HandleFunc("/api/0/img", api_0_img)
 
 	// Run the webserver
-	http.ListenAndServe(WEBSERVER_PORT, nil)
+	http.ListenAndServe(CONTROLLER_PORT, nil)
 }

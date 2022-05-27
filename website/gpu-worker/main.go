@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+
+	"project-exia-monorepo/website/exapi"
 )
 
 const WORKER_PORT = ":8090"
@@ -18,29 +20,12 @@ const SECRET = "kldsjfksdjfwefjeojfefjkksdjfdsfsd932849j92h2uhf" //TODO: Authent
 
 var IS_BUSY = false //set to true while the worker is busy
 
-// This infotion is sent by the scheduler
-// Then is used to run the model (disco.py python script)
-type Job struct {
-	Prompt     string `json:"prompt"`
-	Job_params string `json:"job_params"` // TODO: should be a struct
-	Secret     string `json:"secret"`     // TODO: Authenticate better
-}
-
-type JobRequest struct {
-	Secret string `json:"secret"` // TODO: Authenticate better
-}
-
 // Answers jobs posted to /api/0/worker
 // I think this happens asynchronously
 func api_0_worker(w http.ResponseWriter, r *http.Request) {
 
-	// define the struct for the response
-	var jobRequest Job // holds the request from the client
-	m := struct {
-		Accepted bool `json:"accepted"`
-	}{
-		Accepted: true,
-	}
+	var jobRequest exapi.Job   // holds the request from the client
+	var m exapi.WorkerResponse // Response for the scheduler
 
 	if !IS_BUSY {
 
@@ -52,13 +37,16 @@ func api_0_worker(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		//fmt.Println(jobRequest.Prompt) // print prompt for testing
-		json.NewEncoder(w).Encode(m) // send back the json as a the response
+		// Send response to the scheduler
+		m.Job_accepted = true
+		json.NewEncoder(w).Encode(m)
+
 		IS_BUSY = true
 		runModel(jobRequest.Prompt)
+
 	} else {
-		m.Accepted = false
-		json.NewEncoder(w).Encode(m) // send back the json as a the response
+		// Send response to the scheduler
+		json.NewEncoder(w).Encode(m)
 	}
 }
 
@@ -92,11 +80,11 @@ func runModel(prompt string) {
 // Sends a job request to the scheduler
 // returns error if it fails
 // returns job if job was received
-func sendJobRequest() (Job, error) {
+func sendJobRequest() (exapi.Job, error) {
 
 	fmt.Println("Encoding jobrequest ") //debug
 
-	var jr JobRequest
+	var jr exapi.Job
 	jr.Secret = SECRET
 
 	jsonReq, err := json.Marshal(jr)
@@ -122,7 +110,7 @@ func sendJobRequest() (Job, error) {
 	fmt.Println(bodyString)
 
 	// Convert response body to Todo struct
-	var jobReceivedFromScheduler Job
+	var jobReceivedFromScheduler exapi.Job
 	json.Unmarshal(bodyBytes, &jobReceivedFromScheduler)
 
 	return jobReceivedFromScheduler, err

@@ -8,41 +8,31 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-)
 
-// Schema of a Job for the gpu-worker
-type Job struct {
-	Prompt     string `json:"prompt"`
-	Job_params string `json:"job_params"` // TODO: should be a struct
-	Secret     string `json:"secret"`     // TODO: Authenticate better
-}
+	"project-exia-monorepo/website/exapi"
+)
 
 const WEBSERVER_PORT = ":8091" // Scheduler is listening on this port
 const SECRET = "kldsjfksdjfwefjeojfefjkksdjfdsfsd932849j92h2uhf"
 
-type jobRequest struct {
-	Secret string `json:"secret"` // TODO: Authenticate better
-}
-
-// Scheduler listens on /api/0/scheduler for jobrequests
-// Sends back jobs to gpu-worker on request and writes to db
+// Scheduler listens on /api/0/scheduler for workerRegistrationForms
 func api_0_scheduler(w http.ResponseWriter, r *http.Request) {
 
-	var jobResponse Job //  TODO Get this Job from the db instead
+	var jobResponse exapi.Job //  TODO Get this Job from the db instead
 	jobResponse.Prompt = "Panorama photo of an intricate wizzards tower on mount everest, dark elf gothic arthitecture, trending on arstation, 3d photorealistic materials,"
 	jobResponse.Job_params = ""
 	jobResponse.Secret = SECRET
 
 	// define the struct for the response
-	var jobRequest jobRequest              // holds the request from the client
+	var form exapi.WorkerRegistrationForm  // holds the request from the client
 	jsonDecoder := json.NewDecoder(r.Body) // Read the request
-	err := jsonDecoder.Decode(&jobRequest) // Store the request in jobRequest
+	err := jsonDecoder.Decode(&form)       // Store the request in workerRegistrationForm
 	if err != nil {
 		log.Println(err) // maybe handle this better
 		return
 	}
 
-	if jobRequest.Secret == SECRET {
+	if form.Secret == SECRET {
 
 		json.NewEncoder(w).Encode(jobResponse) // send back the response
 	}

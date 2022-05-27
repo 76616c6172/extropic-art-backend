@@ -13,46 +13,7 @@ import (
 	"project-exia-monorepo/website/exdb"
 )
 
-const GPU_STATUS string = "offline" // can be offline, online, or busy
-const MAX_PROMPT_LENGTH = 600
-
-type newjob struct {
-	Prompt string `json:"prompt"`
-}
-
-// This is the response object of he /api/0/jobs endpoint
-// For reference here is the Schema for request sent to job endpoint by client
-/*
-{
-  "jobid": "1",
-  "prompt": "Space wool bla bla, bla bla..",
-  "job_status": "qeued",
-  "iteration_status": "125",
-  "iteration_max": "240",
-}
-*/
-type apiJob struct {
-	Jobid            string `json:"jobid"`
-	Prompt           string `json:"prompt"`
-	Job_status       string `json:"job_status"`
-	Iteration_status int    `json:"iteration_status"`
-	Iteration_max    int    `json:"iteration_max"`
-	Img_path         string `json:"img_path"`
-}
-
-// This is the response object sent back when POSTING a new job
-type jobResponse struct {
-	Jobid      int    `json:"jobid"`
-	Prompt     string `json:"prompt"`
-	Job_status string `json:"job_status"`
-}
-
-// Schema for the status object returned by the status endpoint
-type status struct {
-	Gpu            string   `json:"gpu"`
-	Completed_jobs []apiJob `json:"completed_jobs"`
-	//Description string `json:"Description"`
-}
+const MAX_PROMPT_LENGTH = 600 // Reject a new job posted by the view if longer than this value
 
 // Deals with requests to the status endpoint
 func HandleStatusRequest(w http.ResponseWriter, r *http.Request) {
@@ -96,16 +57,6 @@ func HandleImgRequests(w http.ResponseWriter, r *http.Request) {
 	inputstring := strings.TrimLeft(input, "/api/0/img?jobid=")
 	inputstring2 := strings.TrimSpace(inputstring)
 
-	/* Don/t care bout the body for now
-	jsonDecoder := json.NewDecoder(r.Body)
-	var imgRequest imgRequest
-	err := jsonDecoder.Decode(&imgRequest)
-	if err != nil {
-		log.Println(err) // maybe handle this better
-		return
-	}
-	*/
-
 	//img, err := os.Open("./model/images/" + imgRequest.Jobid + ".png") // for now just get this image for testing
 	img, err := os.Open("../model/images/" + inputstring2 + ".png") // temporary
 	// TODO: Actually lookfor the image in SQLite database
@@ -123,13 +74,9 @@ func HandleImgRequests(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// queries the jobs.db and sends back info about the job
-// takes /api/0/jobs=?jobid="yourjodidhere"
-// OR /api/0/jobx=3&joby=4
-// Sendsback array of jobs between [3 .. 4]
+// Sends back metadata for one or multiple jobs
+// takes /api/0/jobs=?jobid=1 OR /api/0/jobx=3&joby=4
 func HandleJobsApiGet(w http.ResponseWriter, r *http.Request) {
-
-	// WIP: working on new feature
 
 	if r.Method == "GET" {
 		str_a := strings.TrimLeft(r.URL.String(), "/api/0/")
@@ -139,11 +86,11 @@ func HandleJobsApiGet(w http.ResponseWriter, r *http.Request) {
 
 			// 1. Determine the jobid from the request
 			input := fmt.Sprintln(r.URL)
-			inputstring := strings.TrimLeft(input, "/api/0/jobs?jobid=")
-			inputstring2 := strings.TrimSpace(inputstring)
+			input2 := strings.TrimLeft(input, "/api/0/jobs?jobid=")
+			input3 := strings.TrimSpace(input2)
 
 			// 2. Sanitize the input
-			sanitized_input, err := strconv.Atoi(inputstring2)
+			sanitized_input, err := strconv.Atoi(input3)
 			if err != nil {
 				log.Println(err)
 				return
@@ -220,10 +167,6 @@ func HandleJobsApiGet(w http.ResponseWriter, r *http.Request) {
 // Deals with POST requests made to the jobs endpoint (POST new jobs)
 // Sends the job to jobs.db
 func HandleJobsApiPost(w http.ResponseWriter, r *http.Request) {
-	//w.Header().Set("Access-Control-Allow-Origin", "https://www.exia.art") // TESTING: allow CORS for testing purposes
-	//w.Header().Set("Access-Control-Allow-Origin", "*")
-	//w.Header().Set("Access-Control-Allow-Origin", r.Header.Get("Origin"))
-	//w.Header().Set("Access-Control-Allow-Headers", r.Header.Get("Access-Control-Request-Headers"))
 
 	jsonDecoder := json.NewDecoder(r.Body)
 	var jobRequest newjob

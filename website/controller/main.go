@@ -1,12 +1,12 @@
 package main
 
 import (
-	"exia/controller/xapi"
-	"exia/controller/xdb"
 	"log"
+	"net/http"
 	"os"
 
-	"net/http"
+	"project-exia-monorepo/website/exapi"
+	"project-exia-monorepo/website/exdb"
 )
 
 const WEBSERVER_PORT = ":8080"
@@ -19,9 +19,9 @@ func api_0_jobs(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "GET": // Return info about existing jobs (I would like to make this GET but the frontend requires POST)
-		xapi.HandleJobsApiGet(w, r)
+		exapi.HandleJobsApiGet(w, r)
 	case "POST": // take in new jobs
-		xapi.HandleJobsApiPost(w, r)
+		exapi.HandleJobsApiPost(w, r)
 		// TODO: deal with accepting new jobs
 	}
 }
@@ -31,7 +31,7 @@ func api_0_jobs(w http.ResponseWriter, r *http.Request) {
 func api_0_img(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")  // TESTING: allow CORS for testing purposes
 	w.Header().Set("Access-Control-Allow-Headers", "*") //FIXME because I don't get it
-	xapi.HandleImgRequests(w, r)                        // TODO: Return the correct image based on the request (request with jobid)
+	exapi.HandleImgRequests(w, r)                       // TODO: Return the correct image based on the request (request with jobid)
 }
 
 // Answers calls to the endpoint /api/0/all
@@ -39,13 +39,13 @@ func api_0_img(w http.ResponseWriter, r *http.Request) {
 func api_0_status(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")  // TESTING: allow CORS for testing purposes
 	w.Header().Set("Access-Control-Allow-Headers", "*") //FIXME because I don't get it
-	xapi.HandleStatusRequest(w, r)
+	exapi.HandleStatusRequest(w, r)
 }
 
 // This is the main function :D
 func main() {
 	// Initialize the jobs database
-	xdb.JobdbInit()
+	exdb.JobdbInit()
 
 	// Select the logfile
 	logFile, err := os.OpenFile(("./logs/exia.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)

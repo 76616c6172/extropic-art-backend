@@ -5,6 +5,7 @@ build_static_controller_and_upload
 .DS_Store
 node_modules
 /dist
+scripts
 *db-cleaner*
 
 # local env files

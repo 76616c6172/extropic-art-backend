@@ -9,7 +9,10 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/google/uuid"
+
 	"project-exia-monorepo/website/exapi"
+	"project-exia-monorepo/website/exdb"
 )
 
 const WEBSERVER_PORT = ":8091" // Scheduler is listening on this port
@@ -25,14 +28,16 @@ func api_0_registration(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(workerSecret.Value)
 
 	if workerSecret.Value == SECRET {
-		fmt.Println("Registration successful")
+		newWorkerId := uuid.New().String()
+		fmt.Println("New worker ID created:", newWorkerId)
 
 		// Store the following worker features in workerdb
 		// worker_uid
-		// worker_ip
-		// worker_status
-		// worker_gpu_type
-		// worker_current_job
+		// worker_ip "127.0.0.1:9080"
+		// worker_busy true/false
+		// worker_gpu_type "v100"
+		// worker_current_job "jobid"
+		fmt.Println("Registration successful")
 
 	}
 
@@ -64,7 +69,6 @@ func api_0_scheduler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	fmt.Println("Yo")
 
 	logFile, err := os.OpenFile(("./logs/scheduler.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
@@ -72,6 +76,9 @@ func main() {
 	}
 	defer logFile.Close()
 	log.SetOutput(logFile)
+
+	// Innitialize the workerdb
+	exdb.WorkerdbInit()
 
 	http.HandleFunc("/api/0/scheduler", api_0_scheduler)       //handler for /api/0/scheduler
 	http.HandleFunc("/api/0/registration", api_0_registration) //handler for /api/0/registration
@@ -85,5 +92,4 @@ func main() {
 	signal.Notify(channel, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-channel
 	fmt.Println("scheduler closed gracefully")
-
 }

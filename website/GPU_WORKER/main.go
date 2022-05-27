@@ -18,6 +18,7 @@ const SCHEDULER_IP = "http://127.0.0.1:8091"
 const SECRET = "kldsjfksdjfwefjeojfefjkksdjfdsfsd932849j92h2uhf" //TODO: Authenticate better
 
 var IS_BUSY = false //set to true while the worker is busy
+var WORKER_ID string
 
 // Answers jobs posted to /api/0/worker
 // I think this happens asynchronously
@@ -117,6 +118,8 @@ func sendJobRequest() (exapi.Job, error) {
 
 // Send an authenticated webrequest to the scheduler, registering the worker
 func registerWorker() {
+
+	fmt.Println("Registering with scheduler")
 
 	req, err := http.NewRequest("POST", SCHEDULER_IP+"/api/0/registration", nil)
 	if err != nil {

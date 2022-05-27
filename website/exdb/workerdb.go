@@ -1,0 +1,50 @@
+package exdb
+
+import (
+	// 3rd party packages
+	"database/sql"
+	"log"
+
+	_ "github.com/mattn/go-sqlite3"
+)
+
+var WORKERDB *sql.DB // This pointer is shared within the module to do database operations
+
+// Initialize and connect to workerdb
+func WorkerdbInit() {
+
+	var err error
+	WORKERDB, err = sql.Open("sqlite3", "../model/workerdb/workers.db")
+	if err != nil {
+		log.Fatal(err) // TODO: Maybe handle this better
+	}
+	//defer db.Close() // If we wanted to close it
+
+	// worker_uid
+	// worker_ip "127.0.0.1:9080"
+	// worker_busy true/false
+	// worker_gpu_type "v100"
+	// worker_current_job "jobid"
+
+	// Create table if it doesn't exist
+	stmnt, err := WORKERDB.Prepare(`
+CREATE TABLE IF NOT EXISTS "workers" (
+ "worker_id" TEXT,
+ "worker_ip" TEXT,
+ "worker_busy" INTEGER,
+ "worker_current_job", INTEGER,
+ "worker_last_health_check" INTEGER,
+ "worker_time_created" INTEGER,
+ "worker_secret" TEXT,
+ "worker_type" INT
+	);`)
+
+	if err != nil {
+		log.Fatal(err) // TODO: Maybe handle this better
+	}
+	_, err = stmnt.Exec()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+}

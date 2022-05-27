@@ -17,9 +17,7 @@ var JOBDB *sql.DB // This pointer is shared within the module to do database ope
 
 // The parameters the diffusion model uses when running the job
 type jobParam struct {
-	placeholder int
-
-	// TODO add more parameters here
+	placeholder int // TODO add more parameters here
 }
 
 // the job schema based on the data from the jobdb
@@ -46,6 +44,8 @@ type Job struct {
 	Time_completed    string `json:"time_completed"`
 }
 
+
+// Initialize and connect to jobdb
 func JobdbInit() {
 	var err error
 	JOBDB, err = sql.Open("sqlite3", "../model/jobdb/jobs.db")

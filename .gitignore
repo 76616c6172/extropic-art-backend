@@ -5,15 +5,17 @@ build_static_controller_and_upload
 .DS_Store
 node_modules
 /dist
+*db-cleaner*
 
 # local env files
 .env.local
 .env.*.local
 
 
-# local deploymeny scripts
+# local scripts
 local_build_and_redeploy_controller
 local_push_frontend_to_server
+clean_remote_jobdb
 
 # Log files
 npm-debug.log*

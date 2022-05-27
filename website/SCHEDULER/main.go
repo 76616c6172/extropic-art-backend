@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/google/uuid"
@@ -16,7 +17,7 @@ import (
 )
 
 const WEBSERVER_PORT = ":8091" // Scheduler is listening on this port
-const SECRET = "kldsjfksdjfwefjeojfefjkksdjfdsfsd932849j92h2uhf"
+var SECRET string
 
 // GPU_WORERS register themselves with the scheduler through this endpoint
 func api_0_registration(w http.ResponseWriter, r *http.Request) {
@@ -69,6 +70,15 @@ func api_0_scheduler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+
+	// Check to make sure a bot auth token was supplied on startup
+	if len(os.Args) < 2 || len(os.Args) > 2 {
+		fmt.Println("Error: You must supply EXACTLY one argument (the GPU_WORER auth token) on startup.")
+		os.Exit(1)
+	}
+
+	SECRET = strings.TrimSpace(os.Args[1])
+	fmt.Println("AUTH TOKEN:", SECRET)
 
 	logFile, err := os.OpenFile(("./logs/scheduler.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {

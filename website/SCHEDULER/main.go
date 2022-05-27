@@ -21,13 +21,13 @@ const SECRET = "kldsjfksdjfwefjeojfefjkksdjfdsfsd932849j92h2uhf"
 // GPU_WORERS register themselves with the scheduler through this endpoint
 func api_0_registration(w http.ResponseWriter, r *http.Request) {
 
-	workerSecret, err := r.Cookie("secret")
+	registrationSecret, err := r.Cookie("secret")
 	if err != nil {
 		log.Println("Error reading secret cookie: ", err)
 	}
-	fmt.Println(workerSecret.Value)
+	fmt.Println(registrationSecret.Value)
 
-	if workerSecret.Value == SECRET {
+	if registrationSecret.Value == SECRET {
 		newWorkerId := uuid.New().String()
 		fmt.Println("New worker ID created:", newWorkerId)
 

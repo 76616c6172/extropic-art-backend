@@ -15,6 +15,29 @@ import (
 const WEBSERVER_PORT = ":8091" // Scheduler is listening on this port
 const SECRET = "kldsjfksdjfwefjeojfefjkksdjfdsfsd932849j92h2uhf"
 
+// GPU_WORERS register themselves with the scheduler through this endpoint
+func api_0_registration(w http.ResponseWriter, r *http.Request) {
+
+	workerSecret, err := r.Cookie("secret")
+	if err != nil {
+		log.Println("Error reading secret cookie: ", err)
+	}
+	fmt.Println(workerSecret.Value)
+
+	if workerSecret.Value == SECRET {
+		fmt.Println("Registration successful")
+
+		// Store the following worker features in workerdb
+		// worker_uid
+		// worker_ip
+		// worker_status
+		// worker_gpu_type
+		// worker_current_job
+
+	}
+
+}
+
 // Scheduler listens on /api/0/scheduler for workerRegistrationForms
 func api_0_scheduler(w http.ResponseWriter, r *http.Request) {
 
@@ -50,8 +73,12 @@ func main() {
 	defer logFile.Close()
 	log.SetOutput(logFile)
 
-	http.HandleFunc("/api/0/scheduler", api_0_scheduler) //register handler for /api/0/scheduler
-	go http.ListenAndServe(WEBSERVER_PORT, nil)          //start the server
+	http.HandleFunc("/api/0/scheduler", api_0_scheduler)       //handler for /api/0/scheduler
+	http.HandleFunc("/api/0/registration", api_0_registration) //handler for /api/0/registration
+	go http.ListenAndServe(WEBSERVER_PORT, nil)                //start the server
+
+	// Run some kind of loop here to check if jobs have been processing for a long time
+	// if so set them back to queued.
 
 	fmt.Println("Scheduler is running..") // keep the scheduler running until CTRL-C
 	channel := make(chan os.Signal, 1)
@@ -59,6 +86,4 @@ func main() {
 	<-channel
 	fmt.Println("scheduler closed gracefully")
 
-	// Run some kind of loop here to check if jobs have been processing for a long time
-	// if so set them back to queued.
 }

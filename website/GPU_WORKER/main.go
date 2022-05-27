@@ -14,8 +14,7 @@ import (
 )
 
 const WORKER_PORT = ":8090"
-const SCHEDULER_PORT = ":8091"
-const SCHEDULER_IP = "127.0.0.1"                                 //localhost for testing
+const SCHEDULER_IP = "http://127.0.0.1:8091"
 const SECRET = "kldsjfksdjfwefjeojfefjkksdjfdsfsd932849j92h2uhf" //TODO: Authenticate better
 
 var IS_BUSY = false //set to true while the worker is busy
@@ -94,7 +93,7 @@ func sendJobRequest() (exapi.Job, error) {
 
 	fmt.Println("Sending jobrequest") //debug
 
-	schedulerAddress := "http://" + SCHEDULER_IP + SCHEDULER_PORT + "/api/0/scheduler"
+	schedulerAddress := "http://" + SCHEDULER_IP + "/api/0/scheduler"
 	resp, err := http.Post(schedulerAddress, "application/json; charset=utf-8", bytes.NewBuffer(jsonReq))
 	//resp, err := http.PostForm("http://"+SCHEDULER_IP+SCHEDULER_PORT+"/api/0/scheduler",)
 	if err != nil {
@@ -116,8 +115,36 @@ func sendJobRequest() (exapi.Job, error) {
 	return jobReceivedFromScheduler, err
 }
 
+// Send an authenticated webrequest to the scheduler, registering the worker
+func registerWorker() {
+
+	req, err := http.NewRequest("POST", SCHEDULER_IP+"/api/0/registration", nil)
+	if err != nil {
+		log.Println("Error registering worker: ", err)
+		return
+	}
+
+	req.AddCookie(&http.Cookie{Name: "secret", Value: SECRET})
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Println("Error sending registration: ", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		log.Println("Error registering worker: ", resp.StatusCode)
+		return
+	}
+
+	fmt.Println("Worker successully registered with scheduler")
+}
+
 func main() {
 
+	// Set up a log file
 	logFile, err := os.OpenFile(("./logs/worker.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatal("main: error opening logfile")
@@ -126,12 +153,10 @@ func main() {
 	log.SetOutput(logFile)
 
 	http.HandleFunc("/api/0/worker", api_0_worker) //register handler for /api/0/worker
-	go http.ListenAndServe(WORKER_PORT, nil)       //start the server
 
-	// Do some kind of loop here to ask for jobs, and run them
-	Job, err := sendJobRequest()
-	if err != nil {
-		log.Println("Error requesting job:", err)
-	}
-	fmt.Println(Job)
+	// Register with the scheduler
+	registerWorker()
+
+	fmt.Println("Worker is running, waiting for assignments..")
+	http.ListenAndServe(WORKER_PORT, nil) //start the server
 }

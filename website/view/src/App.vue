@@ -1,27 +1,20 @@
 <template>
   <div class="appContainer">
-    <Navbar />
     <div class="row">
       <div class="col-12">
         <Home />
       </div>
     </div>
-    <Footer />
   </div>
 </template>
 
 <script>
 // Components
 import { default as Home } from "./components/HomeComponent.vue";
-import { default as Navbar } from "./components/general/NavbarComponent.vue";
-import { default as Footer } from "./components/general/FooterComponent.vue";
-
 export default {
   name: "App",
   components: {
     Home,
-    Navbar,
-    Footer,
   },
 };
 </script>
@@ -51,6 +44,5 @@ $fa-font-path: "~@fortawesome/fontawesome-free/webfonts";
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
 }
 </style>

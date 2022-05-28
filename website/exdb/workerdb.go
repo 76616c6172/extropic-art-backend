@@ -3,8 +3,11 @@ package exdb
 import (
 	// 3rd party packages
 	"database/sql"
+	"fmt"
 	"log"
+	"time"
 
+	//_ "github.com/mattn/go-sqlite3"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -46,5 +49,23 @@ CREATE TABLE IF NOT EXISTS "workers" (
 	if err != nil {
 		log.Fatal(err)
 	}
+}
 
+// Add a new worker to the db
+func RegisterNewWorker(workerId string) error {
+	var err error
+
+	stmnt, err := WORKERDB.Prepare(` INSERT INTO workers (worker_id, worker_ip, worker_busy, worker_current_job, worker_last_health_check, worker_time_created, worker_secret, worker_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
+	if err != nil {
+		return err
+	}
+
+	unixtime := int(time.Now().Unix())
+	result, err := stmnt.Exec(workerId, "", 0, 0, 0, unixtime, "", 0) // Execute the statement
+	if err != nil {
+		return err
+	}
+	fmt.Println(result.LastInsertId())
+
+	return err
 }

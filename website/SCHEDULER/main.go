@@ -38,6 +38,12 @@ func api_0_registration(w http.ResponseWriter, r *http.Request) {
 		// worker_busy true/false
 		// worker_gpu_type "v100"
 		// worker_current_job "jobid"
+		err := exdb.RegisterNewWorker(newWorkerId)
+		if err != nil {
+			log.Println("Error registering worker:", err)
+			return
+		}
+
 		fmt.Println("Registration successful")
 
 	}
@@ -87,8 +93,8 @@ func main() {
 	defer logFile.Close()
 	log.SetOutput(logFile)
 
-	// Innitialize the workerdb
-	exdb.WorkerdbInit()
+	exdb.WorkerdbInit() // Innitialize the workerdb
+	exdb.JobdbInit()    //Innitialize the jobdb
 
 	http.HandleFunc("/api/0/scheduler", api_0_scheduler)       //handler for /api/0/scheduler
 	http.HandleFunc("/api/0/registration", api_0_registration) //handler for /api/0/registration
@@ -98,6 +104,9 @@ func main() {
 	// if so set them back to queued.
 
 	fmt.Println("Scheduler is running..") // keep the scheduler running until CTRL-C
+
+	exdb.EntryPointForTesting()
+
 	channel := make(chan os.Signal, 1)
 	signal.Notify(channel, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-channel

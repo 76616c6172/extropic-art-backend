@@ -44,7 +44,6 @@ type Job struct {
 	Time_completed    string `json:"time_completed"`
 }
 
-
 // Initialize and connect to jobdb
 func JobdbInit() {
 	var err error
@@ -210,15 +209,36 @@ func GetJobsByXY(a int, b int) ([]Job, error) {
 	return jobs, nil
 }
 
+// Returns oldest queued jon from the database
+// Specifically, returns the job with the lowest jobid that has status "queued"
+func GetOldestQueuedJob() (Job, error) {
+	var j Job
+
+	row, err := JOBDB.Query(`SELECT * FROM "jobs" WHERE status = "queued" ORDER BY jobid ASC LIMIT 1;`) // Query the database
+	if err != nil {
+		return j, err
+	}
+
+	row.Next()
+	err = row.Scan(&j.Jobid, &j.Prompt, &j.Status, &j.Job_params, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
+	if err != nil {
+		return j, err
+	}
+
+	return j, err
+}
+
 // Called by the main function so we can test the module
 func EntryPointForTesting() { //debug
 
-	j, err := GetJobByJobid(1)
+	//just testing
+	fmt.Println("getting oldest job")
+	j, err := GetOldestQueuedJob()
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("error getting oldest job")
 	}
 
-	fmt.Println(j.Jobid)
-	fmt.Println(j.Prompt)
+	fmt.Println(j.Jobid, j.Prompt)
+
 	os.Exit(0)
 }

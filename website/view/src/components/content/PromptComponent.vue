@@ -7,7 +7,7 @@
           <div class="w-100" ref="inputPrompt">
             <Field
               as="input"
-              rules="required|minLength:1|maxLength:600|noWhitespace|commaSeperated"
+              rules="required|minLength:1|maxLength:600|noWhitespace"
               name="vPrompt"
               type="input"
               class="form-control bg-transparent text-white"

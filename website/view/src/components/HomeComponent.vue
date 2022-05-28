@@ -1,5 +1,10 @@
 <template>
   <div class="container-fluid">
+    <div class="row justify-content-center">
+      <div class="col-lg-6 col-sm-12">
+        <Navbar />
+      </div>
+    </div>
     <div class="mt-5">
       <div class="row justify-content-center">
         <div class="col-lg-6 col-sm-12">
@@ -23,23 +28,24 @@
       </div>
     </div>
   </div>
+  <Footer />
 </template>
 
 <script>
+import { default as Navbar } from "../components/general/NavbarComponent.vue";
+import { default as Footer } from "../components/general/FooterComponent.vue";
 import { default as Typing } from "../components/miscellaneous/TypingComponent.vue";
 import { default as Instructions } from "../components/miscellaneous/InstructionsComponent.vue";
-// import { default as Prompt } from "../components/content/PromptComponent.vue";
-// import { default as ItemList } from "./content/ItemListComponent.vue";
 import { default as Image } from "./content/ImageComponent.vue";
 import { default as TerminalWrapper } from "./content/TerminalWrapperComponent.vue";
 
 export default {
   name: "HomeComponent",
   components: {
+    Navbar,
+    Footer,
     Typing,
     Instructions,
-    // Prompt,
-    // ItemList,
     Image,
     TerminalWrapper,
   },

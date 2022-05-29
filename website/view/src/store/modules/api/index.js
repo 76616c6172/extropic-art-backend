@@ -7,6 +7,7 @@ const state = {
   selectedJob: [],
   jobRange: {},
   jobsExist: true,
+  newestJobID: "",
 };
 const getters = {
   getJobs: (state) => {
@@ -23,46 +24,60 @@ const getters = {
   },
 };
 const actions = {
-  // Fetch InitialJobs
-  async fetchInitialJobs({ commit }) {
-    commit("INITIAL_JOBRANGE", { jobx: 1, joby: 10 });
+  // Get Newest Job
+  async fetchNewestJobID({ commit }, scrollEvent) {
     try {
-      return await axios
-        .get(
-          `${url}/jobs?jobx=${state.jobRange.jobx}&joby=${state.jobRange.joby}`
-        )
-        .then((response) => {
-          if (response.status == 200) {
-            const payload = response.data;
-            commit("FETCH_INITIAL_JOBS", payload);
+      return await axios.get(`${url}/status`).then((response) => {
+        if (response.status == 200) {
+          const newestJobId = Number(response.data.newest_jobid);
+          switch (scrollEvent) {
+            case "initial":
+              commit("SET_JOBRANGE", {
+                jobx: newestJobId - 9,
+                joby: newestJobId,
+              });
+              break;
+            case "add":
+              commit("SET_JOBRANGE", {
+                jobx:
+                  state.jobRange.jobx > 1
+                    ? state.jobRange.jobx - 10
+                    : (state.jobRange.jobx = 1),
+                joby:
+                  state.jobRange.joby > 1
+                    ? state.jobRange.joby - 10
+                    : (state.jobRange.joby = 1),
+              });
+              break;
+            default:
+              break;
           }
-        });
+        }
+      });
     } catch (error) {
       console.log(error);
     }
   },
-  // Fetch AdditionalJobs
-  async fetchAdditionalJobs({ commit }) {
-    if (state.jobsExist) {
-      commit("INCREMENT_JOBRANGE", { jobxy: 10 });
-      try {
-        return await axios
-          .get(
-            `${url}/jobs?jobx=${state.jobRange.jobx}&joby=${state.jobRange.joby}`
-          )
-          .then((response) => {
-            if (response.status == 200) {
-              const payload = response.data;
-              if (payload == null) {
-                commit("DECREMENT_JOBRANGE", { jobxy: 10 });
+  // Fetch InitialJobs
+  async fetchJobs({ commit, dispatch }, scrollEvent) {
+    dispatch("fetchNewestJobID", scrollEvent).then(() => {
+      if (state.jobRange.jobx != 1) {
+        try {
+          return axios
+            .get(
+              `${url}/jobs?jobx=${state.jobRange.jobx}&joby=${state.jobRange.joby}`
+            )
+            .then((response) => {
+              if (response.status == 200) {
+                const payload = response.data;
+                commit("FETCH_JOBS", payload);
               }
-              commit("FETCH_ADDITIONAL_JOBS", payload);
-            }
-          });
-      } catch (error) {
-        console.log(error);
+            });
+        } catch (error) {
+          console.log(error);
+        }
       }
-    }
+    });
   },
   // Send Job
   async sendNewJob({ commit }, newJobObj) {
@@ -103,27 +118,12 @@ const actions = {
   },
 };
 const mutations = {
-  INITIAL_JOBRANGE(state, payload) {
+  SET_JOBRANGE(state, payload) {
     state.jobRange.jobx = payload.jobx;
     state.jobRange.joby = payload.joby;
   },
-  INCREMENT_JOBRANGE(state, payload) {
-    state.jobRange.jobx += payload.jobxy;
-    state.jobRange.joby += payload.jobxy;
-  },
-  DECREMENT_JOBRANGE(state, payload) {
-    state.jobRange.jobx -= payload.jobxy;
-    state.jobRange.joby -= payload.jobxy;
-  },
-  FETCH_INITIAL_JOBS(state, payload) {
-    state.jobs = payload;
-  },
-  FETCH_ADDITIONAL_JOBS(state, payload) {
-    if (payload != null) {
-      state.jobs.push(...payload);
-    } else {
-      state.jobsExist = false;
-    }
+  FETCH_JOBS(state, payload) {
+    state.jobs.push(...payload);
   },
   FETCH_SELECTED_JOB(state, payload) {
     state.selectedJob = payload;

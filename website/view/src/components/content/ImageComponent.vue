@@ -5,11 +5,11 @@
         <div v-if="isLoading" class="loader">Loading...</div>
         <img :src="imgObjectURL" class="img-fluid img-thumbnail" alt="" />
       </div>
-      <div v-show="Object.keys(selectedJob).length !== 0" class="imgTextbox">
+      <div v-show="Object.keys(getSelectedJob).length !== 0" class="imgTextbox">
         <div class="p-5 imgTextboxContent">
           <hr />
           <p class="fs-4">
-            {{ selectedJob.prompt }}
+            {{ getSelectedJob.prompt }}
           </p>
           <hr />
           <span>
@@ -25,6 +25,7 @@
 </template>
 
 <script>
+import { mapGetters } from "vuex";
 export default {
   name: "ImageComponent",
   data() {
@@ -32,7 +33,6 @@ export default {
       imgObjectURL:
         "https://via.placeholder.com/1920x1024.png?text=This%20is%20zen%27s%20placeholder",
       isLoading: false,
-      selectedJob: {},
     };
   },
   methods: {
@@ -53,20 +53,14 @@ export default {
           this.isLoading = false;
         });
     },
-    storeSelectedJob() {
-      this.selectedJob = this.$store.getters.getSelectedJob;
-    },
   },
   computed: {
-    getSelectedJob() {
-      return this.$store.getters.getSelectedJob;
-    },
+    ...mapGetters(["getSelectedJob"]),
   },
   watch: {
     getSelectedJob: {
       handler() {
         this.createImgObjectURL();
-        this.storeSelectedJob();
       },
     },
   },

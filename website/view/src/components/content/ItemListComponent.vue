@@ -30,6 +30,7 @@
     >
       <Item v-for="(job, index) in getFilteredJobs" :key="index" :job="job" />
     </ul>
+    <!-- <div>{{ this.$store }}</div> -->
   </div>
 </template>
 

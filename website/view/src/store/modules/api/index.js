@@ -25,15 +25,18 @@ const getters = {
 const actions = {
   // Fetch InitialJobs
   async fetchInitialJobs({ commit }) {
-    state.jobRange.jobx = 1;
-    state.jobRange.joby = 10;
+    commit("INITIAL_JOBRANGE", { jobx: 1, joby: 10 });
     try {
-      return await axios.get(`${url}/jobs?jobx=1&joby=10`).then((response) => {
-        if (response.status == 200) {
-          const payload = response.data;
-          commit("FETCH_INITIAL_JOBS", payload);
-        }
-      });
+      return await axios
+        .get(
+          `${url}/jobs?jobx=${state.jobRange.jobx}&joby=${state.jobRange.joby}`
+        )
+        .then((response) => {
+          if (response.status == 200) {
+            const payload = response.data;
+            commit("FETCH_INITIAL_JOBS", payload);
+          }
+        });
     } catch (error) {
       console.log(error);
     }
@@ -41,7 +44,7 @@ const actions = {
   // Fetch AdditionalJobs
   async fetchAdditionalJobs({ commit }) {
     if (state.jobsExist) {
-      commit("INCREMENT_JOBRANGE", { amount: 10 });
+      commit("INCREMENT_JOBRANGE", { jobxy: 10 });
       try {
         return await axios
           .get(
@@ -51,7 +54,7 @@ const actions = {
             if (response.status == 200) {
               const payload = response.data;
               if (payload == null) {
-                commit("DECREMENT_JOBRANGE", { amount: 10 });
+                commit("DECREMENT_JOBRANGE", { jobxy: 10 });
               }
               commit("FETCH_ADDITIONAL_JOBS", payload);
             }
@@ -100,13 +103,17 @@ const actions = {
   },
 };
 const mutations = {
+  INITIAL_JOBRANGE(state, payload) {
+    state.jobRange.jobx = payload.jobx;
+    state.jobRange.joby = payload.joby;
+  },
   INCREMENT_JOBRANGE(state, payload) {
-    state.jobRange.jobx += payload.amount;
-    state.jobRange.joby += payload.amount;
+    state.jobRange.jobx += payload.jobxy;
+    state.jobRange.joby += payload.jobxy;
   },
   DECREMENT_JOBRANGE(state, payload) {
-    state.jobRange.jobx -= payload.amount;
-    state.jobRange.joby -= payload.amount;
+    state.jobRange.jobx -= payload.jobxy;
+    state.jobRange.joby -= payload.jobxy;
   },
   FETCH_INITIAL_JOBS(state, payload) {
     state.jobs = payload;

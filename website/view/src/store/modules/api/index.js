@@ -6,8 +6,8 @@ const state = {
   jobs: [],
   selectedJob: [],
   jobRange: {},
-  jobsExist: true,
   newestJobID: "",
+  isOldestJobID: false,
 };
 const getters = {
   getJobs: (state) => {
@@ -41,7 +41,9 @@ const actions = {
               commit("SET_JOBRANGE", {
                 jobx:
                   state.jobRange.jobx > 1
-                    ? state.jobRange.jobx - 10
+                    ? state.jobRange.jobx - 10 > 0
+                      ? state.jobRange.jobx - 10
+                      : (state.jobRange.jobx = 1)
                     : (state.jobRange.jobx = 1),
                 joby:
                   state.jobRange.joby > 1
@@ -61,7 +63,7 @@ const actions = {
   // Fetch InitialJobs
   async fetchJobs({ commit, dispatch }, scrollEvent) {
     dispatch("fetchNewestJobID", scrollEvent).then(() => {
-      if (state.jobRange.jobx != 1) {
+      if (!state.isOldestJobID) {
         try {
           return axios
             .get(
@@ -69,8 +71,9 @@ const actions = {
             )
             .then((response) => {
               if (response.status == 200) {
-                const payload = response.data;
+                const payload = response.data.sort((job) => job.id).reverse();
                 commit("FETCH_JOBS", payload);
+                state.jobRange.jobx == 1 ? (state.isOldestJobID = true) : "";
               }
             });
         } catch (error) {

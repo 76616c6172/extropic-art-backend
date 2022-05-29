@@ -23,16 +23,10 @@ const getters = {
   },
 };
 const actions = {
-  // Set JobRange
-  setJobRange({ commit }) {
-    const jobRange = {
-      jobx: (state.jobRange.jobx += 10),
-      joby: (state.jobRange.joby += 10),
-    };
-    commit("SET_JOB_RANGE", jobRange);
-  },
   // Fetch InitialJobs
   async fetchInitialJobs({ commit }) {
+    state.jobRange.jobx = 1;
+    state.jobRange.joby = 10;
     try {
       return await axios.get(`${url}/jobs?jobx=1&joby=10`).then((response) => {
         if (response.status == 200) {
@@ -46,19 +40,25 @@ const actions = {
   },
   // Fetch AdditionalJobs
   async fetchAdditionalJobs({ commit }) {
-    try {
-      return await axios
-        .get(
-          `${url}/jobs?jobx=${state.jobRange.jobx}&joby=${state.jobRange.joby}`
-        )
-        .then((response) => {
-          if (response.status == 200) {
-            const payload = response.data;
-            commit("FETCH_ADDITIONAL_JOBS", payload);
-          }
-        });
-    } catch (error) {
-      console.log(error);
+    if (state.jobsExist) {
+      commit("INCREMENT_JOBRANGE", { amount: 10 });
+      try {
+        return await axios
+          .get(
+            `${url}/jobs?jobx=${state.jobRange.jobx}&joby=${state.jobRange.joby}`
+          )
+          .then((response) => {
+            if (response.status == 200) {
+              const payload = response.data;
+              if (payload == null) {
+                commit("DECREMENT_JOBRANGE", { amount: 10 });
+              }
+              commit("FETCH_ADDITIONAL_JOBS", payload);
+            }
+          });
+      } catch (error) {
+        console.log(error);
+      }
     }
   },
   // Send Job
@@ -100,18 +100,22 @@ const actions = {
   },
 };
 const mutations = {
+  INCREMENT_JOBRANGE(state, payload) {
+    state.jobRange.jobx += payload.amount;
+    state.jobRange.joby += payload.amount;
+  },
+  DECREMENT_JOBRANGE(state, payload) {
+    state.jobRange.jobx -= payload.amount;
+    state.jobRange.joby -= payload.amount;
+  },
   FETCH_INITIAL_JOBS(state, payload) {
-    state.jobRange.jobx = 1;
-    state.jobRange.joby = 10;
     state.jobs = payload;
   },
   FETCH_ADDITIONAL_JOBS(state, payload) {
-    if (payload == null) {
-      state.jobsExist = false;
-      state.jobRange.jobx -= 10;
-      state.jobRange.joby -= 10;
-    } else {
+    if (payload != null) {
       state.jobs.push(...payload);
+    } else {
+      state.jobsExist = false;
     }
   },
   FETCH_SELECTED_JOB(state, payload) {
@@ -119,10 +123,6 @@ const mutations = {
   },
   SEND_NEW_JOB(state, payload) {
     state.jobs.push(payload);
-  },
-  SET_JOB_RANGE(state, payload) {
-    state.jobRange.jobx = payload.jobx;
-    state.jobRange.joby = payload.joby;
   },
 };
 

@@ -25,6 +25,7 @@
 
 <script>
 import { default as Item } from "./ItemComponent.vue";
+import { mapGetters } from "vuex";
 
 export default {
   name: "StatusListComponent",
@@ -50,23 +51,18 @@ export default {
       let containerHeight = ulElement.scrollHeight - ulElement.offsetHeight;
 
       if (scrollTop == containerHeight) {
-        if (this.$store.getters.getJobsExist)
-          this.$store.dispatch("setJobRange").then(() => {
-            this.$store.dispatch("fetchAdditionalJobs");
-          });
+        this.$store.dispatch("fetchAdditionalJobs");
       }
       return;
     },
   },
   computed: {
-    getJobs() {
-      return this.$store.getters.getJobs;
-    },
     getFilteredJobs() {
       let jobs = this.getJobs;
       jobs.sort((job) => job.job_status == "completed");
       return this.getFoundJobs(jobs);
     },
+    ...mapGetters(["getJobs"]),
   },
   watch: {
     getFilteredJobs: {

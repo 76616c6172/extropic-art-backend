@@ -5,10 +5,8 @@ const url = "https://exia.art/api/0";
 const state = {
   jobs: [],
   selectedJob: [],
-  jobRange: {
-    jobx: 1,
-    joby: 5,
-  },
+  jobRange: {},
+  jobsExist: true,
 };
 const getters = {
   getJobs: (state) => {
@@ -20,28 +18,34 @@ const getters = {
   getJobRange: (state) => {
     return state.jobRange;
   },
+  getJobsExist: (state) => {
+    return state.jobsExist;
+  },
 };
 const actions = {
   // Set JobRange
-  setJobRange(_, scrollDirection) {
-    switch (scrollDirection) {
-      case "down":
-        state.jobRange.jobx += 5;
-        state.jobRange.joby += 5;
-        break;
-      case "up":
-        if (state.jobRange.jobx == 1) {
-          state.jobRange.jobx = 1;
-          state.jobRange.joby = 5;
-        } else {
-          state.jobRange.jobx -= 5;
-          state.jobRange.joby -= 5;
+  setJobRange({ commit }) {
+    const jobRange = {
+      jobx: (state.jobRange.jobx += 10),
+      joby: (state.jobRange.joby += 10),
+    };
+    commit("SET_JOB_RANGE", jobRange);
+  },
+  // Fetch InitialJobs
+  async fetchInitialJobs({ commit }) {
+    try {
+      return await axios.get(`${url}/jobs?jobx=1&joby=10`).then((response) => {
+        if (response.status == 200) {
+          const payload = response.data;
+          commit("FETCH_INITIAL_JOBS", payload);
         }
-        break;
+      });
+    } catch (error) {
+      console.log(error);
     }
   },
-  // Fetch Jobs
-  async fetchJobs({ commit }) {
+  // Fetch AdditionalJobs
+  async fetchAdditionalJobs({ commit }) {
     try {
       return await axios
         .get(
@@ -50,25 +54,13 @@ const actions = {
         .then((response) => {
           if (response.status == 200) {
             const payload = response.data;
-            commit("FETCH_JOBS", payload);
+            commit("FETCH_ADDITIONAL_JOBS", payload);
           }
         });
     } catch (error) {
       console.log(error);
     }
   },
-  // async fetchJobs({ commit }) {
-  //   try {
-  //     return await axios.get(`${url}/status`).then((response) => {
-  //       if (response.status == 200) {
-  //         const payload = response.data.completed_jobs;
-  //         commit("FETCH_JOBS", payload);
-  //       }
-  //     });
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
-  // },
   // Send Job
   async sendNewJob({ commit }, newJobObj) {
     try {
@@ -108,14 +100,29 @@ const actions = {
   },
 };
 const mutations = {
-  FETCH_JOBS(state, payload) {
+  FETCH_INITIAL_JOBS(state, payload) {
+    state.jobRange.jobx = 1;
+    state.jobRange.joby = 10;
     state.jobs = payload;
+  },
+  FETCH_ADDITIONAL_JOBS(state, payload) {
+    if (payload == null) {
+      state.jobsExist = false;
+      state.jobRange.jobx -= 10;
+      state.jobRange.joby -= 10;
+    } else {
+      state.jobs.push(...payload);
+    }
   },
   FETCH_SELECTED_JOB(state, payload) {
     state.selectedJob = payload;
   },
   SEND_NEW_JOB(state, payload) {
     state.jobs.push(payload);
+  },
+  SET_JOB_RANGE(state, payload) {
+    state.jobRange.jobx = payload.jobx;
+    state.jobRange.joby = payload.joby;
   },
 };
 

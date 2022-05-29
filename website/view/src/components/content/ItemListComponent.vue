@@ -49,20 +49,13 @@ export default {
       let scrollTop = ulElement.scrollTop;
       let containerHeight = ulElement.scrollHeight - ulElement.offsetHeight;
 
-      if (scrollTop == 0) {
-        // console.log("top");
-        this.$store.dispatch("setJobRange", "up").then(() => {
-          this.$store.dispatch("fetchJobs");
-        });
-      }
-
       if (scrollTop == containerHeight) {
-        // console.log("bottom");
-        this.$store.dispatch("setJobRange", "down").then(() => {
-          this.$store.dispatch("fetchJobs");
-        });
-        return;
+        if (this.$store.getters.getJobsExist)
+          this.$store.dispatch("setJobRange").then(() => {
+            this.$store.dispatch("fetchAdditionalJobs");
+          });
       }
+      return;
     },
   },
   computed: {
@@ -82,7 +75,7 @@ export default {
           jobs.forEach((job) => {
             if (job.job_status == "accepted") {
               setTimeout(() => {
-                this.$store.dispatch("fetchJobs");
+                this.$store.dispatch("fetchInitialJobs");
               }, 1500);
             }
           });
@@ -91,7 +84,7 @@ export default {
     },
   },
   async mounted() {
-    this.$store.dispatch("fetchJobs");
+    this.$store.dispatch("fetchInitialJobs");
     document
       .getElementById("ul-list")
       .addEventListener("scroll", this.handleScroll);
@@ -105,7 +98,7 @@ export default {
 </script>
 <style scoped>
 ul {
-  max-height: 210px;
+  max-height: 400px;
   overflow-y: auto;
   overflow-x: hidden;
 }

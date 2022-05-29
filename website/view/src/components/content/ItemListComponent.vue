@@ -1,8 +1,8 @@
 <template>
   <div>
     <div class="row">
-      <div class="pt-3 pb-3">
-        <form class="col-4 mb-3 mb-lg-0">
+      <div class="col-9 mb-3 mb-lg-0 pt-3 pb-3">
+        <form>
           <input
             v-model="searchQuery"
             type="search"
@@ -12,6 +12,16 @@
           />
         </form>
       </div>
+      <div class="col-3">
+        <button
+          @click="refreshJobList"
+          type="button"
+          class="btn btn-transparent text-secondary pt-2 pb-2"
+          id="refreshButton"
+        >
+          <i class="fa fa-refresh" aria-hidden="true"></i>
+        </button>
+      </div>
     </div>
     <ul
       id="ul-list"
@@ -20,6 +30,7 @@
     >
       <Item v-for="(job, index) in getFilteredJobs" :key="index" :job="job" />
     </ul>
+    <!-- <div>{{ this.$store }}</div> -->
   </div>
 </template>
 
@@ -51,15 +62,17 @@ export default {
       let containerHeight = ulElement.scrollHeight - ulElement.offsetHeight;
 
       if (scrollTop == containerHeight) {
-        this.$store.dispatch("fetchAdditionalJobs");
+        this.$store.dispatch("fetchJobs", "add");
       }
       return;
+    },
+    refreshJobList() {
+      this.$store.dispatch("fetchJobs", "initial");
     },
   },
   computed: {
     getFilteredJobs() {
       let jobs = this.getJobs;
-      jobs.sort((job) => job.job_status == "completed");
       return this.getFoundJobs(jobs);
     },
     ...mapGetters(["getJobs"]),
@@ -71,7 +84,7 @@ export default {
           jobs.forEach((job) => {
             if (job.job_status == "accepted") {
               setTimeout(() => {
-                this.$store.dispatch("fetchInitialJobs");
+                this.$store.dispatch("fetchJobs", "initial");
               }, 1500);
             }
           });
@@ -80,7 +93,7 @@ export default {
     },
   },
   async mounted() {
-    this.$store.dispatch("fetchInitialJobs");
+    this.$store.dispatch("fetchJobs", "initial");
     document
       .getElementById("ul-list")
       .addEventListener("scroll", this.handleScroll);
@@ -100,5 +113,8 @@ ul {
 }
 input {
   border: none;
+}
+.btn#refreshButton {
+  padding: 10px !important;
 }
 </style>

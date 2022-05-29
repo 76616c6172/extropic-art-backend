@@ -19,10 +19,10 @@ SERVER_RESTART_COMMAND="systemctl restart $BINARY_NAME"
 
 # 1. Call the build script to create a static binary
 #$( cd "./website/controller/" && ./build_controller )
-$(cd "./website/controller" && bash "./build_static_controller")
+$(cd "../website/CONTROLLER" && bash "./build_static_controller")
 echo "test"
 
-OUTFILE="./website/controller/$BINARY_NAME" # set the location of the new binary
+OUTFILE="../website/CONTROLLER/$BINARY_NAME" # set the location of the new binary
 COMMIT_HASH=$(git rev-parse HEAD)
 BUILD_TIMESTAMP=$(TZ=UTC date -u +"%s")
 FILE_HASH=$(b2sum $OUTFILE | cut -f1 -d' ')

@@ -21,7 +21,8 @@ func HandleStatusRequest(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" { // send back the response
 
 		var responseObject = status{ // We append to this object as we go and send it back to the client
-			Gpu: "ready", // busy, offline
+			Gpu:          "ready", // busy, offline
+			Newest_jobid: "",
 		}
 
 		// TODO: dumping entire database into memory every time won't scale so get only the last 10!
@@ -32,18 +33,21 @@ func HandleStatusRequest(w http.ResponseWriter, r *http.Request) {
 			json.NewEncoder(w).Encode(responseObject) // send back the json as a the response
 		}
 
-		var respJob apiJob
-		for i := 0; i < 10; i++ {
-			if i < len(allJobs) { // sanity check if we have a fresh database with less than 10 entries
-				respJob.Jobid = allJobs[i].Jobid
-				respJob.Prompt = allJobs[i].Prompt
-				respJob.Job_status = allJobs[i].Status
-				respJob.Iteration_max = allJobs[i].Iteration_max
-				respJob.Iteration_status = allJobs[i].Iteration_status
-				respJob.Img_path = "https://exia.art/api/0/img?jobid=" + respJob.Jobid
-				responseObject.Completed_jobs = append(responseObject.Completed_jobs, respJob)
+		/*
+			var respJob apiJob
+			for i := 0; i < 10; i++ {
+				if i < len(allJobs) { // sanity check if we have a fresh database with less than 10 entries
+					respJob.Jobid = allJobs[i].Jobid
+					respJob.Prompt = allJobs[i].Prompt
+					respJob.Job_status = allJobs[i].Status
+					respJob.Iteration_max = allJobs[i].Iteration_max
+					respJob.Iteration_status = allJobs[i].Iteration_status
+					respJob.Img_path = "https://exia.art/api/0/img?jobid=" + respJob.Jobid
+					responseObject.Completed_jobs = append(responseObject.Completed_jobs, respJob)
+				}
 			}
-		}
+		*/
+		responseObject.Newest_jobid = allJobs[0].Jobid
 
 		json.NewEncoder(w).Encode(responseObject) // send back the json as a the response
 	}

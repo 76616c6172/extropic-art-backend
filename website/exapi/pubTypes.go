@@ -32,7 +32,8 @@ type jobResponse struct {
 
 // Schema for the status object returned by the status endpoint
 type status struct {
-	Gpu            string   `json:"gpu"`
-	Completed_jobs []apiJob `json:"completed_jobs"`
+	Gpu string `json:"gpu"`
+	//Completed_jobs []apiJob `json:"completed_jobs"` //no longer needed
+	Newest_jobid string `json:"newest_jobid"`
 	//Description string `json:"Description"`
 }

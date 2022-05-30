@@ -87,8 +87,19 @@ const actions = {
     try {
       return await axios.post(`${url}/jobs`, newJobObj).then((response) => {
         if (response.status == 200) {
-          const payload = response.data;
-          commit("SEND_NEW_JOB", payload);
+          const newJobID = response.data.jobid;
+          try {
+            return axios
+              .get(`${url}/jobs?jobx=${newJobID}&joby=${newJobID}`)
+              .then((response) => {
+                if (response.status == 200) {
+                  const payload = response.data[0];
+                  commit("SEND_NEW_JOB", payload);
+                }
+              });
+          } catch (error) {
+            console.log(error);
+          }
         }
       });
     } catch (error) {
@@ -132,7 +143,7 @@ const mutations = {
     state.selectedJob = payload;
   },
   SEND_NEW_JOB(state, payload) {
-    state.jobs.push(payload);
+    state.jobs.unshift(payload);
   },
 };
 

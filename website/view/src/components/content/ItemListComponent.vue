@@ -12,16 +12,6 @@
           />
         </form>
       </div>
-      <div class="col-3">
-        <button
-          @click="refreshJobList"
-          type="button"
-          class="btn btn-transparent text-secondary pt-2 pb-2"
-          id="refreshButton"
-        >
-          <i class="fa fa-refresh" aria-hidden="true"></i>
-        </button>
-      </div>
     </div>
     <ul
       id="ul-list"
@@ -30,7 +20,6 @@
     >
       <Item v-for="(job, index) in getFilteredJobs" :key="index" :job="job" />
     </ul>
-    <!-- <div>{{ this.$store }}</div> -->
   </div>
 </template>
 
@@ -66,9 +55,6 @@ export default {
       }
       return;
     },
-    refreshJobList() {
-      this.$store.dispatch("fetchJobs", "initial");
-    },
   },
   computed: {
     getFilteredJobs() {
@@ -76,21 +62,6 @@ export default {
       return this.getFoundJobs(jobs);
     },
     ...mapGetters(["getJobs"]),
-  },
-  watch: {
-    getFilteredJobs: {
-      handler(jobs) {
-        if (jobs) {
-          jobs.forEach((job) => {
-            if (job.job_status == "accepted") {
-              setTimeout(() => {
-                this.$store.dispatch("fetchJobs", "initial");
-              }, 1500);
-            }
-          });
-        }
-      },
-    },
   },
   async mounted() {
     this.$store.dispatch("fetchJobs", "initial");
@@ -113,8 +84,5 @@ ul {
 }
 input {
   border: none;
-}
-.btn#refreshButton {
-  padding: 10px !important;
 }
 </style>

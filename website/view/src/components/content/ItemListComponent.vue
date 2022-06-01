@@ -47,12 +47,13 @@ export default {
     },
     handleScroll(event) {
       let ulElement = event.srcElement;
-      let scrollTop = ulElement.scrollTop;
+      let scrollTop = Math.ceil(ulElement.scrollTop);
       let containerHeight = ulElement.scrollHeight - ulElement.offsetHeight;
 
-      if (scrollTop == containerHeight) {
+      if (scrollTop == containerHeight || scrollTop == containerHeight + 1) {
         this.$store.dispatch("fetchJobs", "add");
       }
+
       return;
     },
   },

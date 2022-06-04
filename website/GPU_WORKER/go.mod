@@ -1,4 +1,4 @@
-module project-exia-monorepo/gpu-worker
+module project-exia-monorepo/website/GPU_WORKER
 
 go 1.18
 

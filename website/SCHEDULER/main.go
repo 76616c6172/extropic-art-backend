@@ -21,7 +21,7 @@ var SECRET string
 
 // GPU_WORERS register themselves with the scheduler through this endpoint
 func api_0_registration(w http.ResponseWriter, r *http.Request) {
-
+	
 	registrationSecret, err := r.Cookie("secret")
 	if err != nil {
 		log.Println("Error reading secret cookie: ", err)
@@ -77,14 +77,12 @@ func api_0_scheduler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 
-	// Check to make sure a bot auth token was supplied on startup
-	if len(os.Args) < 2 || len(os.Args) > 2 {
+	if len(os.Args) < 2 || len(os.Args) > 2 { // Check to make sure a bot auth token was supplied on startup
 		fmt.Println("Error: You must supply EXACTLY one argument (the GPU_WORER auth token) on startup.")
 		os.Exit(1)
 	}
 
 	SECRET = strings.TrimSpace(os.Args[1])
-	fmt.Println("AUTH TOKEN:", SECRET)
 
 	logFile, err := os.OpenFile(("./logs/scheduler.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
@@ -105,7 +103,7 @@ func main() {
 
 	fmt.Println("Scheduler is running..") // keep the scheduler running until CTRL-C
 
-	exdb.EntryPointForTesting()
+	//exdb.EntryPointForTesting()
 
 	channel := make(chan os.Signal, 1)
 	signal.Notify(channel, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)

@@ -1,4 +1,4 @@
-module project-exia-monorepo/scheduler
+module project-exia-monorepo/website/SCHEDULER
 
 go 1.18
 

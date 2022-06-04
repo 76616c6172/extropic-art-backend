@@ -1,4 +1,4 @@
-module project-exia-monorepo/website/controller
+module project-exia-monorepo/website/CONTROLLER
 
 go 1.18
 

@@ -13,40 +13,34 @@ const CONTROLLER_PORT = ":8080"
 
 // Answers calls to the endpoint /api/0/jobs
 func api_0_jobs(w http.ResponseWriter, r *http.Request) {
-
-	w.Header().Set("Access-Control-Allow-Origin", "*")  // TESTING: allow CORS for testing purposes
-	w.Header().Set("Access-Control-Allow-Headers", "*") //FIXME because I don't get it
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
 
 	switch r.Method {
-	case "GET": // Return info about existing jobs (I would like to make this GET but the frontend requires POST)
+	case "GET":
 		exapi.HandleJobsApiGet(w, r)
-	case "POST": // take in new jobs
+	case "POST":
 		exapi.HandleJobsApiPost(w, r)
-		// TODO: deal with accepting new jobs
 	}
 }
 
 // Answers calls to the endpoint /api/0/img
-// TODO: requires a jobid and sends back the latest image for that job id.
 func api_0_img(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")  // TESTING: allow CORS for testing purposes
-	w.Header().Set("Access-Control-Allow-Headers", "*") //FIXME because I don't get it
-	exapi.HandleImgRequests(w, r)                       // TODO: Return the correct image based on the request (request with jobid)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	exapi.HandleImgRequests(w, r)
 }
 
-// Answers calls to the endpoint /api/0/all
-// This answers with a json containing all information the view needs when it first loads
+// Answers calls to the endpoint /api/0/status
 func api_0_status(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*") // TESTING: allow CORS for testing purposes
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
 	exapi.HandleStatusRequest(w, r)
 }
 
-// This is the main function :D
-func main() {
-	// Initialize the jobs database
-	exdb.InitializeJobdb()
+// Initializes log file for the controller
+func initializeLogFile() {
 
-	// Select the logfile
 	logFile, err := os.OpenFile(("./logs/exia.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatal("main: error opening logfile")
@@ -54,14 +48,21 @@ func main() {
 	defer logFile.Close()
 	log.SetOutput(logFile)
 
-	// Handle requests for assets, everything in ../view/dist is accessible to the public
-	http.Handle("/", http.FileServer(http.Dir("../view/dist"))) //serves requests to www.url/assets/
+}
 
-	// Handle API endpoints
-	http.HandleFunc("/api/0/status", api_0_status) // registers api_0_status() as the handler for "/api/0/status"
+// This is the main function :D
+func main() {
+
+	initializeLogFile()
+	exdb.InitializeJobdb()
+
+	// Handle requests for everything in ../view/dist - dist is accessible to the public without AUTH
+	http.Handle("/", http.FileServer(http.Dir("../view/dist")))
+
+	// Register API endpoints
+	http.HandleFunc("/api/0/status", api_0_status)
 	http.HandleFunc("/api/0/jobs", api_0_jobs)
 	http.HandleFunc("/api/0/img", api_0_img)
 
-	// Run the webserver
 	http.ListenAndServe(CONTROLLER_PORT, nil)
 }

@@ -228,12 +228,12 @@ func GetOldestQueuedJob() (Job, error) {
 	return j, err
 }
 
-// Returns number of completed jobs from the database
-func GetNumberOfCompletedJobs() int {
+// Returns number of jobs from the db that have the status
+func GetNumberOfJobsThatHaveStatus(status string) int {
 	var jobs []Job
 	var j Job
 
-	row, err := JOBDB.Query(`SELECT * FROM "jobs" WHERE status = "completed";`) // Query the database
+	row, err := JOBDB.Query(`SELECT * FROM "jobs" WHERE status = ?;`, status) // Query the database
 	if err != nil {
 		log.Println("Error in GetNumberOfCompletedJobs", err)
 		return -1
@@ -251,29 +251,7 @@ func GetNumberOfCompletedJobs() int {
 	return len(jobs)
 }
 
-// Returns number of queued jobs from the database
-func GetNumberOfQueuedJobs() int {
-	var jobs []Job
-	var j Job
-
-	row, err := JOBDB.Query(`SELECT * FROM "jobs" WHERE status = "queued";`) // Query the database
-	if err != nil {
-		log.Println("Error in GetNumberOfQueuedJobs", err)
-	}
-
-	for row.Next() {
-		err = row.Scan(&j.Jobid, &j.Prompt, &j.Status, &j.Job_params, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
-		if err != nil {
-			log.Println("Error in GetNumberOfQueuedJobs", err)
-			return -1
-		}
-		jobs = append(jobs, j)
-	}
-
-	return len(jobs)
-}
-
-func GetNewestFiveCompletedJobs() []string {
+func GetNewestFiveCompletedJobids() []string {
 	var jobs []Job
 	var j Job
 

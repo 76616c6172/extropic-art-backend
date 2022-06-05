@@ -15,54 +15,19 @@ import (
 
 const MAX_PROMPT_LENGTH = 600 // Reject a new job posted by the view if longer than this value
 
-// Deals with requests to the status endpoint
+// Sends back the status response
 func HandleStatusRequest(w http.ResponseWriter, r *http.Request) {
 
-	if r.Method == "GET" { // send back the response
+	if r.Method == "GET" {
+		var statusResponse status
 
-		/*
-			var responseObject = status{ // We append to this object as we go and send it back to the client
-				Gpu:          "ready", // busy, offline
-				Newest_jobid: "",
-				Jobs_renderd: 0,
-				Jobs_queued: 0,
-				rewest_completed_jobs: [],
-			}
-		*/
+		statusResponse.Gpu = "offline"
+		statusResponse.Jobs_completed = exdb.GetNumberOfJobsThatHaveStatus("completed")
+		statusResponse.Jobs_queued = exdb.GetNumberOfJobsThatHaveStatus("queued")
+		statusResponse.Newest_completed_jobs = exdb.GetNewestFiveCompletedJobids()
+		statusResponse.Newest_jobid = statusResponse.Newest_completed_jobs[0]
 
-		var responseObject status
-
-		// TODO: dumping entire database into memory every time won't scale so get only the last 10!
-		allJobs, err := exdb.GetAllJobs()
-		if err != nil {
-			log.Println(err)
-			return
-			//TODO: et response code to 500 to indicate server error
-			//json.NewEncoder(w).Encode(responseObject) // send back the json as a the response
-		}
-
-		/*
-			var respJob apiJob
-			for i := 0; i < 10; i++ {
-				if i < len(allJobs) { // sanity check if we have a fresh database with less than 10 entries
-					respJob.Jobid = allJobs[i].Jobid
-					respJob.Prompt = allJobs[i].Prompt
-					respJob.Job_status = allJobs[i].Status
-					respJob.Iteration_max = allJobs[i].Iteration_max
-					respJob.Iteration_status = allJobs[i].Iteration_status
-					respJob.Img_path = "https://exia.art/api/0/img?jobid=" + respJob.Jobid
-					responseObject.Completed_jobs = append(responseObject.Completed_jobs, respJob)
-				}
-			}
-		*/
-		responseObject.Gpu = "offline"
-		responseObject.Newest_jobid = allJobs[0].Jobid
-		responseObject.Jobs_completed = exdb.GetNumberOfCompletedJobs()
-		responseObject.Jobs_queued = exdb.GetNumberOfQueuedJobs()
-		responseObject.Newest_completed_jobs = exdb.GetNewestFiveCompletedJobs()
-		//
-
-		json.NewEncoder(w).Encode(responseObject) // send back the json as a the response
+		json.NewEncoder(w).Encode(statusResponse) // send back the response
 	}
 
 }
@@ -74,21 +39,104 @@ func HandleImgRequests(w http.ResponseWriter, r *http.Request) {
 	inputstring := strings.TrimLeft(input, "/api/0/img?jobid=")
 	inputstring2 := strings.TrimSpace(inputstring)
 
-	//img, err := os.Open("./model/images/" + imgRequest.Jobid + ".png") // for now just get this image for testing
-	img, err := os.Open("../model/images/" + inputstring2 + ".png") // temporary
-	// TODO: Actually lookfor the image in SQLite database
-	// img, err := os.Open("./model/images/" + imgRequest.Jobid + ".png") // for now just get this image for testing
+	img, err := os.Open("../model/images/" + inputstring2 + ".png")
 	if err != nil {
 		img, err = os.Open("../model/images/placeholder.png") // send placeholder image
-		log.Println(err)                                      // perhaps handle this nicer
+		log.Println(err)
 	}
 	defer img.Close()
 
 	w.Header().Set("Content-Type", "image/png") // <-- set the content-type header
-	_, err = io.Copy(w, img)                    // send the image
+
+	_, err = io.Copy(w, img) // send the image
 	if err != nil {
 		log.Println(err)
 	}
+}
+
+func sendBackOneJob(w http.ResponseWriter, r *http.Request, str_a string) {
+
+	if strings.Contains(str_a, "jobs?jobid") { // CHeck if we have a jobid
+
+		// 1. Determine the jobid from the request
+		input := fmt.Sprintln(r.URL)
+		input2 := strings.TrimLeft(input, "/api/0/jobs?jobid=")
+		input3 := strings.TrimSpace(input2)
+
+		// 2. Sanitize the input
+		sanitized_input, err := strconv.Atoi(input3)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		// 2. Get the row from the database
+		var realJob exdb.Job
+		realJob, err = exdb.GetJobByJobid(sanitized_input)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		// 3. Build the response object
+		var responseJob apiJob
+		responseJob.Jobid = realJob.Jobid
+		responseJob.Prompt = realJob.Prompt
+		responseJob.Job_status = realJob.Status
+		responseJob.Iteration_status = realJob.Iteration_status
+		responseJob.Iteration_max = realJob.Iteration_max
+		responseJob.Img_path = "https://exia.art/api/0/img?jobid=" + responseJob.Jobid
+
+		// 4. Send back the response
+		json.NewEncoder(w).Encode(responseJob)
+	}
+}
+
+// Sends back list of jobs to the client
+func sendBackMultipleJobs(w http.ResponseWriter, r *http.Request, str_a string) {
+
+	b_str := strings.TrimLeft(str_a, "jobs?jobx=")
+	c_str := strings.Split(b_str, "&")
+	x_str := strings.TrimRight(c_str[0], "&")
+	y_str := strings.TrimLeft(c_str[1], "joby=")
+
+	// 1. Sanitize the input
+	x, err := strconv.Atoi(x_str)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	y, err := strconv.Atoi(y_str)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	// 2. Query the database
+	var realJobs []exdb.Job
+	realJobs, err = exdb.GetJobsByXY(x, y)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	// 3. Build the resposne
+	var responseJobs []apiJob
+	var responseJob apiJob
+
+	for _, v := range realJobs {
+		responseJob.Jobid = v.Jobid
+		responseJob.Prompt = v.Prompt
+		responseJob.Job_status = v.Status
+		responseJob.Iteration_status = v.Iteration_status
+		responseJob.Iteration_max = v.Iteration_max
+		responseJob.Img_path = "https://exia.art/api/0/img?jobid=" + responseJob.Jobid
+		responseJobs = append(responseJobs, responseJob)
+	}
+
+	// 4. Send back the response
+	json.NewEncoder(w).Encode(responseJobs)
+
 }
 
 // Sends back metadata for one or multiple jobs
@@ -98,91 +146,20 @@ func HandleJobsApiGet(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		str_a := strings.TrimLeft(r.URL.String(), "/api/0/")
 
-		// CHeck if we have a jobid
-		if strings.Contains(str_a, "jobs?jobid") {
-
-			// 1. Determine the jobid from the request
-			input := fmt.Sprintln(r.URL)
-			input2 := strings.TrimLeft(input, "/api/0/jobs?jobid=")
-			input3 := strings.TrimSpace(input2)
-
-			// 2. Sanitize the input
-			sanitized_input, err := strconv.Atoi(input3)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-
-			// 2. Get the row from the database
-			var realJob exdb.Job
-			realJob, err = exdb.GetJobByJobid(sanitized_input)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-
-			// 3. Build the response object
-			var responseJob apiJob
-			responseJob.Jobid = realJob.Jobid
-			responseJob.Prompt = realJob.Prompt
-			responseJob.Job_status = realJob.Status
-			responseJob.Iteration_status = realJob.Iteration_status
-			responseJob.Iteration_max = realJob.Iteration_max
-			responseJob.Img_path = "https://exia.art/api/0/img?jobid=" + responseJob.Jobid
-
-			// 4. Send back the response
-			json.NewEncoder(w).Encode(responseJob)
+		if strings.Contains(str_a, "jobs?jobid") { // assume the client wants only one job back
+			sendBackOneJob(w, r, str_a)
 			return
+
 		} else { // assume the client wants multiple jobs jobx=1&joby=2
-			b_str := strings.TrimLeft(str_a, "jobs?jobx=")
-			c_str := strings.Split(b_str, "&")
-			x_str := strings.TrimRight(c_str[0], "&")
-			y_str := strings.TrimLeft(c_str[1], "joby=")
-
-			// 1. Sanitize the input
-			x, err := strconv.Atoi(x_str)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-			y, err := strconv.Atoi(y_str)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-			var realJobs []exdb.Job
-
-			// 2. Query the database
-			realJobs, err = exdb.GetJobsByXY(x, y)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-
-			// 3. Build the resposne
-			var responseJobs []apiJob
-			var responseJob apiJob
-
-			for _, v := range realJobs {
-				responseJob.Jobid = v.Jobid
-				responseJob.Prompt = v.Prompt
-				responseJob.Job_status = v.Status
-				responseJob.Iteration_status = v.Iteration_status
-				responseJob.Iteration_max = v.Iteration_max
-				responseJob.Img_path = "https://exia.art/api/0/img?jobid=" + responseJob.Jobid
-				responseJobs = append(responseJobs, responseJob)
-			}
-
-			// 4. Send back the response
-			json.NewEncoder(w).Encode(responseJobs)
+			sendBackMultipleJobs(w, r, str_a)
 			return
 		}
-	}
 
+	}
 }
 
 // Deals with POST requests made to the jobs endpoint (POST new jobs)
-// Sends the job to jobs.db
+// Adds job to the database with the "queued" status
 func HandleJobsApiPost(w http.ResponseWriter, r *http.Request) {
 
 	jsonDecoder := json.NewDecoder(r.Body)
@@ -218,11 +195,10 @@ func HandleJobsApiPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 3. Send back the jobid of the newly created job to the client
-
 	var j jobResponse
-	j.Jobid = newJobid           // Placeholder
+	j.Jobid = newJobid
 	j.Prompt = jobRequest.Prompt // TODO: Validate and sanitize user input first
-	j.Job_status = "accepted"    //pending? rejected?
+	j.Job_status = "accepted"
 
 	json.NewEncoder(w).Encode(j) // send back the json as a the response
 }

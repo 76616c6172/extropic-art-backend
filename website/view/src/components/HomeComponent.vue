@@ -16,6 +16,11 @@
           <Instructions />
         </div>
       </div>
+      <div class="row justify-content-center pb-5">
+        <div class="col-lg-6 col-sm-12">
+          <StatsComponent />
+        </div>
+      </div>
       <div class="row justify-content-center bg-light pt-5 pb-5">
         <div class="col-lg-6 col-sm-12">
           <TerminalWrapper :showCursor="showCursor" />
@@ -38,6 +43,7 @@ import { default as Typing } from "../components/miscellaneous/TypingComponent.v
 import { default as Instructions } from "../components/miscellaneous/InstructionsComponent.vue";
 import { default as Image } from "./content/ImageComponent.vue";
 import { default as TerminalWrapper } from "./content/TerminalWrapperComponent.vue";
+import { default as StatsComponent } from "./content/StatsComponent.vue";
 
 export default {
   name: "HomeComponent",
@@ -48,6 +54,7 @@ export default {
     Instructions,
     Image,
     TerminalWrapper,
+    StatsComponent,
   },
   props: {
     msg: String,

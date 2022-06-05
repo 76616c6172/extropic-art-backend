@@ -14,6 +14,7 @@ import (
 )
 
 const MAX_PROMPT_LENGTH = 600 // Reject a new job posted by the view if longer than this value
+var GPU_STATUS = "online"
 
 // Sends back the status response
 func HandleStatusRequest(w http.ResponseWriter, r *http.Request) {
@@ -21,11 +22,11 @@ func HandleStatusRequest(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		var statusResponse status
 
-		statusResponse.Gpu = "offline"
+		statusResponse.Gpu = GPU_STATUS
 		statusResponse.Jobs_completed = exdb.GetNumberOfJobsThatHaveStatus("completed")
 		statusResponse.Jobs_queued = exdb.GetNumberOfJobsThatHaveStatus("queued")
-		statusResponse.Newest_completed_jobs = exdb.GetNewestFiveCompletedJobids()
-		statusResponse.Newest_jobid = statusResponse.Newest_completed_jobs[0]
+		statusResponse.Newest_completed_jobs = exdb.GetNewestCoupleJobsThatHaveStatus("completed")
+		statusResponse.Newest_jobid = exdb.GetLatestJobid()
 
 		json.NewEncoder(w).Encode(statusResponse) // send back the response
 	}
@@ -114,7 +115,7 @@ func sendBackMultipleJobs(w http.ResponseWriter, r *http.Request, str_a string) 
 
 	// 2. Query the database
 	var realJobs []exdb.Job
-	realJobs, err = exdb.GetJobsByXY(x, y)
+	realJobs, err = exdb.GetjobsBetweenJobidXandJobidY(x, y)
 	if err != nil {
 		log.Println(err)
 		return

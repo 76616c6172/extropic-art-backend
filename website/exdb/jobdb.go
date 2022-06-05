@@ -182,7 +182,7 @@ func GetAllJobs() ([]Job, error) {
 
 // Queries jobdb and returns a slice of all jobs in the set of [a,...,b]
 // returns an error if the query fails
-func GetJobsByXY(a int, b int) ([]Job, error) {
+func GetjobsBetweenJobidXandJobidY(a int, b int) ([]Job, error) {
 	if a == 0 { // FIXME: Handle the edge case, idk why 0 is not allowed in the query
 		a = 1
 	}
@@ -251,11 +251,32 @@ func GetNumberOfJobsThatHaveStatus(status string) int {
 	return len(jobs)
 }
 
-func GetNewestFiveCompletedJobids() []string {
+func GetLatestJobid() string {
+	var j Job
+
+	row, err := JOBDB.Query(`SELECT * FROM "jobs" ORDER BY jobid DESC LIMIT 1;`)
+	if err != nil {
+		log.Println("Error in GetNumberOfCompletedJobs", err)
+		return "error getting last job"
+	}
+
+	row.Next()
+	err = row.Scan(&j.Jobid, &j.Prompt, &j.Status, &j.Job_params, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
+	if err != nil {
+		log.Println("Error in GetNumberOfCompletedJobs", err)
+		return "error scanning last job"
+	}
+
+	return j.Jobid
+}
+
+// Returns the last couple jobs from the databasee that have the status you ask
+func GetNewestCoupleJobsThatHaveStatus(status string) []string {
+	const JOB_AMOUNT = 5
 	var jobs []Job
 	var j Job
 
-	row, err := JOBDB.Query(`SELECT * FROM "jobs" WHERE status = "completed" ORDER BY jobid DESC LIMIT 5;`) // Query the database
+	row, err := JOBDB.Query(`SELECT * FROM "jobs" WHERE status = ? ORDER BY jobid DESC LIMIT ?;`, status, JOB_AMOUNT) // Query the database
 	if err != nil {
 		log.Println("Error in GetNewestFiveCompletedJobs", err)
 	}

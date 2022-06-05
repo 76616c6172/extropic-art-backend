@@ -10,10 +10,10 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/google/uuid"
-
 	"project-exia-monorepo/website/exapi"
 	"project-exia-monorepo/website/exdb"
+
+	"github.com/google/uuid"
 )
 
 const WEBSERVER_PORT = ":8091" // Scheduler is listening on this port
@@ -21,7 +21,7 @@ var SECRET string
 
 // GPU_WORERS register themselves with the scheduler through this endpoint
 func api_0_registration(w http.ResponseWriter, r *http.Request) {
-	
+
 	registrationSecret, err := r.Cookie("secret")
 	if err != nil {
 		log.Println("Error reading secret cookie: ", err)
@@ -47,12 +47,10 @@ func api_0_registration(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Registration successful")
 
 	}
-
 }
 
 // Scheduler listens on /api/0/scheduler for workerRegistrationForms
 func api_0_scheduler(w http.ResponseWriter, r *http.Request) {
-
 	var jobResponse exapi.Job //  TODO Get this Job from the db instead
 	jobResponse.Prompt = "Panorama photo of an intricate wizzards tower on mount everest, dark elf gothic arthitecture, trending on arstation, 3d photorealistic materials,"
 	jobResponse.Job_params = ""
@@ -75,38 +73,45 @@ func api_0_scheduler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Sent Job: ", jobResponse.Prompt)
 }
 
-func main() {
+// Keeps the scheduler running until CTRL-C or exit signal is received.
+func KeepSchedulerRunningUntilExitSignalIsReceived() {
+	fmt.Println("Scheduler is running..")
+	channel := make(chan os.Signal, 1) // keep the scheduler running until CTRL-C
+	signal.Notify(channel, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+	<-channel
+	fmt.Println("scheduler closed gracefully")
+}
 
-	if len(os.Args) < 2 || len(os.Args) > 2 { // Check to make sure a bot auth token was supplied on startup
-		fmt.Println("Error: You must supply EXACTLY one argument (the GPU_WORER auth token) on startup.")
-		os.Exit(1)
-	}
-
-	SECRET = strings.TrimSpace(os.Args[1])
-
+// Initalizes/creates the log file as needed.
+func InitializeLogFile() {
 	logFile, err := os.OpenFile(("./logs/scheduler.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatal("main: error opening logfile")
 	}
 	defer logFile.Close()
 	log.SetOutput(logFile)
+}
 
-	exdb.WorkerdbInit() // Innitialize the workerdb
-	exdb.JobdbInit()    //Innitialize the jobdb
+func main() {
 
-	http.HandleFunc("/api/0/scheduler", api_0_scheduler)       //handler for /api/0/scheduler
-	http.HandleFunc("/api/0/registration", api_0_registration) //handler for /api/0/registration
-	go http.ListenAndServe(WEBSERVER_PORT, nil)                //start the server
+	if len(os.Args) < 2 || len(os.Args) > 2 { // Check to make sure a bot auth token was supplied on startup
+		fmt.Println("Error: You must supply EXACTLY one argument (the GPU_WORER auth token) on startup.")
+		os.Exit(1)
+	}
+	SECRET = strings.TrimSpace(os.Args[1])
+
+	InitializeLogFile()
+	exdb.InitializeWorkerdb()
+	exdb.InitializeJobdb()
+
+	http.HandleFunc("/api/0/scheduler", api_0_scheduler)
+	http.HandleFunc("/api/0/registration", api_0_registration)
+
+	go http.ListenAndServe(WEBSERVER_PORT, nil)
 
 	// Run some kind of loop here to check if jobs have been processing for a long time
 	// if so set them back to queued.
-
-	fmt.Println("Scheduler is running..") // keep the scheduler running until CTRL-C
-
 	//exdb.EntryPointForTesting()
 
-	channel := make(chan os.Signal, 1)
-	signal.Notify(channel, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
-	<-channel
-	fmt.Println("scheduler closed gracefully")
+	KeepSchedulerRunningUntilExitSignalIsReceived()
 }

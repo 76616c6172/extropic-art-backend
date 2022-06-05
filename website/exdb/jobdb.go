@@ -45,7 +45,7 @@ type Job struct {
 }
 
 // Initialize and connect to jobdb
-func JobdbInit() {
+func InitializeJobdb() {
 	var err error
 	JOBDB, err = sql.Open("sqlite3", "../model/jobdb/jobs.db")
 	if err != nil {
@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS "jobs" (
 // Adds a new job to the database
 // Returns the jobid of the new job
 // Returns error if job already exists or could not be created
-// Assumes JOBDB is initialized first by calling JobdbInit()
+// Assumes JOBDB is initialized first by calling InnitializeJobdb()
 func InsertNewJob(prompt string, job_params interface{}) (int, error) {
 
 	job_params_unm, err := json.Marshal(job_params) // Convert job_params to a string
@@ -226,6 +226,76 @@ func GetOldestQueuedJob() (Job, error) {
 	}
 
 	return j, err
+}
+
+// Returns number of completed jobs from the database
+func GetNumberOfCompletedJobs() int {
+	var jobs []Job
+	var j Job
+
+	row, err := JOBDB.Query(`SELECT * FROM "jobs" WHERE status = "completed";`) // Query the database
+	if err != nil {
+		log.Println("Error in GetNumberOfCompletedJobs", err)
+		return -1
+	}
+
+	for row.Next() {
+		err = row.Scan(&j.Jobid, &j.Prompt, &j.Status, &j.Job_params, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
+		if err != nil {
+			log.Println("Error in GetNumberOfCompletedJobs", err)
+			return -1
+		}
+		jobs = append(jobs, j)
+	}
+
+	return len(jobs)
+}
+
+// Returns number of queued jobs from the database
+func GetNumberOfQueuedJobs() int {
+	var jobs []Job
+	var j Job
+
+	row, err := JOBDB.Query(`SELECT * FROM "jobs" WHERE status = "queued";`) // Query the database
+	if err != nil {
+		log.Println("Error in GetNumberOfQueuedJobs", err)
+	}
+
+	for row.Next() {
+		err = row.Scan(&j.Jobid, &j.Prompt, &j.Status, &j.Job_params, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
+		if err != nil {
+			log.Println("Error in GetNumberOfQueuedJobs", err)
+			return -1
+		}
+		jobs = append(jobs, j)
+	}
+
+	return len(jobs)
+}
+
+func GetNewestFiveCompletedJobs() []string {
+	var jobs []Job
+	var j Job
+
+	row, err := JOBDB.Query(`SELECT * FROM "jobs" WHERE status = "completed" ORDER BY jobid DESC LIMIT 5;`) // Query the database
+	if err != nil {
+		log.Println("Error in GetNewestFiveCompletedJobs", err)
+	}
+
+	for row.Next() {
+		err = row.Scan(&j.Jobid, &j.Prompt, &j.Status, &j.Job_params, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
+		if err != nil {
+			log.Println("Error in GetNewestFiveCompletedJobs", err)
+		}
+		jobs = append(jobs, j)
+	}
+
+	var answer []string
+	for _, job := range jobs {
+		answer = append(answer, job.Jobid)
+	}
+
+	return answer
 }
 
 // Called by the main function so we can test the module

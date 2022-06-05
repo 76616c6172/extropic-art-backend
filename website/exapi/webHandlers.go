@@ -20,17 +20,25 @@ func HandleStatusRequest(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "GET" { // send back the response
 
-		var responseObject = status{ // We append to this object as we go and send it back to the client
-			Gpu:          "ready", // busy, offline
-			Newest_jobid: "",
-		}
+		/*
+			var responseObject = status{ // We append to this object as we go and send it back to the client
+				Gpu:          "ready", // busy, offline
+				Newest_jobid: "",
+				Jobs_renderd: 0,
+				Jobs_queued: 0,
+				rewest_completed_jobs: [],
+			}
+		*/
+
+		var responseObject status
 
 		// TODO: dumping entire database into memory every time won't scale so get only the last 10!
 		allJobs, err := exdb.GetAllJobs()
 		if err != nil {
 			log.Println(err)
+			return
 			//TODO: et response code to 500 to indicate server error
-			json.NewEncoder(w).Encode(responseObject) // send back the json as a the response
+			//json.NewEncoder(w).Encode(responseObject) // send back the json as a the response
 		}
 
 		/*
@@ -47,7 +55,12 @@ func HandleStatusRequest(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		*/
+		responseObject.Gpu = "offline"
 		responseObject.Newest_jobid = allJobs[0].Jobid
+		responseObject.Jobs_completed = exdb.GetNumberOfCompletedJobs()
+		responseObject.Jobs_queued = exdb.GetNumberOfQueuedJobs()
+		responseObject.Newest_completed_jobs = exdb.GetNewestFiveCompletedJobs()
+		//
 
 		json.NewEncoder(w).Encode(responseObject) // send back the json as a the response
 	}

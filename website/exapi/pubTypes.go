@@ -1,4 +1,4 @@
-// Contains all data types sent between the VIEW and the CONTROLLER
+// Webhandlers and data structures for the API
 package exapi
 
 type newjob struct {
@@ -23,17 +23,17 @@ type apiJob struct {
 	Img_path         string `json:"img_path"`
 }
 
-// This is the response object sent back to the VIEW after POSTING a new job
-type jobResponse struct {
+type jobResponse struct { // This is the response object sent back to the VIEW after POSTING a new job
 	Jobid      int    `json:"jobid"`
 	Prompt     string `json:"prompt"`
 	Job_status string `json:"job_status"`
 }
 
-// Schema for the status object returned by the status endpoint
-type status struct {
+type status struct { // Schema for the status object returned by the status endpoint
 	Gpu string `json:"gpu"`
 	//Completed_jobs []apiJob `json:"completed_jobs"` //no longer needed
-	Newest_jobid string `json:"newest_jobid"`
-	//Description string `json:"Description"`
+	Newest_jobid          string   `json:"newest_jobid"`
+	Jobs_completed        int      `json"jobs_completed"`
+	Jobs_queued           int      `json"jobs_queued"`
+	Newest_completed_jobs []string `json"newest_completed_jobs"`
 }

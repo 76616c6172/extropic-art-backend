@@ -37,15 +37,14 @@ func api_0_img(w http.ResponseWriter, r *http.Request) {
 // Answers calls to the endpoint /api/0/all
 // This answers with a json containing all information the view needs when it first loads
 func api_0_status(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")  // TESTING: allow CORS for testing purposes
-	w.Header().Set("Access-Control-Allow-Headers", "*") //FIXME because I don't get it
+	w.Header().Set("Access-Control-Allow-Origin", "*") // TESTING: allow CORS for testing purposes
 	exapi.HandleStatusRequest(w, r)
 }
 
 // This is the main function :D
 func main() {
 	// Initialize the jobs database
-	exdb.JobdbInit()
+	exdb.InitializeJobdb()
 
 	// Select the logfile
 	logFile, err := os.OpenFile(("./logs/exia.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
@@ -54,9 +53,6 @@ func main() {
 	}
 	defer logFile.Close()
 	log.SetOutput(logFile)
-
-	// TESTING: Play with SQLite
-	//xdb.EntryPointForTesting() //testing
 
 	// Handle requests for assets, everything in ../view/dist is accessible to the public
 	http.Handle("/", http.FileServer(http.Dir("../view/dist"))) //serves requests to www.url/assets/

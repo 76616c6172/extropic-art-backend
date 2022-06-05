@@ -13,8 +13,8 @@ import (
 
 var WORKERDB *sql.DB // This pointer is shared within the module to do database operations
 
-// Initialize and connect to workerdb
-func WorkerdbInit() {
+// Initializes and connects to workers.db
+func InitializeWorkerdb() {
 
 	var err error
 	WORKERDB, err = sql.Open("sqlite3", "../model/workerdb/workers.db")

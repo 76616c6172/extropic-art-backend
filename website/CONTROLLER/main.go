@@ -40,23 +40,19 @@ func api_0_status(w http.ResponseWriter, r *http.Request) {
 
 // Initializes log file for the controller
 func initializeLogFile() {
-
 	logFile, err := os.OpenFile(("./logs/exia.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatal("main: error opening logfile")
 	}
-	defer logFile.Close()
 	log.SetOutput(logFile)
-
 }
 
 // This is the main function :D
 func main() {
-
 	initializeLogFile()
 	exdb.InitializeJobdb()
 
-	// Handle requests for everything in ../view/dist - dist is accessible to the public without AUTH
+	// Handle requests for ressources in dist
 	http.Handle("/", http.FileServer(http.Dir("../view/dist")))
 
 	// Register API endpoints

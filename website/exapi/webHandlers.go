@@ -55,9 +55,12 @@ func HandleImgRequests(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Finishes parsing the query param from the web request, then looks up the requested job
+// in the database by jobid and sends back the job to the client.
 func sendBackOneJob(w http.ResponseWriter, r *http.Request, str_a string) {
 
-	if strings.Contains(str_a, "jobs?jobid") { // CHeck if we have a jobid
+	// CHeck if we have a jobid
+	if strings.Contains(str_a, "jobs?jobid") {
 
 		// 1. Determine the jobid from the request
 		input := fmt.Sprintln(r.URL)
@@ -87,7 +90,6 @@ func sendBackOneJob(w http.ResponseWriter, r *http.Request, str_a string) {
 		responseJob.Iteration_status = realJob.Iteration_status
 		responseJob.Iteration_max = realJob.Iteration_max
 		responseJob.Img_path = "https://exia.art/api/0/img?jobid=" + responseJob.Jobid
-
 		// 4. Send back the response
 		json.NewEncoder(w).Encode(responseJob)
 	}
@@ -96,6 +98,7 @@ func sendBackOneJob(w http.ResponseWriter, r *http.Request, str_a string) {
 // Sends back list of jobs to the client
 func sendBackMultipleJobs(w http.ResponseWriter, r *http.Request, str_a string) {
 
+	// 0. Finish parsing the query parameters
 	b_str := strings.TrimLeft(str_a, "jobs?jobx=")
 	c_str := strings.Split(b_str, "&")
 	x_str := strings.TrimRight(c_str[0], "&")
@@ -112,9 +115,9 @@ func sendBackMultipleJobs(w http.ResponseWriter, r *http.Request, str_a string) 
 		log.Println(err)
 		return
 	}
+	var realJobs []exdb.Job
 
 	// 2. Query the database
-	var realJobs []exdb.Job
 	realJobs, err = exdb.GetjobsBetweenJobidXandJobidY(x, y)
 	if err != nil {
 		log.Println(err)
@@ -124,7 +127,6 @@ func sendBackMultipleJobs(w http.ResponseWriter, r *http.Request, str_a string) 
 	// 3. Build the resposne
 	var responseJobs []apiJob
 	var responseJob apiJob
-
 	for _, v := range realJobs {
 		responseJob.Jobid = v.Jobid
 		responseJob.Prompt = v.Prompt
@@ -137,7 +139,7 @@ func sendBackMultipleJobs(w http.ResponseWriter, r *http.Request, str_a string) 
 
 	// 4. Send back the response
 	json.NewEncoder(w).Encode(responseJobs)
-
+	return
 }
 
 // Sends back metadata for one or multiple jobs
@@ -145,58 +147,59 @@ func sendBackMultipleJobs(w http.ResponseWriter, r *http.Request, str_a string) 
 func HandleJobsApiGet(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "GET" {
-		str_a := strings.TrimLeft(r.URL.String(), "/api/0/")
 
+		str_a := strings.TrimLeft(r.URL.String(), "/api/0/")
 		if strings.Contains(str_a, "jobs?jobid") { // assume the client wants only one job back
 			sendBackOneJob(w, r, str_a)
 			return
-
-		} else { // assume the client wants multiple jobs jobx=1&joby=2
-			sendBackMultipleJobs(w, r, str_a)
-			return
 		}
 
+		sendBackMultipleJobs(w, r, str_a) // assume the client wants multiple jobs jobx=1&joby=2
 	}
 }
 
 // Deals with POST requests made to the jobs endpoint (POST new jobs)
 // Adds job to the database with the "queued" status
 func HandleJobsApiPost(w http.ResponseWriter, r *http.Request) {
+	var j jobResponse
 
 	jsonDecoder := json.NewDecoder(r.Body)
 	var jobRequest newjob
 	err := jsonDecoder.Decode(&jobRequest)
 	if err != nil {
-		log.Println(err) // maybe handle this better
+		log.Println("HandleJobsApiPost: Error decoding request", err)
+		w.Write([]byte("500 - Something bad happened!"))
+		json.NewEncoder(w).Encode(j) // send back the json as a the response
 		return
 	}
 
 	// 1. Santizie and check the input
 	if len(jobRequest.Prompt) > MAX_PROMPT_LENGTH {
-		log.Println("JobsApiPost: Prompt is of length < 1")
-		return
-	}
-	if len(jobRequest.Prompt) < 1 { // send back an error response
-		var j jobResponse
-		j.Jobid = -1                 // Placeholder
-		j.Prompt = jobRequest.Prompt // TODO: Validate and sanitize user input first
-		j.Job_status = "Rejected"    //pending? rejected?
-
-		w.WriteHeader(http.StatusInternalServerError)
+		log.Println("HandleJobsApiPost: Error large prompt length")
 		w.Write([]byte("500 - Something bad happened!"))
 		json.NewEncoder(w).Encode(j) // send back the json as a the response
+		return
+	}
+
+	if len(jobRequest.Prompt) < 1 {
+		j.Jobid = -1
+		j.Prompt = jobRequest.Prompt // TODO: Validate and sanitize user input first
+		j.Job_status = "Rejected"
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("500 - Something bad happened!"))
+		json.NewEncoder(w).Encode(j)
+		log.Println("HandleJobsApiPost: Error small prompt length")
 		return
 	}
 
 	// 2. Create the job in the database
 	newJobid, err := exdb.InsertNewJob(jobRequest.Prompt, "")
 	if err != nil {
-		log.Println("JobsApiPost: err")
+		log.Println("HandleJobsApiPost: Error inserting new job", err)
 		return
 	}
 
 	// 3. Send back the jobid of the newly created job to the client
-	var j jobResponse
 	j.Jobid = newJobid
 	j.Prompt = jobRequest.Prompt // TODO: Validate and sanitize user input first
 	j.Job_status = "accepted"

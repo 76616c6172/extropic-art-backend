@@ -147,6 +147,7 @@ func GetJobByJobid(jobid int) (Job, error) {
 	if err != nil {
 		return j, err
 	}
+	defer row.Close()
 
 	row.Next()
 	err = row.Scan(&j.Jobid, &j.Prompt, &j.Status, &j.Job_params, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
@@ -166,6 +167,7 @@ func GetAllJobs() ([]Job, error) {
 	if err != nil {
 		return jobs, err
 	}
+	defer rows.Close()
 
 	// Iterate over the rows and add them to the slice
 	var j Job
@@ -218,6 +220,7 @@ func GetOldestQueuedJob() (Job, error) {
 	if err != nil {
 		return j, err
 	}
+	defer row.Close()
 
 	row.Next()
 	err = row.Scan(&j.Jobid, &j.Prompt, &j.Status, &j.Job_params, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
@@ -238,6 +241,7 @@ func GetNumberOfJobsThatHaveStatus(status string) int {
 		log.Println("Error in GetNumberOfCompletedJobs", err)
 		return -1
 	}
+	defer row.Close()
 
 	for row.Next() {
 		err = row.Scan(&j.Jobid, &j.Prompt, &j.Status, &j.Job_params, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
@@ -259,6 +263,7 @@ func GetLatestJobid() string {
 		log.Println("Error in GetNumberOfCompletedJobs", err)
 		return "error getting last job"
 	}
+	defer row.Close()
 
 	row.Next()
 	err = row.Scan(&j.Jobid, &j.Prompt, &j.Status, &j.Job_params, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
@@ -280,6 +285,7 @@ func GetNewestCoupleJobsThatHaveStatus(status string) []string {
 	if err != nil {
 		log.Println("Error in GetNewestFiveCompletedJobs", err)
 	}
+	defer row.Close()
 
 	for row.Next() {
 		err = row.Scan(&j.Jobid, &j.Prompt, &j.Status, &j.Job_params, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)

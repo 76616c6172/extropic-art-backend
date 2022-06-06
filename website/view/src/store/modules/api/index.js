@@ -42,6 +42,7 @@ const actions = {
           const newestJobId = Number(data.newest_jobid);
           switch (scrollEvent) {
             case "initial":
+              console.log("initial");
               commit("SET_JOBSTATUS", {
                 jobRange: {
                   jobx: newestJobId - 9 >= 1 ? newestJobId - 9 : 1,
@@ -54,6 +55,7 @@ const actions = {
               });
               break;
             case "add":
+              console.log("add");
               commit("SET_JOBSTATUS", {
                 jobRange: {
                   jobx:
@@ -74,7 +76,12 @@ const actions = {
               });
               break;
             default:
+              console.log("default");
               commit("SET_JOBSTATUS", {
+                jobRange: {
+                  jobx: state.jobStatus.jobRange.jobx,
+                  joby: state.jobStatus.jobRange.joby,
+                },
                 jobsCompleted: data.Jobs_completed,
                 jobsQueued: data.Jobs_queued,
                 newestJobId: newestJobId,

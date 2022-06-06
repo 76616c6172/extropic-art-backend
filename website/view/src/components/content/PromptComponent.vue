@@ -59,6 +59,8 @@ export default {
       this.$store
         .dispatch("sendNewJob", { prompt: values.vPrompt })
         .then(() => {
+          // Emitter to HomeComponent
+          this.$emit("set-newJob");
           this.promptStatus = "Prompt added";
         })
         .finally(() => {

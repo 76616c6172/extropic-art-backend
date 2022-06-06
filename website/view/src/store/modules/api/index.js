@@ -38,7 +38,6 @@ const actions = {
     try {
       return await axios.get(`${url}/status`).then((response) => {
         if (response.status == 200) {
-          // console.log(response.data);
           const data = response.data;
           const newestJobId = Number(data.newest_jobid);
           switch (scrollEvent) {
@@ -136,11 +135,9 @@ const actions = {
   },
   // Send Job
   async sendNewJob({ commit }, newJobObj) {
-    console.log(newJobObj);
     try {
       return await axios.post(`${url}/jobs`, newJobObj).then((response) => {
         if (response.status == 200) {
-          console.log(response.data);
           const newJobID = response.data.jobid;
           try {
             return axios

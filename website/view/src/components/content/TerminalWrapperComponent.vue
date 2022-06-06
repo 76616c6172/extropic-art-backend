@@ -8,7 +8,7 @@
         <div class="ui-circle ui-circle-green rounded-pill"></div>
       </div>
       <ItemList />
-      <Prompt :showCursor="showCursor" />
+      <Prompt @set-newJob="emitNewJob()" :showCursor="showCursor" />
     </div>
   </div>
 </template>
@@ -26,6 +26,11 @@ export default {
     showCursor: {
       type: Boolean,
       required: true,
+    },
+  },
+  methods: {
+    emitNewJob() {
+      this.$emit("set-newJob");
     },
   },
 };

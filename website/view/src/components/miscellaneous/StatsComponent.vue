@@ -105,13 +105,13 @@ export default {
         this.counterObj[type]++;
         this.setText(type);
       } else {
-        sessionStorage.setItem(this.$options.name, "stateComponent");
+        sessionStorage.setItem(this.$options.name, "statsComponent");
       }
     },
   },
   computed: {
     isPageLoaded() {
-      return sessionStorage.getItem(this.$options.name) == "stateComponent";
+      return sessionStorage.getItem(this.$options.name) == "statsComponent";
     },
   },
   watch: {

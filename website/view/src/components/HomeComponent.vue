@@ -18,7 +18,7 @@
       </div>
       <div class="row justify-content-center pb-5">
         <div class="col-lg-6 col-sm-12">
-          <StatsComponent />
+          <StatsComponent v-if="jobStatus" :jobStatus="jobStatus" />
         </div>
       </div>
       <div class="row justify-content-center bg-light pt-5 pb-5">
@@ -40,10 +40,10 @@
 import { default as Navbar } from "../components/general/NavbarComponent.vue";
 import { default as Footer } from "../components/general/FooterComponent.vue";
 import { default as Typing } from "../components/miscellaneous/TypingComponent.vue";
-import { default as Instructions } from "../components/miscellaneous/InstructionsComponent.vue";
 import { default as Image } from "./content/ImageComponent.vue";
 import { default as TerminalWrapper } from "./content/TerminalWrapperComponent.vue";
-import { default as StatsComponent } from "./content/StatsComponent.vue";
+import { default as Instructions } from "../components/miscellaneous/InstructionsComponent.vue";
+import { default as StatsComponent } from "../components/miscellaneous/StatsComponent.vue";
 
 export default {
   name: "HomeComponent",
@@ -62,12 +62,18 @@ export default {
   data() {
     return {
       showCursor: false,
+      jobStatus: {},
     };
   },
   methods: {
     setCursor() {
       this.showCursor = true;
     },
+  },
+  async mounted() {
+    this.$store.dispatch("fetchJobStatus", "initial").then(() => {
+      this.jobStatus = this.$store.getters.getJobStatus;
+    });
   },
 };
 </script>

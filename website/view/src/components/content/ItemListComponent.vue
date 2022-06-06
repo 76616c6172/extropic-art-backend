@@ -62,10 +62,9 @@ export default {
       let jobs = this.getJobs;
       return this.getFoundJobs(jobs);
     },
-    ...mapGetters(["getJobs"]),
+    ...mapGetters(["getJobs", "getIsInitialLoadStatus"]),
   },
   async mounted() {
-    this.$store.dispatch("fetchJobs", "initial");
     document
       .getElementById("ul-list")
       .addEventListener("scroll", this.handleScroll);
@@ -74,6 +73,13 @@ export default {
     document
       .getElementById("ul-list")
       .addEventListener("scroll", this.handleScroll);
+  },
+  watch: {
+    getIsInitialLoadStatus: {
+      handler() {
+        this.$store.dispatch("fetchJobs", "initial");
+      },
+    },
   },
 };
 </script>

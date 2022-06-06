@@ -13,8 +13,12 @@ const state = {
     newestCompletedJobs: [],
   },
   isOldestJobID: false,
+  isInitialLoad: false,
 };
 const getters = {
+  getIsInitialLoadStatus: (state) => {
+    return state.isInitialLoad;
+  },
   getJobs: (state) => {
     return state.jobs;
   },
@@ -30,7 +34,7 @@ const getters = {
 };
 const actions = {
   // Get Newest Job
-  async fetchNewestJobID({ commit }, scrollEvent) {
+  async fetchJobStatus({ commit }, scrollEvent) {
     try {
       return await axios.get(`${url}/status`).then((response) => {
         if (response.status == 200) {
@@ -81,28 +85,54 @@ const actions = {
   },
   // Fetch InitialJobs
   async fetchJobs({ commit, dispatch }, scrollEvent) {
-    dispatch("fetchNewestJobID", scrollEvent).then(() => {
-      if (!state.isOldestJobID) {
-        console.log("here");
-        try {
-          return axios
-            .get(
-              `${url}/jobs?jobx=${state.jobStatus.jobRange.jobx}&joby=${state.jobStatus.jobRange.joby}`
-            )
-            .then((response) => {
-              if (response.status == 200) {
-                const payload = response.data.sort((job) => job.id).reverse();
-                commit("FETCH_JOBS", payload);
-                state.jobStatus.jobRange.jobx == 1
-                  ? (state.isOldestJobID = true)
-                  : "";
-              }
-            });
-        } catch (error) {
-          console.log(error);
+    switch (scrollEvent) {
+      case "initial":
+        if (!state.isOldestJobID) {
+          try {
+            return axios
+              .get(
+                `${url}/jobs?jobx=${state.jobStatus.jobRange.jobx}&joby=${state.jobStatus.jobRange.joby}`
+              )
+              .then((response) => {
+                if (response.status == 200) {
+                  const payload = response.data.sort((job) => job.id).reverse();
+                  commit("FETCH_JOBS", payload);
+                  state.jobStatus.jobRange.jobx == 1
+                    ? (state.isOldestJobID = true)
+                    : "";
+                }
+              });
+          } catch (error) {
+            console.log(error);
+          }
         }
-      }
-    });
+        break;
+      default:
+        dispatch("fetchJobStatus", scrollEvent).then(() => {
+          if (!state.isOldestJobID) {
+            try {
+              return axios
+                .get(
+                  `${url}/jobs?jobx=${state.jobStatus.jobRange.jobx}&joby=${state.jobStatus.jobRange.joby}`
+                )
+                .then((response) => {
+                  if (response.status == 200) {
+                    const payload = response.data
+                      .sort((job) => job.id)
+                      .reverse();
+                    commit("FETCH_JOBS", payload);
+                    state.jobStatus.jobRange.jobx == 1
+                      ? (state.isOldestJobID = true)
+                      : "";
+                  }
+                });
+            } catch (error) {
+              console.log(error);
+            }
+          }
+        });
+        break;
+    }
   },
   // Send Job
   async sendNewJob({ commit }, newJobObj) {
@@ -158,6 +188,7 @@ const actions = {
 const mutations = {
   SET_JOBSTATUS(state, payload) {
     state.jobStatus = payload;
+    state.isInitialLoad == false ? (state.isInitialLoad = true) : "";
   },
   FETCH_JOBS(state, payload) {
     state.jobs.push(...payload);

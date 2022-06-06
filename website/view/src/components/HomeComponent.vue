@@ -23,10 +23,7 @@
       </div>
       <div class="row justify-content-center bg-light pt-5 pb-5">
         <div class="col-lg-6 col-sm-12">
-          <TerminalWrapper
-            @set-newJob="reloadJobStatus()"
-            :showCursor="showCursor"
-          />
+          <TerminalWrapper :showCursor="showCursor" />
         </div>
       </div>
       <div class="row justify-content-center pt-5 pb-5">
@@ -73,11 +70,6 @@ export default {
     setCursor() {
       this.showCursor = true;
     },
-    reloadJobStatus() {
-      this.$store.dispatch("fetchJobStatus", "initial").then(() => {
-        this.jobStatus = this.getJobStatus;
-      });
-    },
   },
   computed: {
     ...mapGetters(["getJobStatus"]),
@@ -86,6 +78,13 @@ export default {
     this.$store.dispatch("fetchJobStatus", "initial").then(() => {
       this.jobStatus = this.getJobStatus;
     });
+  },
+  watch: {
+    getJobStatus: {
+      handler() {
+        this.jobStatus = this.getJobStatus;
+      },
+    },
   },
 };
 </script>

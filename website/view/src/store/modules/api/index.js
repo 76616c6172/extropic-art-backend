@@ -74,6 +74,12 @@ const actions = {
               });
               break;
             default:
+              commit("SET_JOBSTATUS", {
+                jobsCompleted: data.Jobs_completed,
+                jobsQueued: data.Jobs_queued,
+                newestJobId: newestJobId,
+                newestCompletedJobs: [...data.Newest_completed_jobs],
+              });
               break;
           }
         }
@@ -134,7 +140,7 @@ const actions = {
     }
   },
   // Send Job
-  async sendNewJob({ commit }, newJobObj) {
+  async sendNewJob({ commit, dispatch }, newJobObj) {
     try {
       return await axios.post(`${url}/jobs`, newJobObj).then((response) => {
         if (response.status == 200) {
@@ -146,6 +152,8 @@ const actions = {
                 if (response.status == 200) {
                   const payload = response.data[0];
                   commit("SEND_NEW_JOB", payload);
+                  // Reload Status
+                  dispatch("fetchJobStatus");
                 }
               });
           } catch (error) {

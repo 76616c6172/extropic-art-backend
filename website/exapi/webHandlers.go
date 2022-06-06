@@ -13,9 +13,6 @@ import (
 	"project-exia-monorepo/website/exdb"
 )
 
-const MAX_PROMPT_LENGTH = 600 // Reject a new job posted by the view if longer than this value
-var GPU_STATUS = "online"
-
 // Sends back the status response
 func HandleStatusRequest(w http.ResponseWriter, r *http.Request) {
 

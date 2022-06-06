@@ -75,16 +75,16 @@ export default {
     },
     reloadJobStatus() {
       this.$store.dispatch("fetchJobStatus", "initial").then(() => {
-        this.jobStatus = this.$store.getters.getJobStatus;
+        this.jobStatus = this.getJobStatus;
       });
     },
   },
   computed: {
-    ...mapGetters(["getJobs"]),
+    ...mapGetters(["getJobStatus"]),
   },
   async mounted() {
     this.$store.dispatch("fetchJobStatus", "initial").then(() => {
-      this.jobStatus = this.$store.getters.getJobStatus;
+      this.jobStatus = this.getJobStatus;
     });
   },
 };

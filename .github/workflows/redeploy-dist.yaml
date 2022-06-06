@@ -1,5 +1,5 @@
 # Redeploy website/view/dist to production on every push to master
-name: Actions Test
+name: Redeploy DIST
 
 on:
   push:
@@ -14,7 +14,7 @@ jobs:
     steps:
       - name: checkout the repo
         uses: actions/checkout@v3
-      - name: Configure-Runner-SSH
+      - name: configure-runner-SSH
         run: |
           mkdir -p /home/runner/.ssh
           ssh-keyscan exia.art >> /home/runner/.ssh/known_hosts
@@ -22,6 +22,6 @@ jobs:
           chmod 600 /home/runner/.ssh/github_actions
           ssh-agent -a $SSH_AUTH_SOCK > /dev/null
           ssh-add /home/runner/.ssh/github_actions
-      - name: Run script to redeploy dist folder
+      - name: redeploy-dist-folder
         run: |
           bash ./GitHubAction-Scripts/redeploy_dist

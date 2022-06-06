@@ -5,19 +5,28 @@ const url = "https://exia.art/api/0";
 const state = {
   jobs: [],
   selectedJob: [],
-  jobRange: {},
-  newestJobID: "",
+  jobStatus: {
+    jobRange: {},
+    jobsCompleted: "",
+    jobsQueued: "",
+    newestJobId: "",
+    newestCompletedJobs: [],
+  },
   isOldestJobID: false,
+  isInitialLoad: false,
 };
 const getters = {
+  getIsInitialLoadStatus: (state) => {
+    return state.isInitialLoad;
+  },
   getJobs: (state) => {
     return state.jobs;
   },
   getSelectedJob: (state) => {
     return state.selectedJob;
   },
-  getJobRange: (state) => {
-    return state.jobRange;
+  getJobStatus: (state) => {
+    return state.jobStatus;
   },
   getJobsExist: (state) => {
     return state.jobsExist;
@@ -25,30 +34,44 @@ const getters = {
 };
 const actions = {
   // Get Newest Job
-  async fetchNewestJobID({ commit }, scrollEvent) {
+  async fetchJobStatus({ commit }, scrollEvent) {
     try {
       return await axios.get(`${url}/status`).then((response) => {
         if (response.status == 200) {
-          const newestJobId = Number(response.data.newest_jobid);
+          // console.log(response.data);
+          const data = response.data;
+          const newestJobId = Number(data.newest_jobid);
           switch (scrollEvent) {
             case "initial":
-              commit("SET_JOBRANGE", {
-                jobx: newestJobId - 9,
-                joby: newestJobId,
+              commit("SET_JOBSTATUS", {
+                jobRange: {
+                  jobx: newestJobId - 9 >= 1 ? newestJobId - 9 : 1,
+                  joby: newestJobId,
+                },
+                jobsCompleted: data.Jobs_completed,
+                jobsQueued: data.Jobs_queued,
+                newestJobId: newestJobId,
+                newestCompletedJobs: [...data.Newest_completed_jobs],
               });
               break;
             case "add":
-              commit("SET_JOBRANGE", {
-                jobx:
-                  state.jobRange.jobx > 1
-                    ? state.jobRange.jobx - 10 > 0
-                      ? state.jobRange.jobx - 10
-                      : (state.jobRange.jobx = 1)
-                    : (state.jobRange.jobx = 1),
-                joby:
-                  state.jobRange.joby > 1
-                    ? state.jobRange.joby - 10
-                    : (state.jobRange.joby = 1),
+              commit("SET_JOBSTATUS", {
+                jobRange: {
+                  jobx:
+                    state.jobStatus.jobRange.jobx > 1
+                      ? state.jobStatus.jobRange.jobx - 10 > 0
+                        ? state.jobStatus.jobRange.jobx - 10
+                        : (state.jobStatus.jobRange.jobx = 1)
+                      : (state.jobStatus.jobRange.jobx = 1),
+                  joby:
+                    state.jobStatus.jobRange.joby > 1
+                      ? state.jobStatus.jobRange.joby - 10
+                      : (state.jobStatus.jobRange.joby = 1),
+                },
+                jobsCompleted: data.Jobs_completed,
+                jobsQueued: data.Jobs_queued,
+                newestJobId: newestJobId,
+                newestCompletedJobs: [...data.Newest_completed_jobs],
               });
               break;
             default:
@@ -62,31 +85,62 @@ const actions = {
   },
   // Fetch InitialJobs
   async fetchJobs({ commit, dispatch }, scrollEvent) {
-    dispatch("fetchNewestJobID", scrollEvent).then(() => {
-      if (!state.isOldestJobID) {
-        try {
-          return axios
-            .get(
-              `${url}/jobs?jobx=${state.jobRange.jobx}&joby=${state.jobRange.joby}`
-            )
-            .then((response) => {
-              if (response.status == 200) {
-                const payload = response.data.sort((job) => job.id).reverse();
-                commit("FETCH_JOBS", payload);
-                state.jobRange.jobx == 1 ? (state.isOldestJobID = true) : "";
-              }
-            });
-        } catch (error) {
-          console.log(error);
+    switch (scrollEvent) {
+      case "initial":
+        if (!state.isOldestJobID) {
+          try {
+            return axios
+              .get(
+                `${url}/jobs?jobx=${state.jobStatus.jobRange.jobx}&joby=${state.jobStatus.jobRange.joby}`
+              )
+              .then((response) => {
+                if (response.status == 200) {
+                  const payload = response.data.sort((job) => job.id).reverse();
+                  commit("FETCH_JOBS", payload);
+                  state.jobStatus.jobRange.jobx == 1
+                    ? (state.isOldestJobID = true)
+                    : "";
+                }
+              });
+          } catch (error) {
+            console.log(error);
+          }
         }
-      }
-    });
+        break;
+      default:
+        dispatch("fetchJobStatus", scrollEvent).then(() => {
+          if (!state.isOldestJobID) {
+            try {
+              return axios
+                .get(
+                  `${url}/jobs?jobx=${state.jobStatus.jobRange.jobx}&joby=${state.jobStatus.jobRange.joby}`
+                )
+                .then((response) => {
+                  if (response.status == 200) {
+                    const payload = response.data
+                      .sort((job) => job.id)
+                      .reverse();
+                    commit("FETCH_JOBS", payload);
+                    state.jobStatus.jobRange.jobx == 1
+                      ? (state.isOldestJobID = true)
+                      : "";
+                  }
+                });
+            } catch (error) {
+              console.log(error);
+            }
+          }
+        });
+        break;
+    }
   },
   // Send Job
   async sendNewJob({ commit }, newJobObj) {
+    console.log(newJobObj);
     try {
       return await axios.post(`${url}/jobs`, newJobObj).then((response) => {
         if (response.status == 200) {
+          console.log(response.data);
           const newJobID = response.data.jobid;
           try {
             return axios
@@ -132,9 +186,9 @@ const actions = {
   },
 };
 const mutations = {
-  SET_JOBRANGE(state, payload) {
-    state.jobRange.jobx = payload.jobx;
-    state.jobRange.joby = payload.joby;
+  SET_JOBSTATUS(state, payload) {
+    state.jobStatus = payload;
+    state.isInitialLoad == false ? (state.isInitialLoad = true) : "";
   },
   FETCH_JOBS(state, payload) {
     state.jobs.push(...payload);

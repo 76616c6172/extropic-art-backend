@@ -7,7 +7,7 @@ on:
       - master
 
 jobs:
-  Configure-Runner-SSH:
+  Redeploy-DIST-to-prod:
     runs-on: ubuntu-latest
     env:
       SSH_AUTH_SOCK: /tmp/ssh_agent.sock

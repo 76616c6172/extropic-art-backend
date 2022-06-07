@@ -1,0 +1,26 @@
+#!bin/bash
+set -e # fail fast
+
+# Remove previous go install
+rm -rf /usr/local/go
+
+export PATH=$PATH:/usr/local/go/bin
+VERSION="1.18.3" # go version
+ARCH="amd64" # go archicture
+curl -O -L "https://golang.org/dl/go${VERSION}.linux-${ARCH}.tar.gz"
+#wget -L "https://golang.org/dl/go${VERSION}.linux-${ARCH}.tar.gz" # Instead of curl, one can use wget command too #
+
+tar -xf "go${VERSION}.linux-${ARCH}.tar.gz" # Extract go lang from the tar.gz file
+chown -R root:root ./go # Set perms
+mv -v go /usr/local
+
+# set up Go lang path #
+export GOPATH=$HOME/go
+export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
+
+# add Go path to bashrc
+echo 'export GOPATH=$HOME/go' >> ~/.bashrc
+echo 'export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin' >> ~/.bashrc
+
+# show Go version
+go version

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -9,9 +10,12 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"strings"
 
 	"project-exia-monorepo/website/exapi"
 )
+
+const IMAGE_PATH = "./images_out/TimeToDisco/progress.png"
 
 const WORKER_PORT = ":8090"
 const SCHEDULER_IP = "http://127.0.0.1:8091"
@@ -43,6 +47,7 @@ func api_0_worker(w http.ResponseWriter, r *http.Request) {
 
 		IS_BUSY = true
 		runModel(jobRequest.Prompt)
+		IS_BUSY = false
 
 	} else {
 		// Send response to the scheduler
@@ -53,28 +58,77 @@ func api_0_worker(w http.ResponseWriter, r *http.Request) {
 // Runs the clip guided diffusion model
 func runModel(prompt string) {
 
-	// build the parameters to call the script with
-	modelParameters := fmt.Sprintf("--text_prompts '{\"0\": [\"%s\"]}' --steps 240 --width_height '[1920, 1088]'", prompt)
-	fmt.Println(modelParameters)
+	// 0. TODO: Write the prompt and params to yaml config file
 
-	// call the python script with the prompt as agrument
-	cmd := exec.Command("./disco.py", modelParameters)
-	cmd.Stdout = os.Stdout // debug print
-	cmd.Stderr = os.Stderr //debug print
+	// 1. Run the model
+	//modelParameters := fmt.Sprintf("--text_prompts '{\"0\": [\"%s\"]}' --steps 240 --width_height '[1920, 1088]'", prompt)
+	modelSubProcess := exec.Command("./run_model")
 
-	err := cmd.Run() //wait for the command to finish
+	stdout, err := modelSubProcess.StdoutPipe()
 	if err != nil {
-		log.Println(err) //TODO: notify the scheduler that something went wrong with this job
+		log.Println("testing: error connecting to stdout", err)
+		return
+	}
+	defer stdout.Close()
+
+	stderr, err := modelSubProcess.StderrPipe()
+	if err != nil {
+		log.Println("testing: error connecting to stderr", err)
+		return
+	}
+	defer stderr.Close()
+
+	// Run the model
+	err = modelSubProcess.Start()
+	if err != nil {
+		log.Println("testing: error running cmd.Start()", err)
+		return
 	}
 
-	out, err := cmd.Output()
-	if err != nil {
-		log.Println(err) //TODO: notify the scheduler that something went wrong with this job
-	}
-	fmt.Println(out)
+	// Read the output of the model line by line
+	stdoutScanner := bufio.NewScanner(stdout)
+	//stderrScanner := bufio.NewScanner(stderr)
+	numberOfInprogressImages := -1
+	var exiting bool
+	for {
 
-	fmt.Println("model run complete, setting worker to available") // DEBUG
-	IS_BUSY = false
+		if exiting {
+			if modelSubProcess.ProcessState.Exited() {
+				fmt.Println("Exiting the model gracefully")
+				return
+			}
+		}
+
+		isReceivingAnotherLineFromStdout := stdoutScanner.Scan()
+
+		if isReceivingAnotherLineFromStdout {
+			fmt.Println("1")
+			currentLineFromStdout := stdoutScanner.Text()
+
+			if strings.Contains(currentLineFromStdout, "<PIL.Image.Image") {
+				numberOfInprogressImages++
+				fmt.Println("Assuming another 50 steps completed! Iteration_status = ", numberOfInprogressImages*50)
+
+			} else if strings.Contains(currentLineFromStdout, "SUCCESS") {
+				fmt.Println("SUCCESS, model run complete")
+				exiting = true
+				modelSubProcess.Wait()
+			}
+
+			/*
+				// Exit if the script execution throws any errors
+				isReceivingAnotherLineFromStderr := stderrScanner.Scan()
+				if isReceivingAnotherLineFromStderr {
+					currentLineFromStderr := stderrScanner.Text()
+					if len(currentLineFromStderr) != 0 {
+						modelSubProcess.Wait()
+						return
+					}
+
+					fmt.Println("2")
+			*/
+		}
+	}
 }
 
 // Sends a job request to the scheduler
@@ -148,16 +202,95 @@ func registerWorkerWithScheduler() {
 
 // Initializes log file for the GPU_WORKER
 func initializeLogFile() {
-	logFile, err := os.OpenFile(("./logs/exia.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	logFile, err := os.OpenFile(("./logs/worker.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatal("main: error opening logfile")
 	}
 	log.SetOutput(logFile)
 }
 
+// FIXME
+// IMPORTANT: THIS IS AN UGLY POC
+// IT WORKS BUT ASSUMES THE MODEL RUNS FLAWLESSLY WITHOUT CRASHING
+// IT DOES NOT UNDERSTAND CRASHES OR TIMEOUTS AND GETS STUCK IF ANYTHING WEIRD HAPPENS
+func testing() {
+
+	// Prepare for running the model as a subprocess
+	modelSubProcess := exec.Command("./disco.sh", "argument 1", "argument 2", "argument 3")
+
+	stdout, err := modelSubProcess.StdoutPipe()
+	if err != nil {
+		log.Println("testing: error connecting to stdout", err)
+		return
+	}
+	defer stdout.Close()
+
+	stderr, err := modelSubProcess.StderrPipe()
+	if err != nil {
+		log.Println("testing: error connecting to stderr", err)
+		return
+	}
+	defer stderr.Close()
+
+	// Run the model
+	err = modelSubProcess.Start()
+	if err != nil {
+		log.Println("testing: error running cmd.Start()", err)
+		return
+	}
+
+	// Read the output of the model line by line
+	stdoutScanner := bufio.NewScanner(stdout)
+	//stderrScanner := bufio.NewScanner(stderr)
+	numberOfInprogressImages := -1
+	var exiting bool
+	for {
+
+		if exiting {
+			if modelSubProcess.ProcessState.Exited() {
+				fmt.Println("Exiting the model gracefully")
+				return
+			}
+		}
+
+		isReceivingAnotherLineFromStdout := stdoutScanner.Scan()
+
+		if isReceivingAnotherLineFromStdout {
+			fmt.Println("1")
+			currentLineFromStdout := stdoutScanner.Text()
+
+			if strings.Contains(currentLineFromStdout, "<PIL.Image.Image") {
+				numberOfInprogressImages++
+				fmt.Println("Assuming another 50 steps completed! Iteration_status = ", numberOfInprogressImages*50)
+
+			} else if strings.Contains(currentLineFromStdout, "SUCCESS") {
+				fmt.Println("SUCCESS, model run complete")
+				exiting = true
+				modelSubProcess.Wait()
+			}
+
+			/*
+				// Exit if the script execution throws any errors
+				isReceivingAnotherLineFromStderr := stderrScanner.Scan()
+				if isReceivingAnotherLineFromStderr {
+					currentLineFromStderr := stderrScanner.Text()
+					if len(currentLineFromStderr) != 0 {
+						modelSubProcess.Wait()
+						return
+					}
+
+					fmt.Println("2")
+			*/
+		}
+	}
+}
+
 // This is the main function :D
 func main() {
 	initializeLogFile()
+
+	runModel("quizical look | friendly person | leica arstation HDR | extremely detailed")
+	os.Exit(0) // testing:W
 
 	http.HandleFunc("/api/0/worker", api_0_worker) // Listen for new jobs on this endpoint
 

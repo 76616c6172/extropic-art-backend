@@ -15,7 +15,7 @@ import (
 
 const WORKER_PORT = ":8090"
 const SCHEDULER_IP = "http://127.0.0.1:8091"
-const SECRET = "kldsjfksdjfwefjeojfefjkksdjfdsfsd932849j92h2uhf" //TODO: Authenticate better
+const SECRET = "klhjfhf93hfu3fhiu3hf3hf3]ueyf0" //TODO: Authenticate better
 
 var IS_BUSY = false //set to true while the worker is busy
 var WORKER_ID string
@@ -54,7 +54,7 @@ func api_0_worker(w http.ResponseWriter, r *http.Request) {
 func runModel(prompt string) {
 
 	// build the parameters to call the script with
-	modelParameters := fmt.Sprintf("--text_prompts '{\"0\": [\"%s\"]}' --steps 240 --width_height '[1920, 1080]'", prompt)
+	modelParameters := fmt.Sprintf("--text_prompts '{\"0\": [\"%s\"]}' --steps 240 --width_height '[1920, 1088]'", prompt)
 	fmt.Println(modelParameters)
 
 	// call the python script with the prompt as agrument
@@ -117,18 +117,19 @@ func sendJobRequest() (exapi.Job, error) {
 }
 
 // Send an authenticated webrequest to the scheduler, registering the worker
-func registerWorker() {
+func registerWorkerWithScheduler() {
 
-	fmt.Println("Registering with scheduler")
+	fmt.Println("Registering with scheduler") // debug
 
+	// Prepare the web request
 	req, err := http.NewRequest("POST", SCHEDULER_IP+"/api/0/registration", nil)
 	if err != nil {
 		log.Println("Error registering worker: ", err)
 		return
 	}
-
 	req.AddCookie(&http.Cookie{Name: "secret", Value: SECRET})
 
+	// Send the web request
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -138,28 +139,30 @@ func registerWorker() {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		log.Println("Error registering worker: ", resp.StatusCode)
+		log.Println("registerWorker: Error registering worker: ", resp.StatusCode)
 		return
 	}
 
 	fmt.Println("Worker successully registered with scheduler")
 }
 
-func main() {
-
-	// Set up a log file
-	logFile, err := os.OpenFile(("./logs/worker.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+// Initializes log file for the GPU_WORKER
+func initializeLogFile() {
+	logFile, err := os.OpenFile(("./logs/exia.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatal("main: error opening logfile")
 	}
-	defer logFile.Close()
 	log.SetOutput(logFile)
+}
 
-	http.HandleFunc("/api/0/worker", api_0_worker) //register handler for /api/0/worker
+// This is the main function :D
+func main() {
+	initializeLogFile()
 
-	// Register with the scheduler
-	registerWorker()
+	http.HandleFunc("/api/0/worker", api_0_worker) // Listen for new jobs on this endpoint
 
-	fmt.Println("Worker is running, waiting for assignments..")
-	http.ListenAndServe(WORKER_PORT, nil) //start the server
+	registerWorkerWithScheduler()
+
+	fmt.Println("Worker is running, waiting for assignments..") // Debug
+	http.ListenAndServe(WORKER_PORT, nil)
 }

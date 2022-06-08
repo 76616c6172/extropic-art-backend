@@ -22,7 +22,7 @@ var SECRET string
 
 // GPU_WORERS register themselves with the scheduler through this endpoint
 // /api/0/registration
-func api_0_registration(w http.ResponseWriter, r *http.Request) {
+func workerRegistrationHandler(w http.ResponseWriter, r *http.Request) {
 
 	registrationSecret, err := r.Cookie("secret")
 	if err != nil {
@@ -54,7 +54,7 @@ func api_0_registration(w http.ResponseWriter, r *http.Request) {
 
 // GPU_WORKERS send images+metadata to this endpoint
 // /api/0/report
-func api_0_report(w http.ResponseWriter, r *http.Request) {
+func jobReportHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 
 	}
@@ -92,10 +92,9 @@ func main() {
 	exdb.InitializeWorkerdb()
 	exdb.InitializeJobdb()
 
-	http.HandleFunc("/api/0/registration", api_0_registration)
-	http.HandleFunc("/api/0/report", api_0_report)
+	http.HandleFunc("/api/0/registration", workerRegistrationHandler)
+	http.HandleFunc("/api/0/report", jobReportHandler)
 
 	go http.ListenAndServe(WEBSERVER_PORT, nil)
-
 	KeepSchedulerRunningUntilExitSignalIsReceived()
 }

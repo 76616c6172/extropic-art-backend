@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -18,8 +19,10 @@ const WEBSERVER_PORT = ":8091" // Scheduler is listening on this port
 const P100 = 1                 // Default worker type
 const IP = "127.0.0.1"         // Local worker ip for testing
 
+var WORKERDB *sql.DB //pointer used to connect to the db, initialized in main
 var SECRET string
 
+// Initialize and connect to workerdb
 // GPU_WORERS register themselves with the scheduler through this endpoint
 // /api/0/registration
 func workerRegistrationHandler(w http.ResponseWriter, r *http.Request) {
@@ -35,7 +38,7 @@ func workerRegistrationHandler(w http.ResponseWriter, r *http.Request) {
 		newWorkerId := uuid.New().String()
 		fmt.Println("New worker ID created:", newWorkerId)
 
-		err := exdb.RegisterNewWorker(newWorkerId, IP, P100)
+		err := exdb.RegisterNewWorker(WORKERDB, newWorkerId, IP, P100)
 		if err != nil {
 			log.Println("Error registering worker:", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -55,6 +58,7 @@ func workerRegistrationHandler(w http.ResponseWriter, r *http.Request) {
 // GPU_WORKERS send images+metadata to this endpoint
 // /api/0/report
 func jobReportHandler(w http.ResponseWriter, r *http.Request) {
+
 	if r.Method == "POST" {
 
 	}
@@ -80,18 +84,17 @@ func InitializeLogFile() {
 }
 
 func main() {
-
-	// Check arguments
-	if len(os.Args) < 2 || len(os.Args) > 2 {
+	if len(os.Args) < 2 || len(os.Args) > 2 { // Check arguments
 		fmt.Println("Error: You must supply EXACTLY one argument (the GPU_WORER auth token) on startup.")
 		os.Exit(1)
 	}
 	SECRET = strings.TrimSpace(os.Args[1])
 
 	InitializeLogFile()
-	exdb.InitializeWorkerdb()
 	exdb.InitializeJobdb()
+	WORKERDB = exdb.InitializeWorkerdb()
 
+	// Register handlers
 	http.HandleFunc("/api/0/registration", workerRegistrationHandler)
 	http.HandleFunc("/api/0/report", jobReportHandler)
 

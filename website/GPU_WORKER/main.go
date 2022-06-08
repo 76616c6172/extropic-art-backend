@@ -28,7 +28,6 @@ var IS_BUSY = false //set to true while the worker is busy
 var WORKER_ID string
 
 // Answers jobs posted to /api/0/worker
-// I think this happens asynchronously
 func api_0_worker(w http.ResponseWriter, r *http.Request) {
 
 	var jobRequest exapi.Job   // holds the request from the client
@@ -261,7 +260,7 @@ func main() {
 
 	http.HandleFunc("/api/0/worker", api_0_worker) // Listen for new jobs on this endpoint
 
-	runModel("quizical look | friendly person | leica arstation HDR | extremely detailed")
+	//runModel("quizical look | friendly person | leica arstation HDR | extremely detailed")
 
 	fmt.Println("Worker is running, waiting for assignments..") // Debug
 	http.ListenAndServe(WORKER_PORT, nil)

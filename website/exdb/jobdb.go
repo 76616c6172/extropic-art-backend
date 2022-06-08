@@ -45,26 +45,24 @@ type Job struct {
 }
 
 // Initialize and connect to jobdb
-func InitializeJobdb() {
-	var err error
-	JOBDB, err = sql.Open("sqlite3", "../model/jobdb/jobs.db")
+func InitializeJobdb() *sql.DB {
+	JOBDB, err := sql.Open("sqlite3", "../model/jobdb/jobs.db")
 	if err != nil {
 		log.Fatal(err) // TODO: Maybe handle this better
 	}
-	//defer db.Close() // If we wanted to close it
 
 	// Create table if it doesn't exist
 	stmnt, err := JOBDB.Prepare(`
-CREATE TABLE IF NOT EXISTS "jobs" (
- "jobid" INTEGER PRIMARY KEY AUTOINCREMENT,
- "prompt" TEXT,
- "status" TEXT,
- "job_params" JSON,
- "iteration_status" INTEGER,
- "iteration_max" INTEGER,
- "time_created" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
- "time_last_updated" TIMESTAMP,
- "time_completed" TIMESTAMP
+	CREATE TABLE IF NOT EXISTS "jobs" (
+	"jobid" INTEGER PRIMARY KEY AUTOINCREMENT,
+	"prompt" TEXT,
+	"status" TEXT,
+	"job_params" JSON,
+	"iteration_status" INTEGER,
+	"iteration_max" INTEGER,
+	"time_created" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	"time_last_updated" TIMESTAMP,
+	"time_completed" TIMESTAMP
 	);`)
 	if err != nil {
 		log.Fatal(err) // TODO: Maybe handle this better
@@ -73,6 +71,7 @@ CREATE TABLE IF NOT EXISTS "jobs" (
 	if err != nil {
 		log.Fatal(err)
 	}
+	return JOBDB
 }
 
 // Adds a new job to the database

@@ -1,6 +1,7 @@
 package exapi
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -14,16 +15,16 @@ import (
 )
 
 // Sends back the status response
-func HandleStatusRequest(w http.ResponseWriter, r *http.Request) {
+func HandleStatusRequest(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "GET" {
 		var statusResponse status
 
 		statusResponse.Gpu = GPU_STATUS
-		statusResponse.Jobs_completed = exdb.GetNumberOfJobsThatHaveStatus("completed")
-		statusResponse.Jobs_queued = exdb.GetNumberOfJobsThatHaveStatus("queued")
-		statusResponse.Newest_completed_jobs = exdb.GetNewestCoupleJobsThatHaveStatus("completed")
-		statusResponse.Newest_jobid = exdb.GetLatestJobid()
+		statusResponse.Jobs_completed = exdb.GetNumberOfJobsThatHaveStatus(db, "completed")
+		statusResponse.Jobs_queued = exdb.GetNumberOfJobsThatHaveStatus(db, "queued")
+		statusResponse.Newest_completed_jobs = exdb.GetNewestCoupleJobsThatHaveStatus(db, "completed", 3)
+		statusResponse.Newest_jobid = exdb.GetLatestJobid(db)
 
 		json.NewEncoder(w).Encode(statusResponse) // send back the response
 	}
@@ -54,7 +55,7 @@ func HandleImgRequests(w http.ResponseWriter, r *http.Request) {
 
 // Finishes parsing the query param from the web request, then looks up the requested job
 // in the database by jobid and sends back the job to the client.
-func sendBackOneJob(w http.ResponseWriter, r *http.Request, str_a string) {
+func sendBackOneJob(db *sql.DB, w http.ResponseWriter, r *http.Request, str_a string) {
 
 	// CHeck if we have a jobid
 	if strings.Contains(str_a, "jobs?jobid") {
@@ -73,7 +74,7 @@ func sendBackOneJob(w http.ResponseWriter, r *http.Request, str_a string) {
 
 		// 2. Get the row from the database
 		var realJob exdb.Job
-		realJob, err = exdb.GetJobByJobid(sanitized_input)
+		realJob, err = exdb.GetJobByJobid(db, sanitized_input)
 		if err != nil {
 			log.Println(err)
 			return
@@ -93,7 +94,7 @@ func sendBackOneJob(w http.ResponseWriter, r *http.Request, str_a string) {
 }
 
 // Sends back list of jobs to the client
-func sendBackMultipleJobs(w http.ResponseWriter, r *http.Request, str_a string) {
+func sendBackMultipleJobs(db *sql.DB, w http.ResponseWriter, r *http.Request, str_a string) {
 
 	// 0. Finish parsing the query parameters
 	b_str := strings.TrimLeft(str_a, "jobs?jobx=")
@@ -115,7 +116,7 @@ func sendBackMultipleJobs(w http.ResponseWriter, r *http.Request, str_a string) 
 	var realJobs []exdb.Job
 
 	// 2. Query the database
-	realJobs, err = exdb.GetjobsBetweenJobidXandJobidY(x, y)
+	realJobs, err = exdb.GetjobsBetweenJobidXandJobidY(db, x, y)
 	if err != nil {
 		log.Println(err)
 		return
@@ -141,23 +142,23 @@ func sendBackMultipleJobs(w http.ResponseWriter, r *http.Request, str_a string) 
 
 // Sends back metadata for one or multiple jobs
 // takes /api/0/jobs=?jobid=1 OR /api/0/jobx=3&joby=4
-func HandleJobsApiGet(w http.ResponseWriter, r *http.Request) {
+func HandleJobsApiGet(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "GET" {
 
 		str_a := strings.TrimLeft(r.URL.String(), "/api/0/")
 		if strings.Contains(str_a, "jobs?jobid") { // assume the client wants only one job back
-			sendBackOneJob(w, r, str_a)
+			sendBackOneJob(db, w, r, str_a)
 			return
 		}
 
-		sendBackMultipleJobs(w, r, str_a) // assume the client wants multiple jobs jobx=1&joby=2
+		sendBackMultipleJobs(db, w, r, str_a) // assume the client wants multiple jobs jobx=1&joby=2
 	}
 }
 
 // Deals with POST requests made to the jobs endpoint (POST new jobs)
 // Adds job to the database with the "queued" status
-func HandleJobsApiPost(w http.ResponseWriter, r *http.Request) {
+func HandleJobsApiPost(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	var j jobResponse
 
 	jsonDecoder := json.NewDecoder(r.Body)
@@ -190,7 +191,7 @@ func HandleJobsApiPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 2. Create the job in the database
-	newJobid, err := exdb.InsertNewJob(jobRequest.Prompt, "")
+	newJobid, err := exdb.InsertNewJob(db, jobRequest.Prompt, "")
 	if err != nil {
 		log.Println("HandleJobsApiPost: Error inserting new job", err)
 		return

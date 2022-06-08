@@ -3,9 +3,7 @@ package exdb // Change this to internals later
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"log"
-	"os"
 	"strconv"
 	"time"
 
@@ -13,7 +11,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var JOBDB *sql.DB // This pointer is shared within the module to do database operations
+//var JOBDB *sql.DB // This pointer is shared within the module to do database operations
 
 // The parameters the diffusion model uses when running the job
 type jobParam struct {
@@ -78,7 +76,7 @@ func InitializeJobdb() *sql.DB {
 // Returns the jobid of the new job
 // Returns error if job already exists or could not be created
 // Assumes JOBDB is initialized first by calling InnitializeJobdb()
-func InsertNewJob(prompt string, job_params interface{}) (int, error) {
+func InsertNewJob(db *sql.DB, prompt string, job_params interface{}) (int, error) {
 
 	job_params_unm, err := json.Marshal(job_params) // Convert job_params to a string
 	if err != nil {
@@ -86,7 +84,7 @@ func InsertNewJob(prompt string, job_params interface{}) (int, error) {
 	}
 	job_params_str := string(job_params_unm)
 
-	stmnt, err := JOBDB.Prepare(` INSERT INTO "jobs" (prompt, status, job_params, iteration_status, iteration_max, time_created, time_last_updated, time_completed) values (?, ?, ?, ?, ?, ?, ?, ?);`) // Prepare the stament
+	stmnt, err := db.Prepare(` INSERT INTO "jobs" (prompt, status, job_params, iteration_status, iteration_max, time_created, time_last_updated, time_completed) values (?, ?, ?, ?, ?, ?, ?, ?);`) // Prepare the stament
 	if err != nil {
 		return -1, err
 	}
@@ -139,10 +137,10 @@ func GetLatestJob() (Job, error) {
 
 // Get job by jobid
 // Returns the job with the given jobid
-func GetJobByJobid(jobid int) (Job, error) {
+func GetJobByJobid(db *sql.DB, jobid int) (Job, error) {
 	var j Job
 
-	row, err := JOBDB.Query(`SELECT * FROM "jobs" WHERE jobid = ?;`, jobid) // Query the database
+	row, err := db.Query(`SELECT * FROM "jobs" WHERE jobid = ?;`, jobid) // Query the database
 	if err != nil {
 		return j, err
 	}
@@ -159,10 +157,10 @@ func GetJobByJobid(jobid int) (Job, error) {
 
 // Dump entire jobdb into memory
 // Returns a slice of all jobs
-func GetAllJobs() ([]Job, error) {
+func GetAllJobs(db *sql.DB) ([]Job, error) {
 	var jobs []Job
 
-	rows, err := JOBDB.Query(`SELECT * FROM "jobs" ORDER BY jobid DESC;`) // Query the database
+	rows, err := db.Query(`SELECT * FROM "jobs" ORDER BY jobid DESC;`) // Query the database
 	if err != nil {
 		return jobs, err
 	}
@@ -183,12 +181,12 @@ func GetAllJobs() ([]Job, error) {
 
 // Queries jobdb and returns a slice of all jobs in the set of [a,...,b]
 // returns an error if the query fails
-func GetjobsBetweenJobidXandJobidY(a int, b int) ([]Job, error) {
+func GetjobsBetweenJobidXandJobidY(db *sql.DB, a int, b int) ([]Job, error) {
 	if a == 0 { // FIXME: Handle the edge case, idk why 0 is not allowed in the query
 		a = 1
 	}
 
-	rows, err := JOBDB.Query(`SELECT * FROM "jobs" WHERE jobid BETWEEN ? AND ?;`, a, b) // Query the database
+	rows, err := db.Query(`SELECT * FROM "jobs" WHERE jobid BETWEEN ? AND ?;`, a, b) // Query the database
 	if err != nil {
 		return nil, err
 	}
@@ -212,10 +210,10 @@ func GetjobsBetweenJobidXandJobidY(a int, b int) ([]Job, error) {
 
 // Returns oldest queued jon from the database
 // Specifically, returns the job with the lowest jobid that has status "queued"
-func GetOldestQueuedJob() (Job, error) {
+func GetOldestQueuedJob(db *sql.DB) (Job, error) {
 	var j Job
 
-	row, err := JOBDB.Query(`SELECT * FROM "jobs" WHERE status = "queued" ORDER BY jobid ASC LIMIT 1;`) // Query the database
+	row, err := db.Query(`SELECT * FROM "jobs" WHERE status = "queued" ORDER BY jobid ASC LIMIT 1;`) // Query the database
 	if err != nil {
 		return j, err
 	}
@@ -231,11 +229,11 @@ func GetOldestQueuedJob() (Job, error) {
 }
 
 // Returns number of jobs from the db that have the status
-func GetNumberOfJobsThatHaveStatus(status string) int {
+func GetNumberOfJobsThatHaveStatus(db *sql.DB, status string) int {
 	var jobs []Job
 	var j Job
 
-	row, err := JOBDB.Query(`SELECT * FROM "jobs" WHERE status = ?;`, status) // Query the database
+	row, err := db.Query(`SELECT * FROM "jobs" WHERE status = ?;`, status) // Query the database
 	if err != nil {
 		log.Println("Error in GetNumberOfCompletedJobs", err)
 		return -1
@@ -254,10 +252,10 @@ func GetNumberOfJobsThatHaveStatus(status string) int {
 	return len(jobs)
 }
 
-func GetLatestJobid() string {
+func GetLatestJobid(db *sql.DB) string {
 	var j Job
 
-	row, err := JOBDB.Query(`SELECT * FROM "jobs" ORDER BY jobid DESC LIMIT 1;`)
+	row, err := db.Query(`SELECT * FROM "jobs" ORDER BY jobid DESC LIMIT 1;`)
 	if err != nil {
 		log.Println("Error in GetNumberOfCompletedJobs", err)
 		return "error getting last job"
@@ -275,12 +273,13 @@ func GetLatestJobid() string {
 }
 
 // Returns the last couple jobs from the databasee that have the status you ask
-func GetNewestCoupleJobsThatHaveStatus(status string) []string {
-	const JOB_AMOUNT = 5
+// status = the status you are filtering for
+// numberOfJobs = the amount of jobs the function will return
+func GetNewestCoupleJobsThatHaveStatus(db *sql.DB, status string, numberOfJobs int) []string {
 	var jobs []Job
 	var j Job
 
-	row, err := JOBDB.Query(`SELECT * FROM "jobs" WHERE status = ? ORDER BY jobid DESC LIMIT ?;`, status, JOB_AMOUNT) // Query the database
+	row, err := db.Query(`SELECT * FROM "jobs" WHERE status = ? ORDER BY jobid DESC LIMIT ?;`, status, numberOfJobs) // Query the database
 	if err != nil {
 		log.Println("Error in GetNewestFiveCompletedJobs", err)
 	}
@@ -300,19 +299,4 @@ func GetNewestCoupleJobsThatHaveStatus(status string) []string {
 	}
 
 	return answer
-}
-
-// Called by the main function so we can test the module
-func EntryPointForTesting() { //debug
-
-	//just testing
-	fmt.Println("getting oldest job")
-	j, err := GetOldestQueuedJob()
-	if err != nil {
-		fmt.Println("error getting oldest job")
-	}
-
-	fmt.Println(j.Jobid, j.Prompt)
-
-	os.Exit(0)
 }

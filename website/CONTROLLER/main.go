@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
 	"os"
@@ -11,6 +12,8 @@ import (
 
 const CONTROLLER_PORT = ":8080"
 
+var JOBDB *sql.DB
+
 // Answers calls to the endpoint /api/0/jobs
 func api_0_jobs(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -18,9 +21,9 @@ func api_0_jobs(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "GET":
-		exapi.HandleJobsApiGet(w, r)
+		exapi.HandleJobsApiGet(JOBDB, w, r)
 	case "POST":
-		exapi.HandleJobsApiPost(w, r)
+		exapi.HandleJobsApiPost(JOBDB, w, r)
 	}
 }
 
@@ -35,7 +38,7 @@ func api_0_img(w http.ResponseWriter, r *http.Request) {
 func api_0_status(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "*")
-	exapi.HandleStatusRequest(w, r)
+	exapi.HandleStatusRequest(JOBDB, w, r)
 }
 
 // Initializes log file for the controller
@@ -50,7 +53,7 @@ func initializeLogFile() {
 // This is the main function :D
 func main() {
 	initializeLogFile()
-	exdb.InitializeJobdb()
+	JOBDB = exdb.InitializeJobdb()
 
 	// Handle requests for ressources in dist
 	http.Handle("/", http.FileServer(http.Dir("../view/dist")))

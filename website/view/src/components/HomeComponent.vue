@@ -16,7 +16,15 @@
           <Instructions />
         </div>
       </div>
-      <div class="row justify-content-center pb-5">
+      <div class="row justify-content-center">
+        <div class="col-lg-6 col-sm-12">
+          <ImageNewestRendersComponent
+            v-if="jobStatus.newestCompletedJobs"
+            :newestJobIds="jobStatus.newestCompletedJobs"
+          />
+        </div>
+      </div>
+      <div class="row justify-content-center pb-5 pt-5">
         <div class="col-lg-6 col-sm-12">
           <StatsComponent v-if="jobStatus" :jobStatus="jobStatus" />
         </div>
@@ -41,6 +49,7 @@ import { mapGetters } from "vuex";
 import { default as Navbar } from "../components/general/NavbarComponent.vue";
 import { default as Footer } from "../components/general/FooterComponent.vue";
 import { default as Typing } from "../components/miscellaneous/TypingComponent.vue";
+import { default as ImageNewestRendersComponent } from "../components/content/ImageNewestRendersComponent";
 import { default as Image } from "./content/ImageComponent.vue";
 import { default as TerminalWrapper } from "./content/TerminalWrapperComponent.vue";
 import { default as Instructions } from "../components/miscellaneous/InstructionsComponent.vue";
@@ -56,6 +65,7 @@ export default {
     Image,
     TerminalWrapper,
     StatsComponent,
+    ImageNewestRendersComponent,
   },
   props: {
     msg: String,

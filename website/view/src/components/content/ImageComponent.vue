@@ -43,11 +43,7 @@ export default {
       this.$store
         .dispatch("getSelectedImg")
         .then((response) => {
-          var img = new Image();
-          let blob = new Blob([response], { type: "image/png" });
-          let url = URL.createObjectURL(blob);
-          img.src = url;
-          this.imgObjectURL = img.src;
+          this.imgObjectURL = response;
         })
         .finally(() => {
           this.isLoading = false;

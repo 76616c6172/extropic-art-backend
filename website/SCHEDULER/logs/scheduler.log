@@ -1,84 +1,28 @@
-2022/06/06 23:38:08 http: panic serving 127.0.0.1:46588: runtime error: invalid memory address or nil pointer dereference
-goroutine 18 [running]:
+2022/06/08 12:08:35 http: panic serving 127.0.0.1:56082: runtime error: invalid memory address or nil pointer dereference
+goroutine 5 [running]:
 net/http.(*conn).serve.func1()
 	/usr/local/go/src/net/http/server.go:1825 +0xbf
-panic({0x7d4a20, 0xa6efb0})
+panic({0x7d4a20, 0xa6ffb0})
 	/usr/local/go/src/runtime/panic.go:844 +0x258
-database/sql.(*DB).conn(0x0, {0x8a6b20, 0xc000016120}, 0x1)
+database/sql.(*DB).conn(0x0, {0x8a6b80, 0xc0000b6020}, 0x1)
 	/usr/local/go/src/database/sql/sql.go:1290 +0x53
-database/sql.(*DB).prepare(0x3c?, {0x8a6b20, 0xc000016120}, {0x8312f3, 0xb7}, 0x68?)
+database/sql.(*DB).prepare(0x3c?, {0x8a6b80, 0xc0000b6020}, {0x831300, 0xb6}, 0x68?)
 	/usr/local/go/src/database/sql/sql.go:1588 +0x45
-database/sql.(*DB).PrepareContext(0x3c?, {0x8a6b20, 0xc000016120}, {0x8312f3, 0xb7})
+database/sql.(*DB).PrepareContext(0x3c?, {0x8a6b80, 0xc0000b6020}, {0x831300, 0xb6})
 	/usr/local/go/src/database/sql/sql.go:1557 +0x98
 database/sql.(*DB).Prepare(...)
 	/usr/local/go/src/database/sql/sql.go:1578
-project-exia-monorepo/website/exdb.RegisterNewWorker({0xc0001ba060, 0x24}, {0x81b2b2, 0x9}, 0x2?)
+project-exia-monorepo/website/exdb.RegisterNewWorker({0xc00029c030, 0x24}, {0x81b2b2, 0x9}, 0x2?)
 	/home/valar/projects/project-exia-monorepo/website/exdb/workerdb.go:49 +0x7a
-main.api_0_registration({0x8a6998, 0xc0001c6000}, 0xc0001b8000)
-	/home/valar/projects/project-exia-monorepo/website/SCHEDULER/main.go:48 +0x255
-net/http.HandlerFunc.ServeHTTP(0x7f4c9084b688?, {0x8a6998?, 0xc0001c6000?}, 0x415bc5?)
+main.api_0_registration({0x8a69f8, 0xc0002a8000}, 0xc00029a000)
+	/home/valar/projects/project-exia-monorepo/website/SCHEDULER/main.go:51 +0x285
+net/http.HandlerFunc.ServeHTTP(0x7faf9ed5ddf8?, {0x8a69f8?, 0xc0002a8000?}, 0x415bc5?)
 	/usr/local/go/src/net/http/server.go:2084 +0x2f
-net/http.(*ServeMux).ServeHTTP(0x0?, {0x8a6998, 0xc0001c6000}, 0xc0001b8000)
+net/http.(*ServeMux).ServeHTTP(0x0?, {0x8a69f8, 0xc0002a8000}, 0xc00029a000)
 	/usr/local/go/src/net/http/server.go:2462 +0x149
-net/http.serverHandler.ServeHTTP({0xc0001920c0?}, {0x8a6998, 0xc0001c6000}, 0xc0001b8000)
+net/http.serverHandler.ServeHTTP({0xc000282030?}, {0x8a69f8, 0xc0002a8000}, 0xc00029a000)
 	/usr/local/go/src/net/http/server.go:2916 +0x43b
-net/http.(*conn).serve(0xc000196000, {0x8a6b90, 0xc000094150})
-	/usr/local/go/src/net/http/server.go:1966 +0x5d7
-created by net/http.(*Server).Serve
-	/usr/local/go/src/net/http/server.go:3071 +0x4db
-2022/06/06 23:42:42 http: panic serving 127.0.0.1:46592: runtime error: invalid memory address or nil pointer dereference
-goroutine 18 [running]:
-net/http.(*conn).serve.func1()
-	/usr/local/go/src/net/http/server.go:1825 +0xbf
-panic({0x7d4a20, 0xa6efb0})
-	/usr/local/go/src/runtime/panic.go:844 +0x258
-database/sql.(*DB).conn(0x0, {0x8a6b20, 0xc000016120}, 0x1)
-	/usr/local/go/src/database/sql/sql.go:1290 +0x53
-database/sql.(*DB).prepare(0x3c?, {0x8a6b20, 0xc000016120}, {0x8312f3, 0xb6}, 0x68?)
-	/usr/local/go/src/database/sql/sql.go:1588 +0x45
-database/sql.(*DB).PrepareContext(0x3c?, {0x8a6b20, 0xc000016120}, {0x8312f3, 0xb6})
-	/usr/local/go/src/database/sql/sql.go:1557 +0x98
-database/sql.(*DB).Prepare(...)
-	/usr/local/go/src/database/sql/sql.go:1578
-project-exia-monorepo/website/exdb.RegisterNewWorker({0xc0000ce060, 0x24}, {0x81b2b2, 0x9}, 0x2?)
-	/home/valar/projects/project-exia-monorepo/website/exdb/workerdb.go:49 +0x7a
-main.api_0_registration({0x8a6998, 0xc0000920e0}, 0xc0000cc000)
-	/home/valar/projects/project-exia-monorepo/website/SCHEDULER/main.go:48 +0x255
-net/http.HandlerFunc.ServeHTTP(0x7fb1b7fc6688?, {0x8a6998?, 0xc0000920e0?}, 0x415bc5?)
-	/usr/local/go/src/net/http/server.go:2084 +0x2f
-net/http.(*ServeMux).ServeHTTP(0x0?, {0x8a6998, 0xc0000920e0}, 0xc0000cc000)
-	/usr/local/go/src/net/http/server.go:2462 +0x149
-net/http.serverHandler.ServeHTTP({0xc000094240?}, {0x8a6998, 0xc0000920e0}, 0xc0000cc000)
-	/usr/local/go/src/net/http/server.go:2916 +0x43b
-net/http.(*conn).serve(0xc0000be000, {0x8a6b90, 0xc000094150})
-	/usr/local/go/src/net/http/server.go:1966 +0x5d7
-created by net/http.(*Server).Serve
-	/usr/local/go/src/net/http/server.go:3071 +0x4db
-2022/06/06 23:42:46 http: panic serving 127.0.0.1:46594: runtime error: invalid memory address or nil pointer dereference
-goroutine 20 [running]:
-net/http.(*conn).serve.func1()
-	/usr/local/go/src/net/http/server.go:1825 +0xbf
-panic({0x7d4a20, 0xa6efb0})
-	/usr/local/go/src/runtime/panic.go:844 +0x258
-database/sql.(*DB).conn(0x0, {0x8a6b20, 0xc000016120}, 0x1)
-	/usr/local/go/src/database/sql/sql.go:1290 +0x53
-database/sql.(*DB).prepare(0x3c?, {0x8a6b20, 0xc000016120}, {0x8312f3, 0xb6}, 0x68?)
-	/usr/local/go/src/database/sql/sql.go:1588 +0x45
-database/sql.(*DB).PrepareContext(0x3c?, {0x8a6b20, 0xc000016120}, {0x8312f3, 0xb6})
-	/usr/local/go/src/database/sql/sql.go:1557 +0x98
-database/sql.(*DB).Prepare(...)
-	/usr/local/go/src/database/sql/sql.go:1578
-project-exia-monorepo/website/exdb.RegisterNewWorker({0xc0001a4060, 0x24}, {0x81b2b2, 0x9}, 0x2?)
-	/home/valar/projects/project-exia-monorepo/website/exdb/workerdb.go:49 +0x7a
-main.api_0_registration({0x8a6998, 0xc0001b0000}, 0xc0001a2000)
-	/home/valar/projects/project-exia-monorepo/website/SCHEDULER/main.go:48 +0x255
-net/http.HandlerFunc.ServeHTTP(0x7fb1b7fc6688?, {0x8a6998?, 0xc0001b0000?}, 0x415bc5?)
-	/usr/local/go/src/net/http/server.go:2084 +0x2f
-net/http.(*ServeMux).ServeHTTP(0x0?, {0x8a6998, 0xc0001b0000}, 0xc0001a2000)
-	/usr/local/go/src/net/http/server.go:2462 +0x149
-net/http.serverHandler.ServeHTTP({0xc00019a030?}, {0x8a6998, 0xc0001b0000}, 0xc0001a2000)
-	/usr/local/go/src/net/http/server.go:2916 +0x43b
-net/http.(*conn).serve(0xc0000be140, {0x8a6b90, 0xc000094150})
+net/http.(*conn).serve(0xc000218000, {0x8a6bf0, 0xc000200150})
 	/usr/local/go/src/net/http/server.go:1966 +0x5d7
 created by net/http.(*Server).Serve
 	/usr/local/go/src/net/http/server.go:3071 +0x4db

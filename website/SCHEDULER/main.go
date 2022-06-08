@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -21,15 +20,6 @@ const IP = "127.0.0.1"         // Local worker ip for testing
 
 var SECRET string
 
-// Sends back empty response with status code 500
-func sendErrorResponseToWorker(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("500 - Error registering worker"))
-	e := struct {
-		Registration string `json:"registration"`
-	}{}
-	json.NewEncoder(w).Encode(e) // send back the json as a the response
-}
-
 // GPU_WORERS register themselves with the scheduler through this endpoint
 // /api/0/registration
 func api_0_registration(w http.ResponseWriter, r *http.Request) {
@@ -37,7 +27,7 @@ func api_0_registration(w http.ResponseWriter, r *http.Request) {
 	registrationSecret, err := r.Cookie("secret")
 	if err != nil {
 		log.Println("Error reading secret cookie: ", err)
-		sendErrorResponseToWorker(w, r)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -48,12 +38,27 @@ func api_0_registration(w http.ResponseWriter, r *http.Request) {
 		err := exdb.RegisterNewWorker(newWorkerId, IP, P100)
 		if err != nil {
 			log.Println("Error registering worker:", err)
-			sendErrorResponseToWorker(w, r)
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
+		// Send OK response
+		w.WriteHeader(http.StatusAccepted)
+
 		fmt.Println("Registration successful") // debug
+		return
 	}
+	// Registration secret is wrong, send back bad response
+	w.WriteHeader(http.StatusForbidden)
+}
+
+// GPU_WORKERS send images+metadata to this endpoint
+// /api/0/report
+func api_0_report(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+
+	}
+
 }
 
 // Keeps the scheduler running until CTRL-C or exit signal is received.
@@ -88,6 +93,7 @@ func main() {
 	exdb.InitializeJobdb()
 
 	http.HandleFunc("/api/0/registration", api_0_registration)
+	http.HandleFunc("/api/0/report", api_0_report)
 
 	go http.ListenAndServe(WEBSERVER_PORT, nil)
 

@@ -42,7 +42,6 @@ const actions = {
           const newestJobId = Number(data.newest_jobid);
           switch (scrollEvent) {
             case "initial":
-              console.log("initial");
               commit("SET_JOBSTATUS", {
                 jobRange: {
                   jobx: newestJobId - 9 >= 1 ? newestJobId - 9 : 1,
@@ -55,7 +54,6 @@ const actions = {
               });
               break;
             case "add":
-              console.log("add");
               commit("SET_JOBSTATUS", {
                 jobRange: {
                   jobx:
@@ -179,8 +177,10 @@ const actions = {
     payload.img = `${url}/img?${jobId}`;
     commit("FETCH_SELECTED_JOB", payload);
   },
-  async getSelectedImg() {
-    let imgURL = state.selectedJob.img_path;
+  async getSelectedImg(_, jobId) {
+    let imgURL = jobId
+      ? `${url}/img?jobid=${jobId}`
+      : state.selectedJob.img_path;
     try {
       return await axios
         .get(`${imgURL}`, { responseType: "blob" })
@@ -188,7 +188,11 @@ const actions = {
           if (response.status == 200) {
             return new Promise((resolve) => {
               const payload = response.data;
-              resolve(payload);
+              let img = new Image();
+              let blob = new Blob([payload], { type: "image/png" });
+              let url = URL.createObjectURL(blob);
+              img.src = url;
+              resolve(img.src);
             });
           }
         });

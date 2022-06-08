@@ -7,19 +7,19 @@
           {{ getText("counterTotal") }}
         </h2>
         <h2 v-else class="display-3 text-start">
-          {{ jobStatusObj.newestJobId }}
+          {{ jobStatus.newestJobId }}
         </h2>
-        <p v-if="jobStatusObj.newestJobId" class="text-start">Images total</p>
+        <p v-if="jobStatus.newestJobId" class="text-start">Images total</p>
       </div>
       <div class="col-4">
         <!-- Jobs Queued -->
         <h2 v-if="!isPageLoaded" class="display-3 text-start">
           {{ getText("counterQueued") }}
         </h2>
-        <h2 v-else class="display-2 text-start">
-          {{ jobStatusObj.jobsQueued }}
+        <h2 v-else class="display-3 text-start">
+          {{ jobStatus.jobsQueued }}
         </h2>
-        <p v-if="jobStatusObj.jobsQueued" class="text-start">Images queued</p>
+        <p v-if="jobStatus.jobsQueued" class="text-start">Images queued</p>
       </div>
       <div class="col-4">
         <!-- Jobs Completed -->
@@ -27,9 +27,9 @@
           {{ getText("counterCompleted") }}
         </h2>
         <h2 v-else class="display-3 text-start">
-          {{ jobStatusObj.jobsCompleted }}
+          {{ jobStatus.jobsCompleted }}
         </h2>
-        <p v-if="jobStatusObj.jobsCompleted" class="text-start">
+        <p v-if="jobStatus.jobsCompleted" class="text-start">
           Images completed
         </p>
       </div>
@@ -47,8 +47,7 @@ export default {
         counterQueued: 0,
         counterCompleted: 0,
       },
-      jobStatusObj: {},
-      jobStatusObjProperty: "",
+      jobStatusProperty: "",
     };
   },
   props: {
@@ -85,23 +84,23 @@ export default {
       return new Promise((resolve) => setTimeout(resolve, ms));
     },
     async setText(type) {
-      if (type !== this.jobStatus[this.jobStatusObjProperty]) {
+      if (type !== this.jobStatus[this.jobStatusProperty]) {
         switch (type) {
           case "counterTotal":
-            this.jobStatusObjProperty = "newestJobId";
+            this.jobStatusProperty = "newestJobId";
             break;
           case "counterQueued":
-            this.jobStatusObjProperty = "jobsQueued";
+            this.jobStatusProperty = "jobsQueued";
             break;
           case "counterCompleted":
-            this.jobStatusObjProperty = "jobsCompleted";
+            this.jobStatusProperty = "jobsCompleted";
             break;
           default:
             break;
         }
       }
-      if (this.counterObj[type] < this.jobStatus[this.jobStatusObjProperty]) {
-        await this.delay(150);
+      if (this.counterObj[type] < this.jobStatus[this.jobStatusProperty]) {
+        await this.delay(1);
         this.counterObj[type]++;
         this.setText(type);
       } else {
@@ -117,7 +116,6 @@ export default {
   watch: {
     jobStatus: {
       handler() {
-        this.jobStatusObj = this.jobStatus;
         this.setText("counterTotal");
         this.setText("counterQueued");
         this.setText("counterCompleted");

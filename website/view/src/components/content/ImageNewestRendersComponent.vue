@@ -1,9 +1,6 @@
 <template>
   <div>
     <div class="row">
-      <div class="col-12">
-        <h2 class="display-8 text-start">Most Recent renders</h2>
-      </div>
       <!-- <div
         v-for="(img, index) in blobObjArrayLocalStorage"
         :key="index"

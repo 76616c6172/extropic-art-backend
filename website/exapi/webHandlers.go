@@ -181,7 +181,7 @@ func HandleJobsApiPost(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 
 	if len(jobRequest.Prompt) < 1 {
 		j.Jobid = -1
-		j.Prompt = jobRequest.Prompt // TODO: Validate and sanitize user input first
+		j.Prompt = jobRequest.Prompt
 		j.Job_status = "Rejected"
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("500 - Something bad happened!"))
@@ -199,7 +199,7 @@ func HandleJobsApiPost(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 
 	// 3. Send back the jobid of the newly created job to the client
 	j.Jobid = newJobid
-	j.Prompt = jobRequest.Prompt // TODO: Validate and sanitize user input first
+	j.Prompt = jobRequest.Prompt
 	j.Job_status = "accepted"
 
 	json.NewEncoder(w).Encode(j) // send back the json as a the response

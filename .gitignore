@@ -7,6 +7,12 @@ node_modules
 /dist
 *db-cleaner*
 
+# Ignore large fils from the model
+website/model/jpgs/
+
+# Ignore temporary helper scripts
+make_jpgs
+
 # local env files
 .env.local
 .env.*.local

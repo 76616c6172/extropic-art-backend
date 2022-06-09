@@ -55,8 +55,8 @@ func main() {
 	initializeLogFile()
 	JOBDB = exdb.InitializeJobdb()
 
-	// Handle requests for ressources in dist
-	http.Handle("/", http.FileServer(http.Dir("../view/dist")))
+	http.Handle("/", http.FileServer(http.Dir("../view/dist"))) // Handles requests for ressources in dist
+	http.Handle("/jpg/", http.StripPrefix("/jpg/", http.FileServer(http.Dir("../model/jpgs"))))
 
 	// Register API endpoints
 	http.HandleFunc("/api/0/status", api_0_status)

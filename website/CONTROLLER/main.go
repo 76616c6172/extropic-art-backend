@@ -50,13 +50,30 @@ func initializeLogFile() {
 	log.SetOutput(logFile)
 }
 
+/*
+// Wrapper for fileserver with CORS headers
+// Responds to the request with the appropriate <jobid>.jpg
+func handleRequestsForJPG(fs http.Handler) http.HandlerFunc {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		fs.ServeHTTP(w, r)
+	}
+	//http.StripPrefix("/jpg/", http.FileServer(http.Dir("../model/jpgs")))
+	//http.StripPrefix("/jpg/", http.FileServer(http.Dir("../model/jpgs")))
+}
+*/
+
 // This is the main function :D
 func main() {
 	initializeLogFile()
 	JOBDB = exdb.InitializeJobdb()
 
 	http.Handle("/", http.FileServer(http.Dir("../view/dist"))) // Handles requests for ressources in dist
-	http.Handle("/jpg/", http.StripPrefix("/jpg/", http.FileServer(http.Dir("../model/jpgs"))))
+	//fs := http.FileServer(http.Dir("../model/jpgs"))
+	//http.Handle("/jpg/", http.StripPrefix("/jpg/", handleRequestsForJPG(fs))
+	//http.Handle("/jpg/", http.StripPrefix("/jpg/", http.FileServer(http.Dir("../model/jpgs"))))
 
 	// Register API endpoints
 	http.HandleFunc("/api/0/status", api_0_status)

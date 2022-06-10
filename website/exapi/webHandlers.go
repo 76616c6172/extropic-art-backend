@@ -14,6 +14,12 @@ import (
 	"project-exia-monorepo/website/exdb"
 )
 
+// Used to decide to send back JPG or PNG
+const (
+	JPG = iota
+	PNG
+)
+
 // Sends back the status response
 func HandleStatusRequest(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 
@@ -31,25 +37,59 @@ func HandleStatusRequest(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 
 }
 
+// Sends back JPG to the client
+// expects requests like: https://exia.art/api/0/img?type=thumbnail?jobid=10
+func SendBackJPG(w http.ResponseWriter, r *http.Request) {
+
+}
+
+// Sends back PNG to the client
+// expects requests like: https://exia.art/api/0/img?type=full?jobid=10
+func SendBackPNGorJPG(w http.ResponseWriter, r *http.Request, imageType int) {
+
+	if imageType == PNG {
+		jobidFromQuery := strings.TrimPrefix(r.URL.RawQuery, "type=full?jobid=")
+
+		img, err := os.Open("../model/images/pngs/" + jobidFromQuery + ".png")
+		if err != nil {
+			img, err = os.Open("../model/images/pngs/placeholder.png")
+			log.Println(err)
+		}
+		defer img.Close()
+
+		_, err = io.Copy(w, img) // send the image
+		if err != nil {
+			log.Println(err)
+		}
+		return
+	}
+
+	if imageType == JPG {
+		//QueryWithoutWhitespace := strings.TrimSpace(r.URL.RawQuery)
+		jobidFromQuery := strings.TrimPrefix(r.URL.RawQuery, "type=thumbnail?jobid=")
+
+		img, err := os.Open("../model/images/jpgs/" + jobidFromQuery + ".jpg")
+		if err != nil {
+			img, err = os.Open("../model/images/jpgs/placeholder.jpg")
+			log.Println(err)
+		}
+		defer img.Close()
+
+		_, err = io.Copy(w, img) // send the image
+		if err != nil {
+			log.Println(err)
+
+		}
+	}
+}
+
 // Obtains the coorect image for a given job and sends it back
 func HandleImgRequests(w http.ResponseWriter, r *http.Request) {
 
-	input := fmt.Sprintln(r.URL)
-	inputstring := strings.TrimLeft(input, "/api/0/img?jobid=")
-	inputstring2 := strings.TrimSpace(inputstring)
-
-	img, err := os.Open("../model/images/" + inputstring2 + ".png")
-	if err != nil {
-		img, err = os.Open("../model/images/placeholder.png") // send placeholder image
-		log.Println(err)
-	}
-	defer img.Close()
-
-	w.Header().Set("Content-Type", "image/png") // <-- set the content-type header
-
-	_, err = io.Copy(w, img) // send the image
-	if err != nil {
-		log.Println(err)
+	if strings.Contains(r.URL.RawQuery, "type=full") { // client wants a PNG
+		SendBackPNGorJPG(w, r, PNG)
+	} else if strings.Contains(r.URL.RawQuery, "type=thumbnail") { // client wants JPG
+		SendBackPNGorJPG(w, r, JPG)
 	}
 }
 

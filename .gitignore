@@ -8,8 +8,8 @@ node_modules
 *db-cleaner*
 
 # Ignore large fils from the model
-website/model/jpgs/
-website/model/images/
+website/model/images/jpgs/
+website/model/images/pngs/
 
 # Ignore temporary helper scripts
 make_jpgs

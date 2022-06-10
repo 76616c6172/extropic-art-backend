@@ -1,19 +1,17 @@
 <template>
   <div>
     <div class="row">
-      <!-- <div
-        v-for="(img, index) in blobObjArrayLocalStorage"
-        :key="index"
-        class="col-xxl-4 col-xl-4 col-lg-4 col-md-4 col-sm-1 col-xs-1"
-      >
-        <img :src="img" class="img-fluid img-thumbnail" alt="" />
-      </div> -->
       <div
-        v-for="(img, index) in blobObjArray"
+        v-for="(el, index) in blobObjArray"
         :key="index"
         class="col-xxl-4 col-xl-4 col-lg-4 col-md-4 col-sm-1 col-xs-1"
       >
-        <img :src="img" class="img-fluid img-thumbnail" alt="" />
+        <img
+          @click="onClickSetSelected(el.jobId)"
+          :src="el.imgURL"
+          class="img-fluid img-thumbnail"
+          alt=""
+        />
       </div>
     </div>
   </div>
@@ -25,16 +23,18 @@ export default {
   data() {
     return {
       blobObjArray: [],
-      blobObjArrayLocalStorage: [],
     };
   },
   props: ["newestJobIds"],
   methods: {
     createImgObjectURL(jobId) {
       this.$store.dispatch("getSelectedImg", jobId).then((response) => {
-        this.blobObjArray.push(response);
-        // LocalStorage
-        // localStorage.setItem(`job-${jobId}`, response);
+        this.blobObjArray.push({ jobId: jobId, imgURL: response });
+      });
+    },
+    onClickSetSelected(jobId) {
+      this.$store.dispatch("fetchSingleJob", jobId).then(() => {
+        console.log("triggered");
       });
     },
   },
@@ -46,11 +46,7 @@ export default {
   async mounted() {
     if (this.blobObjArray.length == 0)
       this.newestJobIds.map((jobId, index) =>
-        index < 3
-          ? this.createImgObjectURL(jobId)
-          : this.blobObjArrayLocalStorage.push(
-              localStorage.getItem(`job-${jobId}`)
-            )
+        index < 3 ? this.createImgObjectURL(jobId) : ""
       );
   },
 };

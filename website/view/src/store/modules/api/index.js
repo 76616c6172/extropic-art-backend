@@ -170,17 +170,46 @@ const actions = {
       console.log(error);
     }
   },
-  getSelectedJob({ commit }, jobId) {
-    const payload = this.getters.getJobs.filter(
-      (job) => job.jobid === jobId
-    )[0];
-    payload.img = `${url}/img?${jobId}`;
-    commit("FETCH_SELECTED_JOB", payload);
+  getSelectedJob({ commit }, { jobId, type }) {
+    switch (type) {
+      case "filterState": {
+        const payload = this.getters.getJobs.filter(
+          (job) => job.jobid === jobId
+        )[0];
+        payload.img = `${url}/img?${jobId}`;
+        payload.type = "filterState";
+        commit("FETCH_SELECTED_JOB", payload);
+        break;
+      }
+      case "newRequest":
+        try {
+          return axios
+            .get(`${url}/jobs?jobx=${jobId}&joby=${jobId}`)
+            .then((response) => {
+              if (response.status == 200) {
+                const payload = response.data[0];
+                payload.type = "newRequest";
+                commit("FETCH_SELECTED_JOB", payload);
+              }
+            });
+        } catch (error) {
+          console.log(error);
+        }
+        break;
+    }
   },
   async getSelectedImg(_, jobId) {
+    let imgType = jobId ? "jpg" : "png";
+    let imgSize = jobId ? "thumbnail" : "full";
+    // to get JPG: /api/0/img?type=thumbnail?jobid=10
+    // to get PNG: /api/0/img?type=full?jobid=10
     let imgURL = jobId
-      ? `${url}/img?jobid=${jobId}`
-      : state.selectedJob.img_path;
+      ? // JPG
+        `${url}/img?type=${imgSize}?jobid=${jobId}`
+      : // PNG
+        `${
+          state.selectedJob.img_path.split("?jobid")[0]
+        }?type=${imgSize}?jobid=${state.selectedJob.jobid}`;
     try {
       return await axios
         .get(`${imgURL}`, { responseType: "blob" })
@@ -189,7 +218,7 @@ const actions = {
             return new Promise((resolve) => {
               const payload = response.data;
               let img = new Image();
-              let blob = new Blob([payload], { type: "image/png" });
+              let blob = new Blob([payload], { type: `image/${imgType}` });
               let url = URL.createObjectURL(blob);
               img.src = url;
               resolve(img.src);

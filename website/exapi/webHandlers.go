@@ -37,12 +37,6 @@ func HandleStatusRequest(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 
 }
 
-// Sends back JPG to the client
-// expects requests like: https://exia.art/api/0/img?type=thumbnail?jobid=10
-func SendBackJPG(w http.ResponseWriter, r *http.Request) {
-
-}
-
 // Sends back PNG to the client
 // expects requests like: https://exia.art/api/0/img?type=full?jobid=10
 func SendBackPNGorJPG(w http.ResponseWriter, r *http.Request, imageType int) {
@@ -65,7 +59,6 @@ func SendBackPNGorJPG(w http.ResponseWriter, r *http.Request, imageType int) {
 	}
 
 	if imageType == JPG {
-		//QueryWithoutWhitespace := strings.TrimSpace(r.URL.RawQuery)
 		jobidFromQuery := strings.TrimPrefix(r.URL.RawQuery, "type=thumbnail?jobid=")
 
 		img, err := os.Open("../model/images/jpgs/" + jobidFromQuery + ".jpg")
@@ -128,6 +121,7 @@ func sendBackOneJob(db *sql.DB, w http.ResponseWriter, r *http.Request, str_a st
 		responseJob.Iteration_status = realJob.Iteration_status
 		responseJob.Iteration_max = realJob.Iteration_max
 		responseJob.Img_path = "https://exia.art/api/0/img?jobid=" + responseJob.Jobid
+
 		// 4. Send back the response
 		json.NewEncoder(w).Encode(responseJob)
 	}
@@ -177,7 +171,6 @@ func sendBackMultipleJobs(db *sql.DB, w http.ResponseWriter, r *http.Request, st
 
 	// 4. Send back the response
 	json.NewEncoder(w).Encode(responseJobs)
-	return
 }
 
 // Sends back metadata for one or multiple jobs

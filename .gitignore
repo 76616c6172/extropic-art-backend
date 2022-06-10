@@ -9,6 +9,7 @@ node_modules
 
 # Ignore large fils from the model
 website/model/jpgs/
+website/model/images/
 
 # Ignore temporary helper scripts
 make_jpgs

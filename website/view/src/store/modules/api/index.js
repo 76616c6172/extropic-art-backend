@@ -144,22 +144,6 @@ const actions = {
         break;
     }
   },
-  // Fetch Single Job
-  async fetchSingleJob({ commit }, jobId) {
-    try {
-      return axios
-        .get(`${url}/jobs?jobx=${jobId}&joby=${jobId}`)
-        .then((response) => {
-          if (response.status == 200) {
-            const payload = response.data;
-            console.log(payload);
-            commit("FETCH_SINGLE_JOB", payload);
-          }
-        });
-    } catch (error) {
-      console.log(error);
-    }
-  },
   // Send Job
   async sendNewJob({ commit, dispatch }, newJobObj) {
     try {
@@ -186,12 +170,33 @@ const actions = {
       console.log(error);
     }
   },
-  getSelectedJob({ commit }, jobId) {
-    const payload = this.getters.getJobs.filter(
-      (job) => job.jobid === jobId
-    )[0];
-    payload.img = `${url}/img?${jobId}`;
-    commit("FETCH_SELECTED_JOB", payload);
+  getSelectedJob({ commit }, { jobId, type }) {
+    switch (type) {
+      case "filterState": {
+        const payload = this.getters.getJobs.filter(
+          (job) => job.jobid === jobId
+        )[0];
+        payload.img = `${url}/img?${jobId}`;
+        payload.type = "filterState";
+        commit("FETCH_SELECTED_JOB", payload);
+        break;
+      }
+      case "newRequest":
+        try {
+          return axios
+            .get(`${url}/jobs?jobx=${jobId}&joby=${jobId}`)
+            .then((response) => {
+              if (response.status == 200) {
+                const payload = response.data[0];
+                payload.type = "newRequest";
+                commit("FETCH_SELECTED_JOB", payload);
+              }
+            });
+        } catch (error) {
+          console.log(error);
+        }
+        break;
+    }
   },
   async getSelectedImg(_, jobId) {
     let imgType = jobId ? "jpg" : "png";

@@ -76,7 +76,10 @@ export default {
       if (this.job.job_status != "completed") {
         e.preventDefault();
       }
-      this.$store.dispatch("getSelectedJob", this.job.jobid);
+      this.$store.dispatch("getSelectedJob", {
+        jobId: this.job.jobid,
+        type: "filterState",
+      });
     },
   },
   computed: {

@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="row">
-      <div class="col-4">
+      <div class="col-xxl-4 col-xl-4 col-lg-4 col-md-4 col-sm-1 col-xs-1">
         <!-- Total Jobs -->
         <h2 v-if="!isPageLoaded" class="display-3 text-start">
           {{ getText("counterTotal") }}
@@ -11,7 +11,7 @@
         </h2>
         <p v-if="jobStatus.newestJobId" class="text-start">Images total</p>
       </div>
-      <div class="col-4">
+      <div class="col-xxl-4 col-xl-4 col-lg-4 col-md-4 col-sm-1 col-xs-1">
         <!-- Jobs Queued -->
         <h2 v-if="!isPageLoaded" class="display-3 text-start">
           {{ getText("counterQueued") }}
@@ -21,7 +21,7 @@
         </h2>
         <p v-if="jobStatus.jobsQueued" class="text-start">Images queued</p>
       </div>
-      <div class="col-4">
+      <div class="col-xxl-4 col-xl-4 col-lg-4 col-md-4 col-sm-1 col-xs-1">
         <!-- Jobs Completed -->
         <h2 v-if="!isPageLoaded" class="display-3 text-start">
           {{ getText("counterCompleted") }}

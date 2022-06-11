@@ -83,13 +83,17 @@ func InitializeLogFile() {
 	log.SetOutput(logFile)
 }
 
-func main() {
+func initializeSecretFromArgument() {
 	if len(os.Args) < 2 || len(os.Args) > 2 { // Check arguments
 		fmt.Println("Error: You must supply EXACTLY one argument (the GPU_WORER auth token) on startup.")
 		os.Exit(1)
 	}
 	SECRET = strings.TrimSpace(os.Args[1])
+}
 
+// This is the main function >:D
+func main() {
+	initializeSecretFromArgument()
 	InitializeLogFile()
 	exdb.InitializeJobdb()
 	WORKERDB = exdb.InitializeWorkerdb()

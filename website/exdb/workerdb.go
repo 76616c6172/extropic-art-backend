@@ -38,11 +38,6 @@ func InitializeWorkerdb() *sql.DB {
 		log.Fatal("InitializeWorkerdb: Error executing SQLite statment", err)
 	}
 
-	// testing
-	err = db.Ping()
-	println("WE GOT HERE: WE CAN PING WORKERDB FINE FROM INITWORKERDB")
-	println(err)
-
 	return db
 }
 

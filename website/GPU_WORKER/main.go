@@ -28,7 +28,7 @@ var IS_BUSY = false //set to true while the worker is busy
 var WORKER_ID string
 
 // Answers jobs posted to /api/0/worker
-func api_0_worker(w http.ResponseWriter, r *http.Request) {
+func handleNewJobPosting(w http.ResponseWriter, r *http.Request) {
 
 	var jobRequest exapi.Job   // holds the request from the client
 	var m exapi.WorkerResponse // Response for the scheduler
@@ -123,6 +123,7 @@ func runModel(prompt string) {
 }
 
 // Sends image + metadata to the scheduler
+// WIP: this isn't quite working yet
 func postJobUpdateToScheduler(iteration_max string) error {
 	var err error
 
@@ -249,16 +250,16 @@ func initializeLogFile() {
 // This is the main function :D
 func main() {
 	initializeLogFile()
+
+	/*
+		err := postJobUpdateToScheduler("250")
+		if err != nil {
+			println(err)
+		}
+	*/
+
 	registerWorkerWithScheduler()
-
-	os.Exit(0) // testing
-
-	err := postJobUpdateToScheduler("250")
-	if err != nil {
-		println(err)
-	}
-
-	http.HandleFunc("/api/0/worker", api_0_worker) // Listen for new jobs on this endpoint
+	http.HandleFunc("/api/0/worker", handleNewJobPosting) // Listen for new jobs on this endpoint
 
 	//runModel("quizical look | friendly person | leica arstation HDR | extremely detailed")
 

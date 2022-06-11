@@ -55,8 +55,8 @@ export default {
   },
   watch: {
     getSelectedJob: {
-      handler(job) {
-        job.type == "filterState" ? this.createImgObjectURL() : "";
+      handler() {
+        this.createImgObjectURL();
       },
     },
   },

@@ -2,7 +2,7 @@
   <div>
     <div class="row">
       <div
-        v-for="(job, index) in blobObjArray"
+        v-for="(job, index) in imgArray"
         :key="index"
         class="col-xxl-4 col-xl-4 col-lg-4 col-md-4 col-sm-1 col-xs-1"
       >
@@ -12,7 +12,7 @@
           class="img-fluid img-thumbnail"
           alt=""
         />
-        <p>{{ job.jobObject.prompt }}</p>
+        <p>{{ job.prompt }}</p>
       </div>
     </div>
   </div>
@@ -23,22 +23,48 @@ export default {
   name: "ImageNewestRendersComponent",
   data() {
     return {
-      blobObjArray: [],
+      imgArray: [],
     };
   },
   props: ["newestJobIds"],
   methods: {
     createImgObjectURL(jobId) {
-      this.$store.dispatch("getSelectedImg", jobId).then((responseImg) => {
+      return new Promise((resolve) => {
         this.$store
-          .dispatch("getSelectedJob", { jobId: jobId, type: "newRequest" })
-          .finally(() => {
-            this.blobObjArray.push({
-              jobId: jobId,
+          .dispatch("getSelectedImg", jobId)
+          .then((responseImg) => {
+            this.imgArray.push({
+              jobid: jobId,
               imgURL: responseImg,
-              jobObject: this.$store.getters.getSelectedJob,
             });
+          })
+          .finally(() => {
+            resolve();
           });
+      });
+    },
+    async getSelectedJobsObject(jobId) {
+      await this.createImgObjectURL(jobId).then(() => {
+        if (this.imgArray.length == 3) {
+          let newestJobIdsValues = Object.values(this.newestJobIds);
+          let newestJobIdsMax = Math.max(...newestJobIdsValues);
+          let newestJobIdsMin = Math.min(...newestJobIdsValues);
+          this.$store
+            .dispatch("getSelectedJobs", {
+              jobx: newestJobIdsMin,
+              joby: newestJobIdsMax,
+              jobIds: newestJobIdsValues,
+            })
+            .then(() => {
+              this.$store.getters.getSelectedJobs.forEach((storeJobElement) => {
+                this.imgArray.forEach((imgArrayElement) => {
+                  if (imgArrayElement.jobid == storeJobElement.jobid) {
+                    imgArrayElement.prompt = storeJobElement.prompt;
+                  }
+                });
+              });
+            });
+        }
       });
     },
     onClickSetSelected() {},
@@ -49,9 +75,9 @@ export default {
     },
   },
   async mounted() {
-    if (this.blobObjArray.length == 0) {
+    if (this.imgArray.length == 0) {
       this.newestJobIds.map((jobId, index) =>
-        index < 3 ? this.createImgObjectURL(jobId) : ""
+        index <= 3 ? this.getSelectedJobsObject(jobId) : ""
       );
     }
   },
@@ -61,9 +87,9 @@ export default {
 <style scoped>
 p {
   white-space: nowrap;
-  width: 100%; /* IE6 needs any width */
-  overflow: hidden; /* "overflow" value must be different from  visible"*/
-  -o-text-overflow: ellipsis; /* Opera < 11*/
-  text-overflow: ellipsis; /* IE, Safari (WebKit), Opera >= 11, FF > 6 */
+  width: 100%;
+  overflow: hidden;
+  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
 }
 </style>

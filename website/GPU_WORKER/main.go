@@ -122,9 +122,46 @@ func runModel(prompt string) {
 	}
 }
 
+func alternatePostJobdUodateToScheduler(iteration_max string) error {
+	println("sending update to scheduler with", iteration_max)
+
+	client := &http.Client{
+		Timeout: time.Second * 10,
+	}
+
+	// New multipart writer.
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	fw, err := writer.CreateFormFile("image", "test.png")
+	if err != nil {
+		return err
+	}
+	file, err := os.Open("images_out/TimeToDisco/progress.png")
+	if err != nil {
+		return err
+	}
+	_, err = io.Copy(fw, file)
+	if err != nil {
+		return err
+	}
+	writer.Close()
+	req, err := http.NewRequest("POST", SCHEDULER_IP+"/api/0/report", bytes.NewReader(body.Bytes()))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	rsp, _ := client.Do(req)
+	if rsp.StatusCode != http.StatusOK {
+		log.Printf("Request failed with response code: %d", rsp.StatusCode)
+	}
+	return nil
+}
+
 // Sends image + metadata to the scheduler
 // WIP: this isn't quite working yet
 func postJobUpdateToScheduler(iteration_max string) error {
+
+	println("posting job to scheduler")
 	var err error
 
 	// 1. Open the image
@@ -153,7 +190,7 @@ func postJobUpdateToScheduler(iteration_max string) error {
 		log.Println("postJobUpdateToscheduler: error calling io.Copy", err)
 		return err
 	}
-	//writer.close()
+
 	req, err := http.NewRequest("POST", SCHEDULER_IP+"/api/0/report", bytes.NewReader(body.Bytes()))
 	if err != nil {
 		log.Println("postJobUpdateToScheduler: Error creating new web request", err)
@@ -162,11 +199,15 @@ func postJobUpdateToScheduler(iteration_max string) error {
 
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	response, err := client.Do(req)
-	if response.StatusCode != http.StatusOK {
-		log.Println("postJobUpdateToScheduler: Error in client.Do(req)", err)
-		return err
-	}
-	return nil
+	/*
+		if response.StatusCode != http.StatusOK {
+			log.Println("postJobUpdateToScheduler: Error in client.Do(req)", err)
+			return err
+		}
+	*/
+	println(response)
+	println("completed sending update to scheduler")
+	return err
 }
 
 // Sends a job request to the scheduler
@@ -215,7 +256,7 @@ func registerWorkerWithScheduler() {
 	// Prepare the web request
 	req, err := http.NewRequest("POST", SCHEDULER_IP+"/api/0/registration", nil)
 	if err != nil {
-		log.Fatal("Error registering worker:", err)
+		log.Println("Error registering worker:", err)
 		return
 	}
 	req.AddCookie(&http.Cookie{Name: "secret", Value: SECRET})
@@ -224,13 +265,13 @@ func registerWorkerWithScheduler() {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal("Error sending registration: ", err)
+		log.Println("Error sending registration: ", err)
 		return
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusAccepted {
-		log.Fatal("Error registering worker - ", resp.StatusCode)
+		log.Println("Error registering worker - ", resp.StatusCode)
 		return
 	}
 
@@ -251,18 +292,17 @@ func initializeLogFile() {
 func main() {
 	initializeLogFile()
 
-	/*
-		err := postJobUpdateToScheduler("250")
-		if err != nil {
-			println(err)
-		}
-	*/
-
 	registerWorkerWithScheduler()
 	http.HandleFunc("/api/0/worker", handleNewJobPosting) // Listen for new jobs on this endpoint
 
 	//runModel("quizical look | friendly person | leica arstation HDR | extremely detailed")
 
 	fmt.Println("Worker is running, waiting for assignments..") // Debug
+
+	//postJobUpdateToScheduler("250")
+	err := alternatePostJobdUodateToScheduler("250")
+	if err != nil {
+		println("error after posting update to scheduler: ", err)
+	}
 	http.ListenAndServe(WORKER_PORT, nil)
 }

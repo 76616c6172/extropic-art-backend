@@ -1,0 +1,3 @@
+2022/06/11 11:50:58 Error sending registration: Post "http://127.0.0.1:8091/api/0/registration": dial tcp 127.0.0.1:8091: connect: connection refused
+2022/06/11 11:53:02 Error sending registration: Post "http://127.0.0.1:8091/api/0/registration": dial tcp 127.0.0.1:8091: connect: connection refused
+2022/06/11 12:47:48 Request failed with response code: 400

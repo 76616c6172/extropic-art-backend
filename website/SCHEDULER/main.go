@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -57,11 +58,85 @@ func handleWorkerRegistration(w http.ResponseWriter, r *http.Request) {
 
 // GPU_WORKERS send images+metadata to this endpoint
 // /api/0/report
-func jobReportHandler(w http.ResponseWriter, r *http.Request) {
+func handleWorkerReportUpdateToJob(w http.ResponseWriter, r *http.Request) {
+	println("Receiving update from worker:")
+	println()
+	println("1:", r.Method) // "POST"
+	var maxBodySize int64 = 10 * 1024 * 1024
 
-	if r.Method == "POST" {
-
+	err := r.ParseMultipartForm(maxBodySize)
+	if err != nil {
+		println("A: ", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
+	//Access the photo key - First Approach
+	file, _, err := r.FormFile("image")
+	if err != nil {
+		println("B: ", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	tmpfile, err := os.Create("./" + "test.png")
+	defer tmpfile.Close()
+	if err != nil {
+		println("C: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	_, err = io.Copy(tmpfile, file)
+	if err != nil {
+		println("D: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(200)
+	return
+
+	/* NO
+	filename := "test.png"
+	buf := new(bytes.Buffer)
+	writer := zip.NewWriter(buf)
+	data, err := ioutil.ReadFile(filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	f, err := writer.Create(filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	_, err = f.Write([]byte(data))
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = writer.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = os.WriteFile("test.png", buf.Bytes(), 0666)
+	println(err)
+	//os.O_RDWR|os.O_CREATE|os.O_APPEND,
+
+	w.Header().Set("Content-Type", "application/zip")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s.zip\"", filename))
+	w.Write(buf.Bytes())
+	*/
+
+	/*
+		println()
+		println("2:", r.ContentLength) // 2360284
+		println()
+		println("3:", r.Header.Values("name"))
+		println()
+		println("4:", r.Form.Get("name"))
+		println()
+		println("5:", r.Body)
+		println()
+		println("6:", r.URL)
+		println()
+	*/
 
 }
 
@@ -100,7 +175,7 @@ func main() {
 
 	// Register handlers
 	http.HandleFunc("/api/0/registration", handleWorkerRegistration)
-	http.HandleFunc("/api/0/report", jobReportHandler)
+	http.HandleFunc("/api/0/report", handleWorkerReportUpdateToJob)
 
 	go http.ListenAndServe(WEBSERVER_PORT, nil)
 	KeepSchedulerRunningUntilExitSignalIsReceived()

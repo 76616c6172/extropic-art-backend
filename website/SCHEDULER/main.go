@@ -25,7 +25,7 @@ var SECRET string
 // Initialize and connect to workerdb
 // GPU_WORERS register themselves with the scheduler through this endpoint
 // /api/0/registration
-func workerRegistrationHandler(w http.ResponseWriter, r *http.Request) {
+func handleWorkerRegistration(w http.ResponseWriter, r *http.Request) {
 
 	registrationSecret, err := r.Cookie("secret")
 	if err != nil {
@@ -99,7 +99,7 @@ func main() {
 	WORKERDB = exdb.InitializeWorkerdb()
 
 	// Register handlers
-	http.HandleFunc("/api/0/registration", workerRegistrationHandler)
+	http.HandleFunc("/api/0/registration", handleWorkerRegistration)
 	http.HandleFunc("/api/0/report", jobReportHandler)
 
 	go http.ListenAndServe(WEBSERVER_PORT, nil)

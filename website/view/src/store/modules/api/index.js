@@ -5,6 +5,7 @@ const url = "https://exia.art/api/0";
 const state = {
   jobs: [],
   selectedJob: [],
+  selectedJobs: [],
   jobStatus: {
     jobRange: {},
     jobsCompleted: "",
@@ -24,6 +25,9 @@ const getters = {
   },
   getSelectedJob: (state) => {
     return state.selectedJob;
+  },
+  getSelectedJobs: (state) => {
+    return state.selectedJobs;
   },
   getJobStatus: (state) => {
     return state.jobStatus;
@@ -170,32 +174,27 @@ const actions = {
       console.log(error);
     }
   },
-  getSelectedJob({ commit }, { jobId, type }) {
-    switch (type) {
-      case "filterState": {
-        const payload = this.getters.getJobs.filter(
-          (job) => job.jobid === jobId
-        )[0];
-        payload.img = `${url}/img?${jobId}`;
-        payload.type = "filterState";
-        commit("FETCH_SELECTED_JOB", payload);
-        break;
-      }
-      case "newRequest":
-        try {
-          return axios
-            .get(`${url}/jobs?jobx=${jobId}&joby=${jobId}`)
-            .then((response) => {
-              if (response.status == 200) {
-                const payload = response.data[0];
-                payload.type = "newRequest";
-                commit("FETCH_SELECTED_JOB", payload);
-              }
-            });
-        } catch (error) {
-          console.log(error);
-        }
-        break;
+  getSelectedJob({ commit }, jobId) {
+    const payload = this.getters.getJobs.filter(
+      (job) => job.jobid === jobId
+    )[0];
+    payload.img = `${url}/img?${jobId}`;
+    commit("FETCH_SELECTED_JOB", payload);
+  },
+  getSelectedJobs({ commit }, { jobx, joby, jobIds }) {
+    try {
+      return axios
+        .get(`${url}/jobs?jobx=${jobx}&joby=${joby}`)
+        .then((response) => {
+          if (response.status == 200) {
+            const payload = response.data.filter(
+              (job) => jobIds.indexOf(job.jobid) > -1
+            );
+            commit("FETCH_SELECTED_JOBS", payload);
+          }
+        });
+    } catch (error) {
+      console.log(error);
     }
   },
   async getSelectedImg(_, jobId) {
@@ -240,6 +239,9 @@ const mutations = {
   },
   FETCH_SELECTED_JOB(state, payload) {
     state.selectedJob = payload;
+  },
+  FETCH_SELECTED_JOBS(state, payload) {
+    state.selectedJobs = payload;
   },
   SEND_NEW_JOB(state, payload) {
     state.jobs.unshift(payload);

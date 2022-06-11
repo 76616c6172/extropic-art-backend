@@ -3,7 +3,6 @@ package exdb
 import (
 	// 3rd party packages
 	"database/sql"
-	"fmt"
 	"log"
 	"time"
 
@@ -50,28 +49,6 @@ func InitializeWorkerdb() *sql.DB {
 // Add a new worker to the db
 func RegisterNewWorker(db *sql.DB, workerId string, ipAddress string, workerType int) error {
 
-	println("WE GOT HERE: 0")
-
-	//THEORY: Since we imported sqlite3 in a weird way, I am guessing that GO
-	// Garbage Collects the pointers at some point
-	err := db.Ping()
-	println("WE GOT HERE: 1")
-	println(err)
-
-	/*
-		stmnt, err := JOBDB.Prepare(`INSERT INTO "jobs" (
-			prompt,
-		  status,
-			job_params,
-			 iteration_status,
-			 iteration_max,
-			 time_created,
-			 time_last_updated,
-			 time_completed) values (?, ?, ?, ?, ?, ?, ?, ?);`)
-	*/
-
-	println("WE GOT HERE: 2")
-
 	stmnt, err := db.Prepare(`INSERT INTO "workers" (
 			worker_id,
 			worker_ip,
@@ -86,16 +63,12 @@ func RegisterNewWorker(db *sql.DB, workerId string, ipAddress string, workerType
 		return err
 	}
 
-	println("WE GOT HERE: 3")
-
 	unixtime := int(time.Now().Unix())
 	result, err := stmnt.Exec(workerId, ipAddress, 0, 0, 0, unixtime, "", workerType) // Execute the statement
 	if err != nil {
 		return err
 	}
-	fmt.Println(result.LastInsertId())
-
-	println("WE GOT HERE: 4")
+	println(result.LastInsertId())
 
 	return err
 }

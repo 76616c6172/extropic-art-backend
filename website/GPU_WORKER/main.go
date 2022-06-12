@@ -12,20 +12,23 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 
 	"project-exia-monorepo/website/exapi"
+	"project-exia-monorepo/website/exutils"
 )
 
 const IMAGE_PATH = "./images_out/TimeToDisco/progress.png"
-
 const WORKER_PORT = ":8090"
-const SCHEDULER_IP = "http://127.0.0.1:8091"
-const SECRET = "1337" //TODO: Authenticate better
+const SCHEDULER_IP = "http://exia.art:8091"
+
+//const SCHEDULER_IP = "http://127.0.0.1:8091"
 
 var IS_BUSY = false //set to true while the worker is busy
 var WORKER_ID string
+var SECRET string
 
 // Answers jobs posted to /api/0/worker
 func handleNewJobPosting(w http.ResponseWriter, r *http.Request) {
@@ -91,7 +94,8 @@ func runModel(prompt string) {
 	// Read the output of the model line by line
 	stdoutScanner := bufio.NewScanner(stdout)
 	//stderrScanner := bufio.NewScanner(stderr)
-	numberOfInprogressImages := -1
+
+	numberOfTimesInProgressPngWasCreated := -1
 	var exiting bool
 	for {
 
@@ -109,8 +113,14 @@ func runModel(prompt string) {
 			currentLineFromStdout := stdoutScanner.Text()
 
 			if strings.Contains(currentLineFromStdout, "<PIL.Image.Image") {
-				numberOfInprogressImages++
-				fmt.Println("Assuming another 50 steps completed! Iteration_status = ", numberOfInprogressImages*50)
+				// Another in progress.png was created by the model!
+				numberOfTimesInProgressPngWasCreated++
+				iterationStatus := numberOfTimesInProgressPngWasCreated * 50
+
+				err = postJobdUpdateToScheduler(strconv.Itoa(iterationStatus))
+				if err != nil {
+					println("error after posting update to scheduler: ", err)
+				}
 
 			} else if strings.Contains(currentLineFromStdout, "SUCCESS") {
 				fmt.Println("SUCCESS, model run complete")
@@ -122,9 +132,8 @@ func runModel(prompt string) {
 	}
 }
 
-func alternatePostJobdUodateToScheduler(iteration_max string) error {
-	println("sending update to scheduler with", iteration_max)
-
+// Sends image + metadata to the scheduler
+func postJobdUpdateToScheduler(iteration_status string) error {
 	client := &http.Client{
 		Timeout: time.Second * 10,
 	}
@@ -134,80 +143,33 @@ func alternatePostJobdUodateToScheduler(iteration_max string) error {
 	writer := multipart.NewWriter(body)
 	fw, err := writer.CreateFormFile("image", "test.png")
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 	file, err := os.Open("images_out/TimeToDisco/progress.png")
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 	_, err = io.Copy(fw, file)
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 	writer.Close()
 	req, err := http.NewRequest("POST", SCHEDULER_IP+"/api/0/report", bytes.NewReader(body.Bytes()))
 	if err != nil {
+		log.Println(err)
 		return err
 	}
+	req.Header.Add("Iteration-Status", iteration_status)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	rsp, _ := client.Do(req)
 	if rsp.StatusCode != http.StatusOK {
-		log.Printf("Request failed with response code: %d", rsp.StatusCode)
+		log.Printf("Request failed with response code: %d\n", rsp.StatusCode)
 	}
+	println("successfully posted updated to scheduler")
 	return nil
-}
-
-// Sends image + metadata to the scheduler
-// WIP: this isn't quite working yet
-func postJobUpdateToScheduler(iteration_max string) error {
-
-	println("posting job to scheduler")
-	var err error
-
-	// 1. Open the image
-	img, err := os.Open("images_out/TimeToDisco/progress.png")
-	if err != nil {
-		log.Println("postJobUpdateToScheduler: Error opening images_out/TimeToDisco/progress.png", err)
-		return err
-	}
-	defer img.Close()
-
-	client := &http.Client{
-		Timeout: time.Second * 10,
-	}
-
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
-	w, err := writer.CreateFormFile("image", "progress.png")
-	if err != nil {
-		log.Println("postJobUpdateToScheduler: error creating form file", err)
-		return err
-	}
-	defer writer.Close()
-
-	_, err = io.Copy(w, img)
-	if err != nil {
-		log.Println("postJobUpdateToscheduler: error calling io.Copy", err)
-		return err
-	}
-
-	req, err := http.NewRequest("POST", SCHEDULER_IP+"/api/0/report", bytes.NewReader(body.Bytes()))
-	if err != nil {
-		log.Println("postJobUpdateToScheduler: Error creating new web request", err)
-		return err
-	}
-
-	req.Header.Set("Content-Type", writer.FormDataContentType())
-	response, err := client.Do(req)
-	/*
-		if response.StatusCode != http.StatusOK {
-			log.Println("postJobUpdateToScheduler: Error in client.Do(req)", err)
-			return err
-		}
-	*/
-	println(response)
-	println("completed sending update to scheduler")
-	return err
 }
 
 // Sends a job request to the scheduler
@@ -291,6 +253,7 @@ func initializeLogFile() {
 // This is the main function :D
 func main() {
 	initializeLogFile()
+	SECRET = exutils.InitializeSecretFromArgument()
 
 	registerWorkerWithScheduler()
 	http.HandleFunc("/api/0/worker", handleNewJobPosting) // Listen for new jobs on this endpoint
@@ -299,10 +262,8 @@ func main() {
 
 	fmt.Println("Worker is running, waiting for assignments..") // Debug
 
-	//postJobUpdateToScheduler("250")
-	err := alternatePostJobdUodateToScheduler("250")
-	if err != nil {
-		println("error after posting update to scheduler: ", err)
-	}
+	postJobdUpdateToScheduler("50")
+	println("YO2")
+
 	http.ListenAndServe(WORKER_PORT, nil)
 }

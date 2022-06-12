@@ -11,8 +11,16 @@ node_modules
 website/model/images/jpgs/
 website/model/images/pngs/
 
-# Ignore temporary helper scripts
+# Ignore temporary test files
+website/SCHEDULER/test.png
+
+# Ignore local helper scripts
 make_jpgs
+website/GPU_WORKER/local_build_run_worker
+
+# Ignore binaries
+website/GPU_WORKER/GPU_WORKER
+website/SCHEDULER/SCHEDULER
 
 # local env files
 .env.local

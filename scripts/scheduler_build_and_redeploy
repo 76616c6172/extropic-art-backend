@@ -1,0 +1,45 @@
+#!/bin/bash
+# Statically build and redeploy the controller (webserver)
+
+set -e # fail fast
+
+# not needed
+#cd $(dirname $0) # make sure we're in the dir we expect
+#if [ "$#" -ne 2 ]; then
+#    echo "usage: $0 user@server-address /path/to/remote/directory/"
+#    exit 1
+#fi
+
+
+# exia="user@server-address" # set the remote target to deploy to
+SERVER_SSH="exia" # alternatively this can be $1 when called by GH actions
+SERVER_PATH="/root/scheduler-testing/SCHEDULER" # alternatively this can be $2 when called by GH Actions
+BINARY_NAME="SCHEDULER"
+SERVICE_NAME="exia-scheduler.service"
+SERVER_RESTART_COMMAND="systemctl restart $SERVICE_NAME"
+
+# 1. Call the build script to create a static binary
+#$( cd "./website/controller/" && ./build_controller )
+$(cd "../website/SCHEDULER" && bash "./build_static_scheduler")
+
+OUTFILE="../website/SCHEDULER/$BINARY_NAME" # set the location of the new binary
+COMMIT_HASH=$(git rev-parse HEAD)
+BUILD_TIMESTAMP=$(TZ=UTC date -u +"%s")
+#FILE_HASH=$(b2sum $OUTFILE | cut -f1 -d' ')
+#REMOTE_FILENAME="$BINARY_NAME-$BUILD_TIMESTAMP-$COMMIT_HASH-$FILE_HASH"
+REMOTE_FILENAME="$COMMIT_HASH-$BUILD_TIMESTAMP"
+
+# 2. Copy over the file
+ssh $SERVER_SSH "mkdir -p $SERVER_PATH/versions/" # create dirs as needed
+scp "$OUTFILE" "$SERVER_SSH:$SERVER_PATH/versions/$REMOTE_FILENAME"
+
+# 3. Symlink the latest version of the binary and restart the systemd service
+ssh -q -T $SERVER_SSH <<EOL
+    nohup sh -c "\
+    rm "$SERVER_PATH/$BINARY_NAME" && \
+    ln -s "$SERVER_PATH/versions/$REMOTE_FILENAME" "$SERVER_PATH/$BINARY_NAME" && \
+    $SERVER_RESTART_COMMAND"
+EOL
+
+echo ""
+echo "Redeployment Complete"

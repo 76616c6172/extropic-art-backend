@@ -8,17 +8,15 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 
 	"project-exia-monorepo/website/exdb"
+	"project-exia-monorepo/website/exutils"
 
 	"github.com/google/uuid"
 )
 
 const WEBSERVER_PORT = ":8091" // Scheduler is listening on this port
-const P100 = 1                 // Default worker type
-const IP = "127.0.0.1"         // Local worker ip for testing
 
 var WORKERDB *sql.DB //pointer used to connect to the db, initialized in main
 var SECRET string
@@ -27,6 +25,10 @@ var SECRET string
 // GPU_WORERS register themselves with the scheduler through this endpoint
 // /api/0/registration
 func handleWorkerRegistration(w http.ResponseWriter, r *http.Request) {
+	error := WORKERDB.Ping()
+	log.Println("Pinging workerdb error: ", error)
+
+	log.Println("registering worker with ip: ", r.RemoteAddr)
 
 	registrationSecret, err := r.Cookie("secret")
 	if err != nil {
@@ -37,9 +39,9 @@ func handleWorkerRegistration(w http.ResponseWriter, r *http.Request) {
 
 	if registrationSecret.Value == SECRET {
 		newWorkerId := uuid.New().String()
-		fmt.Println("New worker ID created:", newWorkerId)
+		log.Println("New worker ID created:", newWorkerId)
 
-		err := exdb.RegisterNewWorker(WORKERDB, newWorkerId, IP, P100)
+		err := exdb.RegisterNewWorker(WORKERDB, newWorkerId, r.RemoteAddr, exutils.P100_16GB_X1)
 		if err != nil {
 			log.Println("Error registering worker:", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -64,79 +66,51 @@ func handleWorkerReportUpdateToJob(w http.ResponseWriter, r *http.Request) {
 	println("1:", r.Method) // "POST"
 	var maxBodySize int64 = 10 * 1024 * 1024
 
+	workerIp := r.Host
+	println(workerIp)
+
+	iteration_status_from_header := r.Header.Values("Iteration-Status")
+	iteration_status := string(iteration_status_from_header[0])
+	println(iteration_status)
+
 	err := r.ParseMultipartForm(maxBodySize)
 	if err != nil {
-		println("A: ", err)
+		log.Println(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
 	//Access the photo key - First Approach
 	file, _, err := r.FormFile("image")
 	if err != nil {
-		println("B: ", err)
+		log.Println(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	tmpfile, err := os.Create("./" + "test.png")
 	defer tmpfile.Close()
 	if err != nil {
-		println("C: ", err)
+		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	_, err = io.Copy(tmpfile, file)
 	if err != nil {
-		println("D: ", err)
+		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
 	w.WriteHeader(200)
-	return
 
-	/* NO
-	filename := "test.png"
-	buf := new(bytes.Buffer)
-	writer := zip.NewWriter(buf)
-	data, err := ioutil.ReadFile(filename)
-	if err != nil {
-		log.Fatal(err)
-	}
-	f, err := writer.Create(filename)
-	if err != nil {
-		log.Fatal(err)
-	}
-	_, err = f.Write([]byte(data))
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = writer.Close()
-	if err != nil {
-		log.Fatal(err)
-	}
+	doSomeLogicAndUpdateWorkerDb(w, r)
 
-	err = os.WriteFile("test.png", buf.Bytes(), 0666)
-	println(err)
-	//os.O_RDWR|os.O_CREATE|os.O_APPEND,
+}
 
-	w.Header().Set("Content-Type", "application/zip")
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s.zip\"", filename))
-	w.Write(buf.Bytes())
-	*/
+// Does what it says
+func doSomeLogicAndUpdateWorkerDb(w http.ResponseWriter, r *http.Request) {
+	// r.RemoteAddr <- this is the ip:port of the worker
 
-	/*
-		println()
-		println("2:", r.ContentLength) // 2360284
-		println()
-		println("3:", r.Header.Values("name"))
-		println()
-		println("4:", r.Form.Get("name"))
-		println()
-		println("5:", r.Body)
-		println()
-		println("6:", r.URL)
-		println()
-	*/
+	//exdb.GetWorkerByIP()
 
 }
 
@@ -158,17 +132,9 @@ func InitializeLogFile() {
 	log.SetOutput(logFile)
 }
 
-func initializeSecretFromArgument() {
-	if len(os.Args) < 2 || len(os.Args) > 2 { // Check arguments
-		fmt.Println("Error: You must supply EXACTLY one argument (the GPU_WORER auth token) on startup.")
-		os.Exit(1)
-	}
-	SECRET = strings.TrimSpace(os.Args[1])
-}
-
 // This is the main function >:D
 func main() {
-	initializeSecretFromArgument()
+	SECRET = exutils.InitializeSecretFromArgument()
 	InitializeLogFile()
 	exdb.InitializeJobdb()
 	WORKERDB = exdb.InitializeWorkerdb()

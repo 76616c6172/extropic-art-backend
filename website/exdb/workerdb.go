@@ -54,16 +54,24 @@ func RegisterNewWorker(db *sql.DB, workerId string, ipAddress string, workerType
 			worker_secret,
 			worker_type) values (?, ?, ?, ?, ?, ?, ?, ?);`)
 	if err != nil {
-		println("ERROR PREPARING STATEMENT", err)
+		log.Println("ERROR PREPARING STATEMENT", err)
 		return err
 	}
 
 	unixtime := int(time.Now().Unix())
 	result, err := stmnt.Exec(workerId, ipAddress, 0, 0, 0, unixtime, "", workerType) // Execute the statement
 	if err != nil {
+		log.Println("ERROR EXECUTING STATEMENT", err)
 		return err
 	}
-	println(result.LastInsertId())
+
+	insertID, err := result.LastInsertId()
+	if err != nil {
+		log.Println("ERROR READING WORKERDB RESULT", err)
+		return err
+	}
+
+	log.Println("successfully registered new worker", insertID)
 
 	return err
 }

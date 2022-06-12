@@ -77,8 +77,8 @@ export default {
 .imgRendered img {
   display: block;
   position: relative;
-  max-height: 100%;
-  max-width: 100%;
+  width: 100%;
+  height: auto;
 }
 
 .imgTextbox {

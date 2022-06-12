@@ -6,15 +6,6 @@
         :key="index"
         class="col-xxl-4 col-xl-4 col-lg-4 col-md-4 col-sm-1 col-xs-1"
       >
-<<<<<<< HEAD
-        <img
-          @click="onClickSetSelected(job.jobId)"
-          :src="job.imgURL"
-          class="img-fluid img-thumbnail"
-          alt=""
-        />
-        <p>{{ job.prompt }}</p>
-=======
         <figure class="image-block">
           <img :src="job.imgURL" class="img-fluid img-thumbnail" alt="" />
           <figcaption>
@@ -27,7 +18,6 @@
             </button>
           </figcaption>
         </figure>
->>>>>>> 8fa9240 (renamed to src + hover imgs)
       </div>
     </div>
   </div>
@@ -82,10 +72,6 @@ export default {
         }
       });
     },
-<<<<<<< HEAD
-    onClickSetSelected() {},
-=======
->>>>>>> 8fa9240 (renamed to src + hover imgs)
   },
   computed: {
     getIsInitialLoadStatus() {
@@ -103,20 +89,13 @@ export default {
 </script>
 
 <style scoped>
-<<<<<<< HEAD
-p {
-=======
 p.prompt {
->>>>>>> 8fa9240 (renamed to src + hover imgs)
   white-space: nowrap;
   width: 100%;
   overflow: hidden;
   -o-text-overflow: ellipsis;
   text-overflow: ellipsis;
 }
-<<<<<<< HEAD
-=======
-
 /* Image Hover */
 figure {
   position: relative;
@@ -130,11 +109,9 @@ figure {
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   overflow: hidden;
 }
-
 figure:hover {
   box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
 }
-
 figure:hover img {
   transform: scale(1.25);
 }
@@ -144,7 +121,6 @@ figure:hover figcaption {
 figure:hover figcaption p {
   white-space: auto;
 }
-
 figure h1 {
   position: absolute;
   top: 50px;
@@ -181,7 +157,6 @@ figure figcaption p {
   font-size: 14px;
   line-height: 1.75;
 }
-
 figure figcaption button {
   position: relative;
   display: flex;
@@ -195,5 +170,4 @@ figure figcaption button a {
   text-decoration: none;
   color: white;
 }
->>>>>>> 8fa9240 (renamed to src + hover imgs)
 </style>

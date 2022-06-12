@@ -1,4 +1,0 @@
-#!/bin/bash
-SECRET=lkjdskjhfklsdhfjiofjsdkferiofeoifue9f873o8v374rnp2unv8p2pvq8nnurv8nq2uvrpbyqvuvyq
-go build -ldflags '-linkmode external -extldflags "-fno-PIC -static"' -o GPU_WORKER
-./GPU_WORKER "$SECRET"

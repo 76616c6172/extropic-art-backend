@@ -5,7 +5,8 @@ import (
 	"strings"
 )
 
-//WORKERTYPES
+// WORKERTYPES
+// Encode the type of machine, so we know what GPU and how much vram etc
 const (
 	P100_16GB_X1 = iota // 1X P100 with 16GB VRAM
 )

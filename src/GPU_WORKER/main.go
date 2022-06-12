@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"mime/multipart"
 	"net/http"
@@ -17,12 +16,15 @@ import (
 	"time"
 
 	"project-exia-monorepo/website/exapi"
+	"project-exia-monorepo/website/exdb"
 	"project-exia-monorepo/website/exutils"
 )
 
 const IMAGE_PATH = "./images_out/TimeToDisco/progress.png"
 const WORKER_PORT = ":8090"
 const SCHEDULER_IP = "http://exia.art:8091"
+const JOB_IS_DONE bool = true
+const JOB_IS_NOT_DONE bool = false
 
 //const SCHEDULER_IP = "http://127.0.0.1:8091"
 
@@ -33,7 +35,7 @@ var SECRET string
 // Answers jobs posted to /api/0/worker
 func handleNewJobPosting(w http.ResponseWriter, r *http.Request) {
 
-	var jobRequest exapi.Job   // holds the request from the client
+	var jobRequest exdb.Job    // holds the request from the client
 	var m exapi.WorkerResponse // Response for the scheduler
 
 	if !IS_BUSY {
@@ -117,7 +119,7 @@ func runModel(prompt string) {
 				numberOfTimesInProgressPngWasCreated++
 				iterationStatus := numberOfTimesInProgressPngWasCreated * 50
 
-				err = postJobdUpdateToScheduler(strconv.Itoa(iterationStatus))
+				err = postJobdUpdateToScheduler(strconv.Itoa(iterationStatus), JOB_IS_DONE)
 				if err != nil {
 					println("error after posting update to scheduler: ", err)
 				}
@@ -133,7 +135,7 @@ func runModel(prompt string) {
 }
 
 // Sends image + metadata to the scheduler
-func postJobdUpdateToScheduler(iteration_status string) error {
+func postJobdUpdateToScheduler(iteration_status string, jobIsDone bool) error {
 	client := &http.Client{
 		Timeout: time.Second * 10,
 	}
@@ -162,7 +164,14 @@ func postJobdUpdateToScheduler(iteration_status string) error {
 		log.Println(err)
 		return err
 	}
-	req.Header.Add("Iteration-Status", iteration_status)
+
+	if jobIsDone {
+		req.Header.Add(exapi.HeaderJobStatusComplete, "1")
+	} else {
+		req.Header.Add(exapi.HeaderJobStatusComplete, "0")
+	}
+
+	req.Header.Add(exapi.HeaderJobIterationStatus, iteration_status)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	rsp, _ := client.Do(req)
 	if rsp.StatusCode != http.StatusOK {
@@ -170,45 +179,6 @@ func postJobdUpdateToScheduler(iteration_status string) error {
 	}
 	println("successfully posted updated to scheduler")
 	return nil
-}
-
-// Sends a job request to the scheduler
-// returns error if it fails
-// returns job if job was received
-func sendJobRequest() (exapi.Job, error) {
-
-	fmt.Println("Encoding jobrequest ") //debug
-
-	var jr exapi.Job
-	jr.Secret = SECRET
-
-	jsonReq, err := json.Marshal(jr)
-	if err != nil {
-		log.Println(err)
-	}
-
-	fmt.Println("Sending jobrequest") //debug
-
-	schedulerAddress := "http://" + SCHEDULER_IP + "/api/0/scheduler"
-	resp, err := http.Post(schedulerAddress, "application/json; charset=utf-8", bytes.NewBuffer(jsonReq))
-	//resp, err := http.PostForm("http://"+SCHEDULER_IP+SCHEDULER_PORT+"/api/0/scheduler",)
-	if err != nil {
-		log.Println(err)
-	}
-	defer resp.Body.Close()
-
-	fmt.Println("Reading response") //debug
-
-	bodyBytes, _ := ioutil.ReadAll(resp.Body)
-	// Convert response body to string
-	bodyString := string(bodyBytes)
-	fmt.Println(bodyString)
-
-	// Convert response body to Todo struct
-	var jobReceivedFromScheduler exapi.Job
-	json.Unmarshal(bodyBytes, &jobReceivedFromScheduler)
-
-	return jobReceivedFromScheduler, err
 }
 
 // Send an authenticated webrequest to the scheduler, registering the worker
@@ -238,7 +208,6 @@ func registerWorkerWithScheduler() {
 	}
 
 	fmt.Println("Worker successully registered with scheduler")
-	return
 }
 
 // Initializes log file for the GPU_WORKER
@@ -258,12 +227,8 @@ func main() {
 	registerWorkerWithScheduler()
 	http.HandleFunc("/api/0/worker", handleNewJobPosting) // Listen for new jobs on this endpoint
 
-	//runModel("quizical look | friendly person | leica arstation HDR | extremely detailed")
+	postJobdUpdateToScheduler("50", JOB_IS_NOT_DONE)
 
-	fmt.Println("Worker is running, waiting for assignments..") // Debug
-
-	postJobdUpdateToScheduler("50")
-	println("YO2")
-
+	fmt.Println("Worker is running, waiting for job posts..") // Debug
 	http.ListenAndServe(WORKER_PORT, nil)
 }

@@ -75,3 +75,23 @@ func RegisterNewWorker(db *sql.DB, workerId string, ipAddress string, workerType
 
 	return err
 }
+
+func GetWorkerByIP(db *sql.DB, workerIp string) (Worker, error) {
+	var wk Worker
+
+	row, err := db.Query(`SELECT * FROM "workers" WHERE worker_ip = ?;`, workerIp) // Query the database
+	if err != nil {
+		log.Println("Error getting worker by IP", err)
+		return wk, err
+	}
+	defer row.Close()
+
+	row.Next()
+	err = row.Scan(&wk.Worker_id, &wk.Worker_ip, &wk.Worker_Busy, &wk.Worker_current_job, &wk.Worker_last_health_check, &wk.Worker_time_created, &wk.Worker_secret, &wk.Worker_type)
+	if err != nil {
+		log.Println("Error reading worker row", err)
+		return wk, err
+	}
+
+	return wk, err
+}

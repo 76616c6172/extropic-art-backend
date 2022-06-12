@@ -30,17 +30,6 @@ type jobParam struct {
 "time_last_updated" TIMESTAMP,
 "time_completed" TIMESTAMP
 */
-type Job struct {
-	Jobid             string `json:"jobid"`
-	Prompt            string `json:"prompt"`
-	Status            string `json:"status"`
-	Job_params        string `json:"job_params"` //changeme job params shoyld be a struct/object
-	Iteration_status  int    `json:"iteration_status"`
-	Iteration_max     int    `json:"iteration_max"`
-	Time_created      string `json:"time_created"`
-	Time_last_updated string `json:"time_last_updated"`
-	Time_completed    string `json:"time_completed"`
-}
 
 // Initialize and connect to jobdb
 func InitializeJobdb() *sql.DB {

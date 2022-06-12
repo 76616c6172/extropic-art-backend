@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"project-exia-monorepo/website/exapi"
 	"project-exia-monorepo/website/exdb"
 	"project-exia-monorepo/website/exutils"
 
@@ -60,18 +61,19 @@ func handleWorkerRegistration(w http.ResponseWriter, r *http.Request) {
 
 // GPU_WORKERS send images+metadata to this endpoint
 // /api/0/report
-func handleWorkerReportUpdateToJob(w http.ResponseWriter, r *http.Request) {
+func handleUpdateFromWorker(w http.ResponseWriter, r *http.Request) {
 	println("Receiving update from worker:")
 	println()
 	println("1:", r.Method) // "POST"
 	var maxBodySize int64 = 10 * 1024 * 1024
 
-	workerIp := r.Host
-	println(workerIp)
-
-	iteration_status_from_header := r.Header.Values("Iteration-Status")
+	iteration_status_from_header := r.Header.Values(exapi.HeaderJobIterationStatus)
 	iteration_status := string(iteration_status_from_header[0])
 	println(iteration_status)
+
+	isJobDoneFromHeader := r.Header.Values(exapi.HeaderJobStatusComplete)
+	isJobDone := string(isJobDoneFromHeader[0])
+	println(isJobDone)
 
 	err := r.ParseMultipartForm(maxBodySize)
 	if err != nil {
@@ -80,7 +82,6 @@ func handleWorkerReportUpdateToJob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//Access the photo key - First Approach
 	file, _, err := r.FormFile("image")
 	if err != nil {
 		log.Println(err)
@@ -101,16 +102,30 @@ func handleWorkerReportUpdateToJob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(200)
-
-	doSomeLogicAndUpdateWorkerDb(w, r)
-
+	doSomeLogicAndUpdateModel(w, r)
 }
 
 // Does what it says
-func doSomeLogicAndUpdateWorkerDb(w http.ResponseWriter, r *http.Request) {
+// Writes updated image
+// Update jobdb
+// Workerdb if Done
+func doSomeLogicAndUpdateModel(w http.ResponseWriter, r *http.Request) {
 	// r.RemoteAddr <- this is the ip:port of the worker
 
-	//exdb.GetWorkerByIP()
+	// 1. Update jobdb and save the image correctly (+ make jpeg)
+	workerFromDb, err := exdb.GetWorkerByIP(WORKERDB, r.RemoteAddr)
+	if err != nil {
+		log.Println("Error getting worker from DB", err)
+		return
+	}
+	log.Println(workerFromDb.Worker_ip)
+	log.Println(workerFromDb.Worker_current_job)
+	// worker := readblabla..
+
+	// exdb.UpdateJobStatus(worker.Iteration_status)
+
+	// 2. Check if the worker is done
+	//if worker_iteration.status ==
 
 }
 
@@ -141,7 +156,7 @@ func main() {
 
 	// Register handlers
 	http.HandleFunc("/api/0/registration", handleWorkerRegistration)
-	http.HandleFunc("/api/0/report", handleWorkerReportUpdateToJob)
+	http.HandleFunc("/api/0/report", handleUpdateFromWorker)
 
 	go http.ListenAndServe(WEBSERVER_PORT, nil)
 	KeepSchedulerRunningUntilExitSignalIsReceived()

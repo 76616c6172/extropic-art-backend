@@ -54,6 +54,8 @@ func InitializeJobdb() *sql.DB {
 	if err != nil {
 		log.Fatal(err) // TODO: Maybe handle this better
 	}
+	defer stmnt.Close()
+
 	_, err = stmnt.Exec()
 	if err != nil {
 		log.Fatal(err)
@@ -77,6 +79,7 @@ func InsertNewJob(db *sql.DB, prompt string, job_params interface{}) (int, error
 	if err != nil {
 		return -1, err
 	}
+	defer stmnt.Close()
 
 	unixtime := strconv.Itoa(int(time.Now().Unix()))
 	iteration_max := 240 // TODO: make this check if the user provided different values first
@@ -289,3 +292,7 @@ func GetNewestCoupleJobsThatHaveStatus(db *sql.DB, status string, numberOfJobs i
 
 	return answer
 }
+
+/ * to be continued */
+JOBDB, jobid, newJobStatus, iterStatus)
+func UpdateJobById(

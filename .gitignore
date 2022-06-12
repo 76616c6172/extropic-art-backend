@@ -15,12 +15,14 @@ src/model/images/pngs/
 src/SCHEDULER/test.png
 
 # Ignore local helper scripts
-make_jpgs
+local_run_worker
 src/GPU_WORKER/local_build_run_worker
 
 # Ignore binaries
-src/GPU_WORKER/GPU_WORKER
-src/SCHEDULER/SCHEDULER
+GPU_WORKER
+SCHEDULER
+CONTROLLER
+
 
 # local env files
 .env.local
@@ -38,6 +40,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 logs/*
+*.log
 
 # Editor directories and files
 .idea

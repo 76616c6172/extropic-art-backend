@@ -11,6 +11,8 @@ const (
 	P100_16GB_X1 = iota // 1X P100 with 16GB VRAM
 )
 
+const PNG_PATH = "../model/images/pngs/"
+
 // Checks for exactly 1 arg from stdin and returns it as string
 // Prints error if not exactly 1 argument received
 func InitializeSecretFromArgument() string {

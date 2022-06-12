@@ -10,12 +10,6 @@ package exapi
 //	Iteration_max    int    `json:"iteration_max"`
 //}
 
-// Custom heders for the API
-const (
-	HeaderJobStatusComplete  = "Job-Is-Complete"  // Header Key->value of "0" if not complete or "1" if complete
-	HeaderJobIterationStatus = "Iteration-Status" // Header Key->value of "0" - "1000" depening on how many iterations
-)
-
 // Form sent by gpu-workers to register with the scheduler
 type WorkerRegistrationForm struct {
 	Secret string `json:"secret"` // TODO: Authenticate better

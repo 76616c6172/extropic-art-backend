@@ -20,18 +20,19 @@ func InitializeWorkerdb() *sql.DB {
 	// Create table if it doesn't exist
 	stmnt, err := db.Prepare(`
 	CREATE TABLE IF NOT EXISTS "workers" (
-	"worker_id" TEXT UNIQUE,
+	"worker_id" TEXT PRIMARY KEY,
 	"worker_ip" TEXT,
 	"worker_busy" INTEGER,
-	"worker_current_job", INTEGER,
+	"worker_current_job" INTEGER,
 	"worker_last_health_check" INTEGER,
 	"worker_time_created" INTEGER,
 	"worker_secret" TEXT,
-	"worker_type" INT
-	);`)
+	"worker_type" INTEGER
+	) WITHOUT ROWID;`)
 	if err != nil {
 		log.Fatal("InitializeWorkerdb: Error preparing SQLite statement", err)
 	}
+	defer stmnt.Close()
 
 	_, err = stmnt.Exec()
 	if err != nil {
@@ -45,21 +46,22 @@ func InitializeWorkerdb() *sql.DB {
 func RegisterNewWorker(db *sql.DB, workerId string, ipAddress string, workerType int) error {
 
 	stmnt, err := db.Prepare(`INSERT INTO "workers" (
-			worker_id,
-			worker_ip,
-			worker_busy,
-			worker_current_job,
-			worker_last_health_check,
-			worker_time_created,
-			worker_secret,
-			worker_type) values (?, ?, ?, ?, ?, ?, ?, ?);`)
+	worker_id,
+	worker_ip,
+	worker_busy,
+	worker_current_job,
+	worker_last_health_check,
+	worker_time_created,
+	worker_secret,
+	worker_type) values (?, ?, ?, ?, ?, ?, ?, ?);`)
 	if err != nil {
 		log.Println("ERROR PREPARING STATEMENT", err)
 		return err
 	}
+	defer stmnt.Close()
 
 	unixtime := int(time.Now().Unix())
-	result, err := stmnt.Exec(workerId, ipAddress, 0, 0, 0, unixtime, "", workerType) // Execute the statement
+	result, err := stmnt.Exec(workerId, ipAddress, NOT_BUSY, NO_JOB, unixtime, unixtime, "none", workerType) // Execute the statement
 	if err != nil {
 		log.Println("ERROR EXECUTING STATEMENT", err)
 		return err
@@ -86,11 +88,13 @@ func GetWorkerByIP(db *sql.DB, workerIp string) (Worker, error) {
 	}
 	defer row.Close()
 
-	row.Next()
-	err = row.Scan(&wk.Worker_id, &wk.Worker_ip, &wk.Worker_Busy, &wk.Worker_current_job, &wk.Worker_last_health_check, &wk.Worker_time_created, &wk.Worker_secret, &wk.Worker_type)
-	if err != nil {
-		log.Println("Error reading worker row", err)
-		return wk, err
+	rowExists := row.Next()
+	if rowExists {
+		err = row.Scan(&wk.Worker_id, &wk.Worker_ip, &wk.Worker_Busy, &wk.Worker_current_job, &wk.Worker_last_health_check, &wk.Worker_time_created, &wk.Worker_secret, &wk.Worker_type)
+		if err != nil {
+			log.Println("Error reading worker row", err)
+			return wk, err
+		}
 	}
 
 	return wk, err

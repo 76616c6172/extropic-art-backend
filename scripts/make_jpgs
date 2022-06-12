@@ -1,0 +1,10 @@
+#!/bin/bash
+# Creates new *.jpg for every *.png in the folder
+
+set -e # fail fast
+
+# Create jpgs
+for f in *.png ; do
+  name=$(echo $f | cut -d'.' -f1)
+  convert-im6.q16 $f "$name".jpg
+done

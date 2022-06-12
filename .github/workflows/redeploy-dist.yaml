@@ -24,4 +24,4 @@ jobs:
           ssh-add /home/runner/.ssh/github_actions
       - name: redeploy-dist-folder
         run: |
-          bash ./GitHubAction-Scripts/redeploy_dist
+          bash ./scripts/redeploy_dist

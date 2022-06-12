@@ -1,2 +1,0 @@
-#!/bin/sh
-python disco.py --config_file ./configs/TimeToDisco.yaml

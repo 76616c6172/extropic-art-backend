@@ -1,8 +1,0 @@
-#!/bin/bash
-# Overrides jobs.db with a clean sample db and restarts exia-controller
-
-set -e # fail fast
-
-cp sample-jobs.db jobs.db
-sudo systemctl restart exia-controller.service
-

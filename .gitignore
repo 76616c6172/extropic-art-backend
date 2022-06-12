@@ -8,19 +8,19 @@ node_modules
 *db-cleaner*
 
 # Ignore large fils from the model
-website/model/images/jpgs/
-website/model/images/pngs/
+src/model/images/jpgs/
+src/model/images/pngs/
 
 # Ignore temporary test files
-website/SCHEDULER/test.png
+src/SCHEDULER/test.png
 
 # Ignore local helper scripts
 make_jpgs
-website/GPU_WORKER/local_build_run_worker
+src/GPU_WORKER/local_build_run_worker
 
 # Ignore binaries
-website/GPU_WORKER/GPU_WORKER
-website/SCHEDULER/SCHEDULER
+src/GPU_WORKER/GPU_WORKER
+src/SCHEDULER/SCHEDULER
 
 # local env files
 .env.local

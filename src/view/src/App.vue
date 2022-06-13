@@ -10,7 +10,7 @@
 
 <script>
 // Components
-import { default as Home } from "./components/HomeComponent.vue";
+import { default as Home } from "./components/content/home/HomeComponent.vue";
 export default {
   name: "App",
   components: {

@@ -31,7 +31,7 @@
 </template>
 
 <script>
-import * as Validation from "../../validation/veeValidateRules";
+import * as Validation from "../../../validation/veeValidateRules";
 import { Form as VeeForm, Field, ErrorMessage } from "vee-validate";
 export default {
   name: "PromptComponent",

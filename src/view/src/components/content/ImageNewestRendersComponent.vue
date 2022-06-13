@@ -104,7 +104,6 @@ figure {
   justify-content: center;
   width: 100%;
   height: auto;
-  border-radius: 10px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   overflow: hidden;
@@ -143,9 +142,8 @@ figure figcaption {
   width: 100%;
   margin: 0;
   padding: 15px 30px 15px 30px;
-  background-color: rgba(0, 0, 0, 0.85);
+  background-color: rgba(255, 255, 255, 0.85);
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
-  color: white;
   line-height: 1;
   transition: 0.25s;
 }
@@ -163,11 +161,15 @@ figure figcaption button {
   align-items: center;
   justify-content: center;
   margin: 10px 0 0;
-  border: 1px solid white;
-  border-radius: 5px;
+  border: 1px solid rgb(44, 62, 80);
 }
+
+figcaption button i {
+  color: rgb(44, 62, 80);
+}
+
 figure figcaption button a {
   text-decoration: none;
-  color: white;
+  color: rgb(44, 62, 80);
 }
 </style>

@@ -46,14 +46,14 @@
 
 <script>
 import { mapGetters } from "vuex";
-import { default as Navbar } from "../components/general/NavbarComponent.vue";
-import { default as Footer } from "../components/general/FooterComponent.vue";
-import { default as Typing } from "../components/miscellaneous/TypingComponent.vue";
-import { default as ImageNewestRendersComponent } from "../components/content/ImageNewestRendersComponent";
-import { default as Image } from "./content/ImageComponent.vue";
-import { default as TerminalWrapper } from "./content/TerminalWrapperComponent.vue";
-import { default as Instructions } from "../components/miscellaneous/InstructionsComponent.vue";
-import { default as StatsComponent } from "../components/miscellaneous/StatsComponent.vue";
+import { default as Navbar } from "../../general/NavbarComponent.vue";
+import { default as Footer } from "../../general/FooterComponent.vue";
+import { default as Typing } from "./TypingComponent.vue";
+import { default as ImageNewestRendersComponent } from "./ImageNewestRendersComponent";
+import { default as Image } from "./ImageComponent.vue";
+import { default as TerminalWrapper } from "./TerminalWrapperComponent.vue";
+import { default as Instructions } from "./InstructionsComponent.vue";
+import { default as StatsComponent } from "./StatsComponent.vue";
 
 export default {
   name: "HomeComponent",

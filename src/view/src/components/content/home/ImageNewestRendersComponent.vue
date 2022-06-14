@@ -1,23 +1,25 @@
 <template>
-  <div>
-    <div class="row">
-      <div
-        v-for="(job, index) in imgArray"
-        :key="index"
-        class="col-xxl-4 col-xl-4 col-lg-4 col-md-4 col-sm-1 col-xs-1"
-      >
-        <figure class="image-block">
-          <img :src="job.imgURL" class="img-fluid img-thumbnail" alt="" />
-          <figcaption>
-            <h3 class="h5">More Info</h3>
-            <p class="prompt">{{ job.prompt }}</p>
-            <button class="btn text-center">
-              <a :href="`${job.imgURL}`" target="_blank"
-                ><i class="fa fa-eye"></i> Full image</a
-              >
-            </button>
-          </figcaption>
-        </figure>
+  <div class="row justify-content-center">
+    <div class="col-lg-10 col-sm-12">
+      <div class="row">
+        <div
+          v-for="(job, index) in imgArray"
+          :key="index"
+          class="col-xxl-4 col-xl-4 col-lg-4 col-md-4 col-sm-1 col-xs-1"
+        >
+          <figure class="image-block">
+            <img :src="job.imgURL" class="img-fluid img-thumbnail" alt="" />
+            <figcaption>
+              <h3 class="h5">More Info</h3>
+              <p class="prompt">{{ job.prompt }}</p>
+              <button class="btn text-center">
+                <a :href="`${job.imgURL}`" target="_blank"
+                  ><i class="fa fa-eye"></i> Full image</a
+                >
+              </button>
+            </figcaption>
+          </figure>
+        </div>
       </div>
     </div>
   </div>

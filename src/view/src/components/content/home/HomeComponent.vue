@@ -1,53 +1,17 @@
 <template>
-  <div class="container-fluid">
-    <div class="row justify-content-center">
-      <div class="col-lg-10 col-sm-12">
-        <Navbar />
-      </div>
-    </div>
-    <div class="mt-5">
-      <div class="row justify-content-center">
-        <div class="col-lg-10 col-sm-12">
-          <Typing @set-cursor="setCursor()" />
-        </div>
-      </div>
-      <div class="row justify-content-center pb-5">
-        <div class="col-lg-10 col-sm-12">
-          <Instructions />
-        </div>
-      </div>
-      <div class="row justify-content-center">
-        <div class="col-lg-10 col-sm-12">
-          <ImageNewestRendersComponent
-            v-if="jobStatus.newestCompletedJobs"
-            :newestJobIds="jobStatus.newestCompletedJobs"
-          />
-        </div>
-      </div>
-      <div class="row justify-content-center pb-5 pt-5">
-        <div class="col-lg-10 col-sm-12">
-          <StatsComponent v-if="jobStatus" :jobStatus="jobStatus" />
-        </div>
-      </div>
-      <div class="row justify-content-center bg-light pt-5 pb-5">
-        <div class="col-lg-10 col-sm-12">
-          <TerminalWrapper :showCursor="showCursor" />
-        </div>
-      </div>
-      <div class="row justify-content-center pt-5 pb-5">
-        <div class="col-lg-10 col-sm-12">
-          <Image />
-        </div>
-      </div>
-    </div>
-  </div>
-  <Footer />
+  <Typing @set-cursor="setCursor()" />
+  <Instructions />
+  <ImageNewestRendersComponent
+    v-if="jobStatus.newestCompletedJobs"
+    :newestJobIds="jobStatus.newestCompletedJobs"
+  />
+  <StatsComponent v-if="jobStatus" :jobStatus="jobStatus" />
+  <TerminalWrapper :showCursor="showCursor" />
+  <Image />
 </template>
 
 <script>
 import { mapGetters } from "vuex";
-import { default as Navbar } from "../../general/NavbarComponent.vue";
-import { default as Footer } from "../../general/FooterComponent.vue";
 import { default as Typing } from "./TypingComponent.vue";
 import { default as ImageNewestRendersComponent } from "./ImageNewestRendersComponent";
 import { default as Image } from "./ImageComponent.vue";
@@ -58,8 +22,6 @@ import { default as StatsComponent } from "./StatsComponent.vue";
 export default {
   name: "HomeComponent",
   components: {
-    Navbar,
-    Footer,
     Typing,
     Instructions,
     Image,

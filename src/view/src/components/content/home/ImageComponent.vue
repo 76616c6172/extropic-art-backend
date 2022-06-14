@@ -1,23 +1,28 @@
 <template>
-  <div>
-    <div class="imgContainer">
-      <div class="imgRendered">
-        <div v-if="isLoading" class="loader">Loading...</div>
-        <img :src="imgObjectURL" class="img-fluid img-thumbnail" alt="" />
-      </div>
-      <div v-show="Object.keys(getSelectedJob).length !== 0" class="imgTextbox">
-        <div class="p-5 imgTextboxContent">
-          <hr />
-          <p class="fs-4">
-            {{ getSelectedJob.prompt }}
-          </p>
-          <hr />
-          <span>
-            <i class="fa-solid fa-link"></i>
-            <a :href="imgObjectURL" class="text-white" target="_blank">
-              Goto Image</a
-            >
-          </span>
+  <div class="row justify-content-center pt-5 pb-5">
+    <div class="col-lg-10 col-sm-12">
+      <div class="imgContainer">
+        <div class="imgRendered">
+          <div v-if="isLoading" class="loader">Loading...</div>
+          <img :src="imgObjectURL" class="img-fluid img-thumbnail" alt="" />
+        </div>
+        <div
+          v-show="Object.keys(getSelectedJob).length !== 0"
+          class="imgTextbox"
+        >
+          <div class="p-5 imgTextboxContent">
+            <hr />
+            <p class="fs-4">
+              {{ getSelectedJob.prompt }}
+            </p>
+            <hr />
+            <span>
+              <i class="fa-solid fa-link"></i>
+              <a :href="imgObjectURL" class="text-white" target="_blank">
+                Goto Image</a
+              >
+            </span>
+          </div>
         </div>
       </div>
     </div>

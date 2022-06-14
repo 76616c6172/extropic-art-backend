@@ -1,37 +1,39 @@
 <template>
-  <div>
-    <div class="row">
-      <div class="col-xxl-4 col-xl-4 col-lg-4 col-md-4 col-sm-1 col-xs-1">
-        <!-- Total Jobs -->
-        <h2 v-if="!isPageLoaded" class="display-3 text-start">
-          {{ getText("counterTotal") }}
-        </h2>
-        <h2 v-else class="display-3 text-start">
-          {{ jobStatus.newestJobId }}
-        </h2>
-        <p v-if="jobStatus.newestJobId" class="text-start">Images total</p>
-      </div>
-      <div class="col-xxl-4 col-xl-4 col-lg-4 col-md-4 col-sm-1 col-xs-1">
-        <!-- Jobs Queued -->
-        <h2 v-if="!isPageLoaded" class="display-3 text-start">
-          {{ getText("counterQueued") }}
-        </h2>
-        <h2 v-else class="display-3 text-start">
-          {{ jobStatus.jobsQueued }}
-        </h2>
-        <p v-if="jobStatus.jobsQueued" class="text-start">Images queued</p>
-      </div>
-      <div class="col-xxl-4 col-xl-4 col-lg-4 col-md-4 col-sm-1 col-xs-1">
-        <!-- Jobs Completed -->
-        <h2 v-if="!isPageLoaded" class="display-3 text-start">
-          {{ getText("counterCompleted") }}
-        </h2>
-        <h2 v-else class="display-3 text-start">
-          {{ jobStatus.jobsCompleted }}
-        </h2>
-        <p v-if="jobStatus.jobsCompleted" class="text-start">
-          Images completed
-        </p>
+  <div class="row justify-content-center pb-5 pt-5">
+    <div class="col-lg-10 col-sm-12">
+      <div class="row">
+        <div class="col-xxl-4 col-xl-4 col-lg-4 col-md-4 col-sm-1 col-xs-1">
+          <!-- Total Jobs -->
+          <h2 v-if="!isPageLoaded" class="display-3 text-start">
+            {{ getText("counterTotal") }}
+          </h2>
+          <h2 v-else class="display-3 text-start">
+            {{ jobStatus.newestJobId }}
+          </h2>
+          <p v-if="jobStatus.newestJobId" class="text-start">Images total</p>
+        </div>
+        <div class="col-xxl-4 col-xl-4 col-lg-4 col-md-4 col-sm-1 col-xs-1">
+          <!-- Jobs Queued -->
+          <h2 v-if="!isPageLoaded" class="display-3 text-start">
+            {{ getText("counterQueued") }}
+          </h2>
+          <h2 v-else class="display-3 text-start">
+            {{ jobStatus.jobsQueued }}
+          </h2>
+          <p v-if="jobStatus.jobsQueued" class="text-start">Images queued</p>
+        </div>
+        <div class="col-xxl-4 col-xl-4 col-lg-4 col-md-4 col-sm-1 col-xs-1">
+          <!-- Jobs Completed -->
+          <h2 v-if="!isPageLoaded" class="display-3 text-start">
+            {{ getText("counterCompleted") }}
+          </h2>
+          <h2 v-else class="display-3 text-start">
+            {{ jobStatus.jobsCompleted }}
+          </h2>
+          <p v-if="jobStatus.jobsCompleted" class="text-start">
+            Images completed
+          </p>
+        </div>
       </div>
     </div>
   </div>

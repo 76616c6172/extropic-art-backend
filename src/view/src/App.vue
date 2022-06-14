@@ -1,20 +1,29 @@
 <template>
   <div class="appContainer">
-    <div class="row">
-      <div class="col-12">
-        <Home />
+    <div class="mainWrapper row">
+      <div class="mainWrapper__col col-12">
+        <div class="mainWrapper__container container-fluid">
+          <Navbar />
+          <Home />
+        </div>
       </div>
     </div>
+    <Footer />
   </div>
 </template>
 
 <script>
 // Components
 import { default as Home } from "./components/content/home/HomeComponent.vue";
+
+import { default as Navbar } from "./components/general/NavbarComponent.vue";
+import { default as Footer } from "./components/general/FooterComponent.vue";
 export default {
   name: "App",
   components: {
     Home,
+    Navbar,
+    Footer,
   },
 };
 </script>

@@ -22,11 +22,11 @@ import (
 
 const IMAGE_PATH = "./images_out/TimeToDisco/progress.png"
 const WORKER_PORT = ":8090"
-const SCHEDULER_IP = "http://exia.art:8091"
+
+//const SCHEDULER_IP = "http://exia.art:8091"
+const SCHEDULER_IP = "http://127.0.0.1:8091"
 const JOB_IS_DONE bool = true
 const JOB_IS_NOT_DONE bool = false
-
-//const SCHEDULER_IP = "http://127.0.0.1:8091"
 
 var IS_BUSY = false //set to true while the worker is busy
 var WORKER_ID string
@@ -70,7 +70,13 @@ func runModel(prompt string) {
 
 	// 1. Run the model
 	//modelParameters := fmt.Sprintf("--text_prompts '{\"0\": [\"%s\"]}' --steps 240 --width_height '[1920, 1088]'", prompt)
-	modelSubProcess := exec.Command("./run_model")
+	// --n_batches 0 --text_prompts '{"0": ["Space panorama of celestial space station, cosmic, photorealistic materials, beeple behance"]}' --steps 250 --width_height '[1920, 1088]'
+
+	args := fmt.Sprintf("--n_batches 0 --text_prompts '{\"0\": [\"")
+	args += prompt
+	args += "\"]}' --steps 250 --width_height '[1920, 1088]'"
+
+	modelSubProcess := exec.Command("./run_model", args)
 
 	stdout, err := modelSubProcess.StdoutPipe()
 	if err != nil {
@@ -136,6 +142,9 @@ func runModel(prompt string) {
 
 // Sends image + metadata to the scheduler
 func postJobdUpdateToScheduler(iteration_status string, jobIsDone bool) error {
+
+	println("Posting job update to scheduler..")
+
 	client := &http.Client{
 		Timeout: time.Second * 10,
 	}
@@ -173,11 +182,21 @@ func postJobdUpdateToScheduler(iteration_status string, jobIsDone bool) error {
 
 	req.Header.Add(exapi.HeaderJobIterationStatus, iteration_status)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
+
 	rsp, _ := client.Do(req)
-	if rsp.StatusCode != http.StatusOK {
-		log.Printf("Request failed with response code: %d\n", rsp.StatusCode)
-	}
-	println("successfully posted updated to scheduler")
+	println(rsp.StatusCode)
+
+	/*
+		if rsp.ContentLength > 0 {
+
+			if rsp.StatusCode != http.StatusOK {
+				log.Printf("Request failed with response code: %d\n", rsp.StatusCode)
+				println("Request failed with response code: ", rsp.StatusCode)
+				return err
+			}
+			println("successfully posted update to scheduler")
+		}
+	*/
 	return nil
 }
 
@@ -224,10 +243,13 @@ func main() {
 	initializeLogFile()
 	SECRET = exutils.InitializeSecretFromArgument()
 
+	// just testing
+	//runModel("This is a test prompt")
+
 	registerWorkerWithScheduler()
 	http.HandleFunc("/api/0/worker", handleNewJobPosting) // Listen for new jobs on this endpoint
 
-	postJobdUpdateToScheduler("50", JOB_IS_NOT_DONE)
+	//postJobdUpdateToScheduler("300", JOB_IS_DONE)
 
 	fmt.Println("Worker is running, waiting for job posts..") // Debug
 	http.ListenAndServe(WORKER_PORT, nil)

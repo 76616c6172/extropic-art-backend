@@ -16,19 +16,27 @@ echo "2022-06-07 19:00:34.182 | INFO     | dd:do_run:1532 - Frame 0 📝 Prompt:
 echo "Batches:   0%|          | 0/1 [00:00<?, ?it/s]"
 echo "Output()"
 echo "Batch 0, step 0, output 0:"
+sleep 2
 echo "<PIL.Image.Image image mode=RGB size=1920x1088 at 0x7F1E6888CFD0>"
 echo "Batch 0, step 50, output 0:"
+sleep 1
 echo "<PIL.Image.Image image mode=RGB size=1920x1088 at 0x7F1E688BF4D0>"
 echo "Batch 0, step 100, output 0:"
 sleep 1
 #for kjshdfkjdhsfiuwehflewf # this should break
 echo "<PIL.Image.Image image mode=RGB size=1920x1088 at 0x7F1E642F4990>"
+sleep 1
 echo "Batch 0, step 150, output 0:"
 echo "<PIL.Image.Image image mode=RGB size=1920x1088 at 0x7F1E6888CFD0>"
+sleep 1
+echo "Batch 0, step 150, output 0:"
 echo "Batch 0, step 200, output 0:"
 echo "<PIL.Image.Image image mode=RGB size=1920x1088 at 0x7F1E6889CD50>"
+sleep 1
 echo " Batch 0, step 239, output 0:"
 echo " <PIL.Image.Image image mode=RGB size=1920x1088 at 0x7F1E75E87B90>"
+sleep 1
 echo " 2022-06-07 19:44:41.545 | INFO     | dd:do_run:1845 - Image render completed."
 echo " 2022-06-07 19:44:42.264 | INFO     | dd:do_run:1865 - Image saved to '/content/images_out/TimeToDisco/TimeToDisco(1)_0.png'"
+sleep 1
 echo " 2022-06-07 19:44:42.621 | SUCCESS  | dd:start_run:2158 - ✅ Session 79c37f6f-4e91-4735-9d00-b991fc3254cf finished by user."

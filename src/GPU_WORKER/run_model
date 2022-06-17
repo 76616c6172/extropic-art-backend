@@ -1,2 +1,4 @@
 #!/bin/sh
-python disco.py --config_file ./configs/TimeToDisco.yaml
+#python disco.py --config_file ./configs/TimeToDisco.yaml
+#echo $@ >> output
+python disco.py $@

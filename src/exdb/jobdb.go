@@ -293,6 +293,37 @@ func GetNewestCoupleJobsThatHaveStatus(db *sql.DB, status string, numberOfJobs i
 	return answer
 }
 
-/ * to be continued */
-JOBDB, jobid, newJobStatus, iterStatus)
-func UpdateJobById(
+/* to be continued */
+// Updates the job in jobdb with the new status (completed or prrocessing) as well
+// as the correct iteration status ( n/250)
+func UpdateJobById(db *sql.DB, jobid string, newStatus string, iterStatus string) {
+
+	iterStatusNumber, err := strconv.Atoi(iterStatus)
+	if err != nil {
+		log.Println("Error converting iterStatus string to int", err)
+	}
+
+	jobidNumber, err := strconv.Atoi(jobid)
+	if err != nil {
+		log.Println("Error converting jobid string to int", err)
+	}
+
+	// Iteration status is an int
+	stmnt, err := db.Prepare(`
+		UPDATE jobs
+		SET
+			status = ?,
+			iteration_status = ?
+		WHERE
+    	jobid = ?;`)
+	if err != nil {
+		log.Println("error preparing statement", err)
+	}
+	defer stmnt.Close()
+
+	result, err := stmnt.Exec(newStatus, iterStatusNumber, jobidNumber)
+	if err != nil {
+		log.Println("error Executing statement", err)
+	}
+	println(result)
+}

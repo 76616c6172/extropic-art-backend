@@ -18,6 +18,7 @@ import (
 )
 
 const WEBSERVER_PORT = ":8091" // Scheduler is listening on this port
+const JOB_COMPLETE = true
 
 var WORKERDB *sql.DB //pointer used to connect to the db, initialized in main
 var JOBDB *sql.DB
@@ -27,6 +28,7 @@ var SECRET string
 // GPU_WORERS register themselves with the scheduler through this endpoint
 // /api/0/registration
 func handleWorkerRegistration(w http.ResponseWriter, r *http.Request) {
+	println("Receiving new worker registration..")
 
 	registrationSecret, err := r.Cookie("secret")
 	if err != nil {
@@ -36,6 +38,7 @@ func handleWorkerRegistration(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if registrationSecret.Value == SECRET {
+		println("Authenticated new worker..")
 		newWorkerId := uuid.New().String()
 		log.Println("New worker ID created:", newWorkerId)
 
@@ -47,16 +50,22 @@ func handleWorkerRegistration(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Send OK response
+		println("Registered new worker with: ", newWorkerId)
 		w.WriteHeader(http.StatusAccepted)
 		return
 	}
 	// Registration secret is wrong, send back bad response
 	w.WriteHeader(http.StatusForbidden)
+
 }
 
 // GPU_WORKERS send images+metadata to this endpoint: /api/0/report
 // FIXME: this function is too long
 func handleUpdateFromWorker(w http.ResponseWriter, r *http.Request) {
+
+	//w.WriteHeader(http.StatusAccepted) // THIS SENDS A RESPONSE RIGHt?
+	//return
+
 	var maxBodySize int64 = 10 * 1024 * 1024
 
 	// Extract the image from the request body
@@ -72,17 +81,20 @@ func handleUpdateFromWorker(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	w.WriteHeader(200) // Send to the worker that we're OK
 
 	// Identify the worker based on ip and get info from the databases
 	worker, err := exdb.GetWorkerByIP(WORKERDB, r.RemoteAddr)
 	if err != nil {
 		log.Println("Error getting worker from DB", err)
+		w.WriteHeader(http.StatusBadRequest)
 		return
+
 	}
+	println(worker.Worker_current_job)
 	job, err := exdb.GetJobByJobid(JOBDB, worker.Worker_current_job)
 	if err != nil {
 		log.Println("Error getting job from DB", err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -108,18 +120,18 @@ func handleUpdateFromWorker(w http.ResponseWriter, r *http.Request) {
 	jobIsDone, iterStatus := getIterationStatusAndJobStatusFromHeaders(w, r)
 
 	// Update the jobdb
-	newJobStatus = "processing"
 	if jobIsDone {
-		newJobStatus = "completed"
-		exdb.UpdateJobById(JOBDB, jobid, newJobStatus, iterStatus)
-		// Update the workerdb but only if the job is done
+		exdb.UpdateJobById(JOBDB, job.Jobid, "completed", iterStatus)
+		exdb.UpdateWorkerByJobid(WORKERDB, job.Jobid, JOB_COMPLETE)
 	} else {
-		exdb.UpdateJobById(JOBDB, jobid, newJobStatus, iterStatus)
+		exdb.UpdateJobById(JOBDB, job.Jobid, "processing", iterStatus)
+
 	}
 
+	w.WriteHeader(http.StatusAccepted)
 }
 
-// FIXME: Add comment
+// Helper func returns information extracted from request headers
 func getIterationStatusAndJobStatusFromHeaders(w http.ResponseWriter, r *http.Request) (jobIsDone bool, status string) {
 
 	iteration_status_from_header := r.Header.Values(exapi.HeaderJobIterationStatus)
@@ -128,8 +140,10 @@ func getIterationStatusAndJobStatusFromHeaders(w http.ResponseWriter, r *http.Re
 
 	isJobDoneFromHeader := r.Header.Values(exapi.HeaderJobStatusComplete)
 	isJobDone := string(isJobDoneFromHeader[0])
-	println(isJobDone)
-
+	if isJobDone == "1" {
+		return true, iteration_status
+	}
+	return true, iteration_status
 }
 
 // Keeps the scheduler running until CTRL-C or exit signal is received.
@@ -163,6 +177,7 @@ func main() {
 
 	go http.ListenAndServe(WEBSERVER_PORT, nil)
 
+	
 	// Just testing
 	//newWorkerId := uuid.New().String()
 	//exdb.RegisterNewWorker(WORKERDB, newWorkerId, "1.1.1.1:69", exutils.P100_16GB_X1)

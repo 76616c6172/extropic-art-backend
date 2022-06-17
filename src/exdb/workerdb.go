@@ -4,6 +4,7 @@ import (
 	// 3rd party packages
 	"database/sql"
 	"log"
+	"strconv"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -61,7 +62,7 @@ func RegisterNewWorker(db *sql.DB, workerId string, ipAddress string, workerType
 	defer stmnt.Close()
 
 	unixtime := int(time.Now().Unix())
-	result, err := stmnt.Exec(workerId, ipAddress, NOT_BUSY, NO_JOB, unixtime, unixtime, "none", workerType) // Execute the statement
+	result, err := stmnt.Exec(workerId, ipAddress, NOT_BUSY, -1, unixtime, unixtime, "none", workerType) // Execute the statement
 	if err != nil {
 		log.Println("ERROR EXECUTING STATEMENT", err)
 		return err
@@ -81,6 +82,7 @@ func RegisterNewWorker(db *sql.DB, workerId string, ipAddress string, workerType
 func GetWorkerByIP(db *sql.DB, workerIp string) (Worker, error) {
 	var wk Worker
 
+	println(workerIp)
 	row, err := db.Query(`SELECT * FROM "workers" WHERE worker_ip = ?;`, workerIp) // Query the database
 	if err != nil {
 		log.Println("Error getting worker by IP", err)
@@ -90,7 +92,7 @@ func GetWorkerByIP(db *sql.DB, workerIp string) (Worker, error) {
 
 	rowExists := row.Next()
 	if rowExists {
-		err = row.Scan(&wk.Worker_id, &wk.Worker_ip, &wk.Worker_Busy, &wk.Worker_current_job, &wk.Worker_last_health_check, &wk.Worker_time_created, &wk.Worker_secret, &wk.Worker_type)
+		err = row.Scan(wk.Worker_id, &wk.Worker_ip, &wk.Worker_Busy, &wk.Worker_current_job, &wk.Worker_last_health_check, &wk.Worker_time_created, &wk.Worker_secret, &wk.Worker_type)
 		if err != nil {
 			log.Println("Error reading worker row", err)
 			return wk, err
@@ -98,4 +100,46 @@ func GetWorkerByIP(db *sql.DB, workerIp string) (Worker, error) {
 	}
 
 	return wk, err
+}
+
+// Updates a worker in the db by the job it was assigned to
+func UpdateWorkerByJobid(db *sql.DB, currentJob string, jobCompleted bool) {
+	var isBusy int
+
+	currentJobNumber, err := strconv.Atoi(currentJob)
+	if err != nil {
+		log.Println("error converting currentJob to int", err)
+		return
+	}
+
+	stmnt, err := db.Prepare(`
+		UPDATE workers
+		SET
+			worker_busy = ?,
+			worker_current_job = ?
+		WHERE
+    	 worker_current_job = ?;`)
+	if err != nil {
+		log.Println("error preparing statement", err)
+		return
+	}
+	defer stmnt.Close()
+
+	// if job is done override the job assigned to the worker in the db with -1
+	if jobCompleted {
+		isBusy = 0
+		result, err := stmnt.Exec(isBusy, -1, currentJobNumber)
+		if err != nil {
+			log.Println("error executing statement", err)
+		}
+		println(result)
+		return
+	}
+	// Otherwise just wr
+	result, err := stmnt.Exec(isBusy, currentJobNumber, currentJobNumber)
+	if err != nil {
+		log.Println("error executing statement", err)
+	}
+
+	println(result)
 }

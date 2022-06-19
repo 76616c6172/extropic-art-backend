@@ -62,7 +62,8 @@ func RegisterNewWorker(db *sql.DB, workerId string, ipAddress string, workerType
 	defer stmnt.Close()
 
 	unixtime := int(time.Now().Unix())
-	result, err := stmnt.Exec(workerId, ipAddress, NOT_BUSY, -1, unixtime, unixtime, "none", workerType) // Execute the statement
+	curJobAssignedToWorker := -1
+	result, err := stmnt.Exec(workerId, ipAddress, NOT_BUSY, curJobAssignedToWorker, unixtime, unixtime, "none", workerType) // Execute the statement
 	if err != nil {
 		log.Println("ERROR EXECUTING STATEMENT", err)
 		return err
@@ -128,6 +129,7 @@ func UpdateWorkerByJobid(db *sql.DB, currentJob string, jobCompleted bool) {
 	// if job is done override the job assigned to the worker in the db with -1
 	if jobCompleted {
 		isBusy = 0
+		currentJobNumber = 0
 		result, err := stmnt.Exec(isBusy, -1, currentJobNumber)
 		if err != nil {
 			log.Println("error executing statement", err)
@@ -135,11 +137,39 @@ func UpdateWorkerByJobid(db *sql.DB, currentJob string, jobCompleted bool) {
 		println(result)
 		return
 	}
-	// Otherwise just wr
 	result, err := stmnt.Exec(isBusy, currentJobNumber, currentJobNumber)
 	if err != nil {
 		log.Println("error executing statement", err)
 	}
 
 	println(result)
+}
+
+// Fetches and returns a free GPU-worker from the workerdb
+func GetFreeWorker(db *sql.DB) (Worker, error) {
+	var w Worker
+
+	row, err := db.Query(`SELECT * FROM "workers" WHERE worker_busy = 0 ORDER BY worker_id ASC LIMIT 1;`) // Query the database
+	if err != nil {
+		return w, err
+	}
+	defer row.Close()
+	/*
+	   "worker_id" TEXT PRIMARY KEY,
+	   "worker_ip" TEXT,
+	   "worker_busy" INTEGER,
+	   "worker_current_job" INTEGER,
+	   "worker_last_health_check" INTEGER,
+	   "worker_time_created" INTEGER,
+	   "worker_secret" TEXT,
+	   "worker_type" INTEGER
+	*/
+
+	row.Next()
+	err = row.Scan(&w.Worker_id, &w.Worker_ip, &w.Worker_Busy, &w.Worker_current_job, &w.Worker_last_health_check, &w.Worker_time_created, &w.Worker_secret, &w.Worker_type)
+	if err != nil {
+		return w, err
+	}
+
+	return w, err
 }

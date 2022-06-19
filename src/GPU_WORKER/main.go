@@ -35,11 +35,18 @@ var SECRET string
 // Answers jobs posted to /api/0/worker
 func handleNewJobPosting(w http.ResponseWriter, r *http.Request) {
 
-	var jobRequest exdb.Job    // holds the request from the client
-	var m exapi.WorkerResponse // Response for the scheduler
+	println("Receiving new posting")
+	//println(r.Body)
+
+	/*
+		var jobRequest exdb.Job    // holds the request from the client
+		var m exapi.WorkerResponse // Response for the scheduler
+	*/
 
 	if !IS_BUSY {
+		var jobRequest exdb.Job
 
+		IS_BUSY = true
 		// Read the request
 		jsonDecoder := json.NewDecoder(r.Body)
 		err := jsonDecoder.Decode(&jobRequest)
@@ -48,17 +55,20 @@ func handleNewJobPosting(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// Send response to the scheduler
-		m.Job_accepted = true
-		json.NewEncoder(w).Encode(m)
+		println("received job:")
+		println(jobRequest.Jobid, jobRequest.Prompt)
 
 		IS_BUSY = true
+
+		w.WriteHeader(http.StatusAccepted)
+		//a, b := w.Write()
+		//println(a, b)
 		runModel(jobRequest.Prompt)
-		IS_BUSY = false
 
 	} else {
+		w.WriteHeader(http.StatusForbidden)
 		// Send response to the scheduler
-		json.NewEncoder(w).Encode(m)
+		//json.NewEncoder(w).Encode(m)
 	}
 }
 
@@ -110,7 +120,7 @@ func runModel(prompt string) {
 		if exiting {
 			if modelSubProcess.ProcessState.Exited() {
 				fmt.Println("Exiting the model gracefully")
-				return
+				break
 			}
 		}
 
@@ -132,12 +142,19 @@ func runModel(prompt string) {
 
 			} else if strings.Contains(currentLineFromStdout, "SUCCESS") {
 				fmt.Println("SUCCESS, model run complete")
+				err = postJobdUpdateToScheduler("250", JOB_IS_DONE)
+				if err != nil {
+					println("error sending final update to scheduler", err)
+					log.Println("error sending final update to scheduler", err)
+					break
+				}
 				exiting = true
 				modelSubProcess.Wait()
 			}
 
 		}
 	}
+	IS_BUSY = false
 }
 
 // Sends image + metadata to the scheduler
@@ -157,6 +174,7 @@ func postJobdUpdateToScheduler(iteration_status string, jobIsDone bool) error {
 		log.Println(err)
 		return err
 	}
+
 	file, err := os.Open("images_out/TimeToDisco/progress.png")
 	if err != nil {
 		log.Println(err)
@@ -243,13 +261,9 @@ func main() {
 	initializeLogFile()
 	SECRET = exutils.InitializeSecretFromArgument()
 
-	// just testing
-	//runModel("This is a test prompt")
-
 	registerWorkerWithScheduler()
 	http.HandleFunc("/api/0/worker", handleNewJobPosting) // Listen for new jobs on this endpoint
-
-	//postJobdUpdateToScheduler("300", JOB_IS_DONE)
+	//postJobdUpdateToScheduler("250", JOB_IS_DONE)
 
 	fmt.Println("Worker is running, waiting for job posts..") // Debug
 	http.ListenAndServe(WORKER_PORT, nil)

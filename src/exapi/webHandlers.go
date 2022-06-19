@@ -194,6 +194,8 @@ func HandleJobsApiGet(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 func HandleJobsApiPost(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	var j jobResponse
 
+	println("Receiving New Job From scheduler")
+
 	jsonDecoder := json.NewDecoder(r.Body)
 	var jobRequest newjob
 	err := jsonDecoder.Decode(&jobRequest)

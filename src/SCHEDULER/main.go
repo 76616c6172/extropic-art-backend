@@ -1,14 +1,18 @@
 package main
 
 import (
+	"bytes"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
+	"time"
 
 	"project-exia-monorepo/website/exapi"
 	"project-exia-monorepo/website/exdb"
@@ -42,7 +46,8 @@ func handleWorkerRegistration(w http.ResponseWriter, r *http.Request) {
 		newWorkerId := uuid.New().String()
 		log.Println("New worker ID created:", newWorkerId)
 
-		err := exdb.RegisterNewWorker(WORKERDB, newWorkerId, r.RemoteAddr, exutils.P100_16GB_X1)
+		workerIpForDB := strings.Split(r.RemoteAddr, ":") // Parse the ip and edit the port
+		err := exdb.RegisterNewWorker(WORKERDB, newWorkerId, workerIpForDB[0], exutils.P100_16GB_X1)
 		if err != nil {
 			log.Println("Error registering worker:", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -62,6 +67,7 @@ func handleWorkerRegistration(w http.ResponseWriter, r *http.Request) {
 // GPU_WORKERS send images+metadata to this endpoint: /api/0/report
 // FIXME: this function is too long
 func handleUpdateFromWorker(w http.ResponseWriter, r *http.Request) {
+	println("RECEIVING UPDATE")
 
 	//w.WriteHeader(http.StatusAccepted) // THIS SENDS A RESPONSE RIGHt?
 	//return
@@ -90,7 +96,8 @@ func handleUpdateFromWorker(w http.ResponseWriter, r *http.Request) {
 		return
 
 	}
-	println(worker.Worker_current_job)
+
+	println("CURRENT JOB IS:", worker.Worker_current_job)
 	job, err := exdb.GetJobByJobid(JOBDB, worker.Worker_current_job)
 	if err != nil {
 		log.Println("Error getting job from DB", err)
@@ -101,6 +108,7 @@ func handleUpdateFromWorker(w http.ResponseWriter, r *http.Request) {
 	// 3. Run logic based on the information we received
 	// FIXME: This may cause unexpected behavior when trying to override the file
 	filepath := exutils.PNG_PATH + job.Jobid + ".png"
+	println("SAVING JOB TO", filepath)
 	emptyFile, err := os.Create(filepath)
 	if err != nil {
 		log.Println(err)
@@ -122,7 +130,7 @@ func handleUpdateFromWorker(w http.ResponseWriter, r *http.Request) {
 	// Update the jobdb
 	if jobIsDone {
 		exdb.UpdateJobById(JOBDB, job.Jobid, "completed", iterStatus)
-		exdb.UpdateWorkerByJobid(WORKERDB, job.Jobid, JOB_COMPLETE)
+		exdb.UpdateWorkerByJobid(WORKERDB, job.Jobid, true) // set worker to no longer busy
 	} else {
 		exdb.UpdateJobById(JOBDB, job.Jobid, "processing", iterStatus)
 
@@ -164,6 +172,88 @@ func InitializeLogFile() {
 	log.SetOutput(logFile)
 }
 
+// Run the scheduling loop posting jobs to the workers
+func runSchedulingLoop() {
+
+	for {
+		time.Sleep(5 * time.Second)
+
+		// 1. Get the oldest queued job from the jobdb
+		println("checking jobdb for oldest queued job")
+		queuedJob, err := exdb.GetOldestQueuedJob(JOBDB)
+		if err != nil {
+			println("error getting queued job from db")
+			log.Println("error getting queued job from db")
+			continue
+		}
+		println("Got queued job:", queuedJob.Jobid, queuedJob.Prompt)
+
+		// 2. Get a worker from the workerdb that is not busy
+		worker, err := exdb.GetFreeWorker(WORKERDB)
+		if err != nil {
+			println("error getting worker from db")
+			log.Println("err}or getting worker from db")
+			continue
+
+		}
+		println("Got worker: ", worker.Worker_id)
+
+		// 3. Assign the job to the worker
+		err = postJobToWorker(queuedJob, worker)
+		if err != nil {
+			println("Error when trying to post job to worker", err)
+			log.Println("Error when trying to post job to worker", err)
+			continue
+		}
+		// 4. Update the Jobdb and the Workerdb
+		exdb.UpdateJobById(JOBDB, queuedJob.Jobid, "processing", "1")
+		exdb.UpdateWorkerByJobid(WORKERDB, queuedJob.Jobid, false) // set worker to no longer busy
+	}
+
+}
+
+// Sends job to worker and returns error if it fails
+func postJobToWorker(job exdb.Job, worker exdb.Worker) error {
+	httpposturl := "http://" + worker.Worker_ip + ":8090/api/0/worker"
+
+	fmt.Println("HTTP JSON POST URL:", httpposturl)
+
+	// Marshal the job to json
+
+	jsonData, err := json.Marshal(job)
+	if err != nil {
+		println("error marshalling struct into json", err)
+		return err
+	}
+
+	request, error := http.NewRequest("POST", httpposturl, bytes.NewBuffer(jsonData))
+	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
+
+	// TODO: Scheduler is waiting on a response that doesn't come
+
+	client := &http.Client{}
+	response, error := client.Do(request)
+	if error != nil {
+		panic(error)
+	}
+	println(response)
+	// FIXME
+	//r.Header.Values(http.StatusOK
+	return nil
+
+	/*
+
+		defer response.Body.Close()
+
+		fmt.Println("response Status:", response.Status)
+		fmt.Println("response Headers:", response.Header)
+		body, _ := ioutil.ReadAll(response.Body)
+		fmt.Println("response Body:", string(body))
+
+		return nil
+	*/
+}
+
 // This is the main function >:D
 func main() {
 	SECRET = exutils.InitializeSecretFromArgument()
@@ -176,8 +266,8 @@ func main() {
 	http.HandleFunc("/api/0/report", handleUpdateFromWorker)
 
 	go http.ListenAndServe(WEBSERVER_PORT, nil)
+	go runSchedulingLoop()
 
-	
 	// Just testing
 	//newWorkerId := uuid.New().String()
 	//exdb.RegisterNewWorker(WORKERDB, newWorkerId, "1.1.1.1:69", exutils.P100_16GB_X1)

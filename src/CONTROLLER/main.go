@@ -43,7 +43,7 @@ func api_0_status(w http.ResponseWriter, r *http.Request) {
 
 // Initializes log file for the controller
 func initializeLogFile() {
-	logFile, err := os.OpenFile(("./logs/exia.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	logFile, err := os.OpenFile(("./logs/controller.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatal("main: error opening logfile")
 	}

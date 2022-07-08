@@ -17,6 +17,8 @@ src/SCHEDULER/test.png
 # Ignore local helper scripts
 local_run_worker
 src/GPU_WORKER/local_build_run_worker
+scripts/clean_db_and_restart_controller
+
 
 # Ignore binaries
 GPU_WORKER

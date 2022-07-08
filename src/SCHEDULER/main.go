@@ -27,6 +27,7 @@ const JOB_COMPLETE = true
 var WORKERDB *sql.DB //pointer used to connect to the db, initialized in main
 var JOBDB *sql.DB
 var SECRET string
+var PANIC bool
 
 // Initialize and connect to workerdb
 // GPU_WORERS register themselves with the scheduler through this endpoint
@@ -205,12 +206,22 @@ func runSchedulingLoop(quit chan bool) {
 			println("Got worker: ", worker.Worker_id)
 
 			// 3. Assign the job to the worker
+
+			//recoverWrapperForPostJobToWorker(queuedJob, worker)
+
 			err = postJobToWorker(queuedJob, worker)
 			if err != nil {
 				println("Error when trying to post job to worker", err)
 				log.Println("Error when trying to post job to worker", err)
 				continue
 			}
+			if PANIC {
+				println("Error, panic when trying to post job to worker", err)
+				log.Println("Error, panic when trying to post job to worker", err)
+				PANIC = false
+				continue
+			}
+
 			// 4. Update the Jobdb and the Workerdb
 			exdb.UpdateJobById(JOBDB, queuedJob.Jobid, "processing", "1")
 			exdb.UpdateWorkerByJobid(WORKERDB, queuedJob.Jobid, false) // set worker to no longer busy
@@ -220,24 +231,35 @@ func runSchedulingLoop(quit chan bool) {
 
 // Sends job to worker and returns error if it fails
 func postJobToWorker(job exdb.Job, worker exdb.Worker) error {
-	httpposturl := "http://" + worker.Worker_ip + ":8090/api/0/worker"
 
-	fmt.Println("HTTP JSON POST URL:", httpposturl)
+	// Intercept the panic that can happen when the request fails
+	defer func() {
+		if err := recover(); err != nil {
+			println("Panic intercepted!", err)
+			PANIC = true
+		}
+	}()
+
+	workerUrl := "http://" + worker.Worker_ip + ":8090/api/0/worker"
+
+	println("Posting job:\"", job.Prompt, "\"to worker: ", worker.Worker_id)
+
+	client := &http.Client{}
+	client.Timeout = time.Second * 10
+	client.Transport = http.DefaultTransport
 
 	// Marshal the job to json
 	jsonData, err := json.Marshal(job)
 	if err != nil {
-		println("error marshalling struct into json", err)
+		log.Println("error marshalling struct into json", err)
 		return err
 	}
 
-	request, err := http.NewRequest("POST", httpposturl, bytes.NewBuffer(jsonData))
+	request, err := http.NewRequest("POST", workerUrl, bytes.NewBuffer(jsonData))
 	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
-
-	println("Posting job:\"", job.Prompt, "\"to worker: ", worker.Worker_id)
-	client := &http.Client{}
-	client.Timeout = time.Second * 10
-	client.Transport = http.DefaultTransport
+	if err != nil {
+		log.Println("error creating request to send to worker")
+	}
 
 	// TODO: Scheduler is waiting on a response that doesn't come
 

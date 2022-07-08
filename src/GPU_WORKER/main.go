@@ -28,9 +28,10 @@ const SCHEDULER_IP = "http://127.0.0.1:8091"
 const JOB_IS_DONE bool = true
 const JOB_IS_NOT_DONE bool = false
 
-var IS_BUSY = false //set to true while the worker is busy
+var HAVE_JOB = false //set to true while the worker is busy
 var WORKER_ID string
 var SECRET string
+var JOB_PROMPT string // prompt for the current job to be rendered
 
 // Answers jobs posted to /api/0/worker
 func handleNewJobPosting(w http.ResponseWriter, r *http.Request) {
@@ -43,10 +44,10 @@ func handleNewJobPosting(w http.ResponseWriter, r *http.Request) {
 		var m exapi.WorkerResponse // Response for the scheduler
 	*/
 
-	if !IS_BUSY {
+	if !HAVE_JOB {
 		var jobRequest exdb.Job
 
-		IS_BUSY = true
+		HAVE_JOB = true
 		// Read the request
 		jsonDecoder := json.NewDecoder(r.Body)
 		err := jsonDecoder.Decode(&jobRequest)
@@ -58,12 +59,13 @@ func handleNewJobPosting(w http.ResponseWriter, r *http.Request) {
 		println("received job:")
 		println(jobRequest.Jobid, jobRequest.Prompt)
 
-		IS_BUSY = true
+		HAVE_JOB = true
+		JOB_PROMPT = jobRequest.Prompt
 
+		//w.Header().Add("If-None-Match", `W/"wyzzy"`)
 		w.WriteHeader(http.StatusAccepted)
-		//a, b := w.Write()
-		//println(a, b)
-		runModel(jobRequest.Prompt)
+		r.Body.Close() // Close the response
+		return
 
 	} else {
 		w.WriteHeader(http.StatusForbidden)
@@ -154,7 +156,7 @@ func runModel(prompt string) {
 
 		}
 	}
-	IS_BUSY = false
+	HAVE_JOB = false
 }
 
 // Sends image + metadata to the scheduler
@@ -256,6 +258,22 @@ func initializeLogFile() {
 	log.SetOutput(logFile)
 }
 
+// If HAVE_JOB is true, run the model against the JOB_PROMPT
+// if HAVE_JOB is false, keep checking every 5 seconds if we have a job
+func runWorkerLoop() {
+	for {
+
+		if HAVE_JOB {
+			println("Running job:", JOB_PROMPT)
+			runModel(JOB_PROMPT)
+			println("Completed Job", JOB_PROMPT)
+		}
+
+		HAVE_JOB = false
+		time.Sleep(5 * time.Second)
+	}
+}
+
 // This is the main function :D
 func main() {
 	initializeLogFile()
@@ -266,5 +284,8 @@ func main() {
 	//postJobdUpdateToScheduler("250", JOB_IS_DONE)
 
 	fmt.Println("Worker is running, waiting for job posts..") // Debug
-	http.ListenAndServe(WORKER_PORT, nil)
+	go http.ListenAndServe(WORKER_PORT, nil)
+
+	// Run worker loop
+	runWorkerLoop()
 }

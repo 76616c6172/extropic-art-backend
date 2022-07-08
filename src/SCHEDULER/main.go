@@ -173,43 +173,49 @@ func InitializeLogFile() {
 }
 
 // Run the scheduling loop posting jobs to the workers
-func runSchedulingLoop() {
+func runSchedulingLoop(quit chan bool) {
 
 	for {
-		time.Sleep(5 * time.Second)
+		select {
+		case <-quit:
+			println("Exiting scheduling loop")
+			return
+		default:
 
-		// 1. Get the oldest queued job from the jobdb
-		println("checking jobdb for oldest queued job")
-		queuedJob, err := exdb.GetOldestQueuedJob(JOBDB)
-		if err != nil {
-			println("error getting queued job from db")
-			log.Println("error getting queued job from db")
-			continue
+			time.Sleep(5 * time.Second)
+
+			// 1. Get the oldest queued job from the jobdb
+			println("checking jobdb for oldest queued job")
+			queuedJob, err := exdb.GetOldestQueuedJob(JOBDB)
+			if err != nil {
+				println("no queued job in db")
+				//log.Println("error getting queued job from db")
+				continue
+			}
+			println("Got queued job:", queuedJob.Jobid, queuedJob.Prompt)
+
+			// 2. Get a worker from the workerdb that is not busy
+			worker, err := exdb.GetFreeWorker(WORKERDB)
+			if err != nil {
+				println("error getting worker from db")
+				log.Println("error getting worker from db")
+				continue
+
+			}
+			println("Got worker: ", worker.Worker_id)
+
+			// 3. Assign the job to the worker
+			err = postJobToWorker(queuedJob, worker)
+			if err != nil {
+				println("Error when trying to post job to worker", err)
+				log.Println("Error when trying to post job to worker", err)
+				continue
+			}
+			// 4. Update the Jobdb and the Workerdb
+			exdb.UpdateJobById(JOBDB, queuedJob.Jobid, "processing", "1")
+			exdb.UpdateWorkerByJobid(WORKERDB, queuedJob.Jobid, false) // set worker to no longer busy
 		}
-		println("Got queued job:", queuedJob.Jobid, queuedJob.Prompt)
-
-		// 2. Get a worker from the workerdb that is not busy
-		worker, err := exdb.GetFreeWorker(WORKERDB)
-		if err != nil {
-			println("error getting worker from db")
-			log.Println("err}or getting worker from db")
-			continue
-
-		}
-		println("Got worker: ", worker.Worker_id)
-
-		// 3. Assign the job to the worker
-		err = postJobToWorker(queuedJob, worker)
-		if err != nil {
-			println("Error when trying to post job to worker", err)
-			log.Println("Error when trying to post job to worker", err)
-			continue
-		}
-		// 4. Update the Jobdb and the Workerdb
-		exdb.UpdateJobById(JOBDB, queuedJob.Jobid, "processing", "1")
-		exdb.UpdateWorkerByJobid(WORKERDB, queuedJob.Jobid, false) // set worker to no longer busy
 	}
-
 }
 
 // Sends job to worker and returns error if it fails
@@ -219,24 +225,27 @@ func postJobToWorker(job exdb.Job, worker exdb.Worker) error {
 	fmt.Println("HTTP JSON POST URL:", httpposturl)
 
 	// Marshal the job to json
-
 	jsonData, err := json.Marshal(job)
 	if err != nil {
 		println("error marshalling struct into json", err)
 		return err
 	}
 
-	request, error := http.NewRequest("POST", httpposturl, bytes.NewBuffer(jsonData))
+	request, err := http.NewRequest("POST", httpposturl, bytes.NewBuffer(jsonData))
 	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
+
+	println("Posting job:\"", job.Prompt, "\"to worker: ", worker.Worker_id)
+	client := &http.Client{}
+	client.Timeout = time.Second * 10
+	client.Transport = http.DefaultTransport
 
 	// TODO: Scheduler is waiting on a response that doesn't come
 
-	client := &http.Client{}
-	response, error := client.Do(request)
-	if error != nil {
-		panic(error)
+	response, err := client.Do(request)
+	if err != nil {
+		log.Println("Error posting job to scheduler", err)
 	}
-	println(response)
+	response.Body.Close()
 	// FIXME
 	//r.Header.Values(http.StatusOK
 	return nil
@@ -266,11 +275,14 @@ func main() {
 	http.HandleFunc("/api/0/report", handleUpdateFromWorker)
 
 	go http.ListenAndServe(WEBSERVER_PORT, nil)
-	go runSchedulingLoop()
+
+	quit := make(chan bool)
+	go runSchedulingLoop(quit)
 
 	// Just testing
 	//newWorkerId := uuid.New().String()
 	//exdb.RegisterNewWorker(WORKERDB, newWorkerId, "1.1.1.1:69", exutils.P100_16GB_X1)
 
 	KeepSchedulerRunningUntilExitSignalIsReceived()
+	close(quit)
 }

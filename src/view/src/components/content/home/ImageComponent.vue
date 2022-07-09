@@ -30,8 +30,6 @@ export default {
   name: "ImageComponent",
   data() {
     return {
-      imgObjectURL:
-        "https://via.placeholder.com/1920x1024.png?text=This%20is%20zen%27s%20placeholder",
       isLoading: false,
     };
   },

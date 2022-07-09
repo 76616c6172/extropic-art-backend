@@ -82,7 +82,7 @@ func InsertNewJob(db *sql.DB, prompt string, job_params interface{}) (int, error
 	defer stmnt.Close()
 
 	unixtime := strconv.Itoa(int(time.Now().Unix()))
-	iteration_max := 240 // TODO: make this check if the user provided different values first
+	iteration_max := 250 // TODO: make this check if the user provided different values first
 
 	// Execute the statement
 	// for reference the jobs schema is:

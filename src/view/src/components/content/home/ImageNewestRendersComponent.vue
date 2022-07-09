@@ -120,6 +120,7 @@ figure:hover img {
   transform: scale(1.25);
 }
 figure:hover figcaption {
+  white-space: wrap;
   bottom: 0;
 }
 figure:hover figcaption p {

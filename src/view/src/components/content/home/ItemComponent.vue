@@ -134,7 +134,7 @@ li.list-group-item.item-group-active {
 }
 p {
   font-family: "Rubik-Light";
-  white-space: nowrap;
+  white-space: wrap;
   width: 100%; /* IE6 needs any width */
   overflow: hidden; /* "overflow" value must be different from  visible"*/
   -o-text-overflow: ellipsis; /* Opera < 11*/

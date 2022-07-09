@@ -119,7 +119,7 @@ li.list-group-item {
   border: none;
 }
 li p {
-  padding: 2px 0px 20px 0px;
+  padding: 0px 0px 0px 0px;
   margin: 0;
 }
 li.list-group-item:hover,

@@ -100,7 +100,7 @@ export default {
 }
 
 .imgTextboxContent {
-  padding: 5px;
+  padding: 0px;
   top: 50%;
   left: 50%;
   float: left;
@@ -113,7 +113,7 @@ export default {
 .loader,
 .loader:before,
 .loader:after {
-  border-radius: 50%;
+  border-radius: 10%;
   width: 2.5em;
   height: 2.5em;
   -webkit-animation-fill-mode: both;

@@ -1,9 +1,9 @@
 <template>
 <div>
     <h2 class="text-start display-7">Featured Model: Disco Diffusion 5.3</h2>
-</div>
-<div><br><br></div>
-  <div>
+<div><br></div>
+
+  <div><br><br></div>
     <div class="row">
       <div
         v-for="(job, index) in imgArray"
@@ -147,7 +147,7 @@ figure figcaption {
   left: 0;
   width: 100%;
   margin: 0;
-  padding: 15px 30px 15px 30px;
+  padding: 0px 5px 0px 0px;
   background-color: rgba(255, 255, 255, 0.85);
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
   line-height: 1;
@@ -166,8 +166,8 @@ figure figcaption button {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 10px 0 0;
-  border: 1px solid rgb(44, 62, 80);
+  margin: 0px 0 0;
+  border: 0px solid rgb(44, 62, 80);
 }
 
 figcaption button i {

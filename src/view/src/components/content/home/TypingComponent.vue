@@ -22,7 +22,7 @@ export default {
       i: 0,
       textOutput: "",
       textInput:
-        "Exia lets you run state of the art machine learning models in the cloud to generate high resolution images from just text! Made with love by zen and valar in 2022.",
+        "Run state of the art machine learning models in the cloud to generate high resolution images from just text! Made with love by zen and valar in 2022.",
     };
   },
   methods: {

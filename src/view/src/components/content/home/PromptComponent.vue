@@ -70,9 +70,9 @@ export default {
     },
   },
   computed: {
-    setAutofocus() {
+    /* setAutofocus() {
       return this.showCursor ? this.$refs.inputPrompt.firstChild.focus() : "";
-    },
+    }, */
   },
   watch: {
     showCursor: {

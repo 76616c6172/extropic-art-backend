@@ -1,6 +1,7 @@
 <template>
   <div>
-    <h2 class="text-start display-5"></h2>
+    <h2 class="text-start display-5">Welcome to Project Exia</h2>
+    <div><br></div>
     <div v-if="!isPageLoaded">
       <p class="text-start fs-5">
         {{ getText }}
@@ -21,7 +22,7 @@ export default {
       i: 0,
       textOutput: "",
       textInput:
-        "Exia is an AI platform that lets you run state of the art machine learning models in the cloud to generate high resolution images from any text prompt you type in! Made with love by zen and valar in 2022.",
+        "Exia lets you run state of the art machine learning models in the cloud to generate high resolution images from just text! Made with love by zen and valar in 2022.",
     };
   },
   methods: {

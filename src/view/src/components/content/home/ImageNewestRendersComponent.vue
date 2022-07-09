@@ -1,4 +1,8 @@
 <template>
+<div>
+    <h2 class="text-start display-7">Featured Model: Disco Diffusion 5.3</h2>
+</div>
+<div><br><br></div>
   <div>
     <div class="row">
       <div
@@ -9,7 +13,7 @@
         <figure class="image-block">
           <img :src="job.imgURL" class="img-fluid img-thumbnail" alt="" />
           <figcaption>
-            <h3 class="h5">More Info</h3>
+            <h2 class="h4">^</h2>
             <p class="prompt">{{ job.prompt }}</p>
             <button class="btn text-center">
               <a :href="`${job.imgURL}`" target="_blank"
@@ -21,6 +25,7 @@
       </div>
     </div>
   </div>
+  <div><br></div>
 </template>
 
 <script>

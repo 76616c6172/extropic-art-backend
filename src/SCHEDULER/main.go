@@ -25,7 +25,7 @@ import (
 
 const WEBSERVER_PORT = ":8091" // Scheduler is listening on this port
 const COLAB_TEST_WORKER = true
-const NGROK_IP = "https://494c-35-201-156-213.ngrok.io/"
+const NGROK_IP = "https://8496-35-201-156-213.ngrok.io"
 
 var WORKERDB *sql.DB //pointer used to connect to the db, initialized in main
 var JOB_COMPLETE = true
@@ -103,15 +103,15 @@ func handleUpdateFromWorker(w http.ResponseWriter, r *http.Request) {
 			log.Println("Error getting worker from DB", err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
-
-		} else {
-			// Identify the worker based on ip and get info from the databases
-			worker, err = exdb.GetWorkerByIP(WORKERDB, r.RemoteAddr)
-			if err != nil {
-				log.Println("Error getting worker from DB", err)
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
+		}
+		log.Println("Handling update for: ", worker.Worker_id, "at", worker.Worker_current_job)
+	} else {
+		// Identify the worker based on ip and get info from the databases
+		worker, err = exdb.GetWorkerByIP(WORKERDB, r.RemoteAddr)
+		if err != nil {
+			log.Println("Error getting worker from DB", err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
 		}
 	}
 
@@ -140,6 +140,7 @@ func handleUpdateFromWorker(w http.ResponseWriter, r *http.Request) {
 	jobIsDone, iterStatus := getIterationStatusAndJobStatusFromHeaders(w, r)
 
 	// Update the jobdb
+	// TODO: Add a safety measure where jobs already marked completed can't be updated by the worker
 	if jobIsDone {
 		exdb.UpdateJobById(JOBDB, jobString, "completed", iterStatus)
 		exdb.UpdateWorkerByJobid(WORKERDB, jobString, true) // set worker to no longer busy
@@ -283,8 +284,15 @@ func postJobToWorker(job exdb.Job, worker exdb.Worker) error {
 	defer response.Body.Close()
 
 	// Only return everything okay if correct status code
+
+	if response.StatusCode == http.StatusAccepted {
+		log.Println("Job posting accepted for JobId:", job.Jobid)
+		return nil
+	}
+
 	if _, exists := response.Request.Header[exapi.HeaderJobAccepted]; exists {
 		return nil
+
 	} else {
 
 		return errors.New("Error posting job")

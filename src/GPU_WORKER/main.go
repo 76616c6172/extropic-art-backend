@@ -66,9 +66,11 @@ func handleNewJobPosting(w http.ResponseWriter, r *http.Request) {
 
 		// Set headers
 		w.Header().Set(exapi.HeaderJobAccepted, "1")
+
 		if IS_COLAB_WORKER {
 			w.Header().Set(exapi.HeaderColabWorker, "1")
 		}
+
 		w.WriteHeader(http.StatusAccepted)
 
 		defer r.Body.Close() // Close the response
@@ -144,7 +146,7 @@ func runModel(prompt string) {
 				numberOfTimesInProgressPngWasCreated++
 				iterationStatus := numberOfTimesInProgressPngWasCreated * 50
 
-				err = postJobdUpdateToScheduler(strconv.Itoa(iterationStatus), JOB_IS_DONE)
+				err = postJobdUpdateToScheduler(strconv.Itoa(iterationStatus), JOB_IS_NOT_DONE)
 				if err != nil {
 					println("error after posting update to scheduler: ", err)
 				}

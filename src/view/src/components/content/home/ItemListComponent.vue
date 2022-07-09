@@ -7,7 +7,7 @@
             v-model="searchQuery"
             type="search"
             class="form-control bg-transparent text-white"
-            placeholder="Search..."
+            placeholder="Filter..."
             aria-label="Search"
           />
         </form>

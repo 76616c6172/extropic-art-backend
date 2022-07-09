@@ -67,6 +67,7 @@ export default {
 }
 .imgContainer:hover .imgTextbox {
   opacity: 1;
+  border: none;
 }
 
 .imgRendered {
@@ -126,15 +127,15 @@ export default {
   right: 0;
   bottom: 0;
   z-index: 1;
-  color: #327959;
+  color: #000000;
   font-size: 10px;
   margin: 80px auto;
   text-indent: -9999em;
   -webkit-transform: translateZ(0);
   -ms-transform: translateZ(0);
   transform: translateZ(0);
-  -webkit-animation-delay: -0.16s;
-  animation-delay: -0.16s;
+  -webkit-animation-delay: -0s;
+  animation-delay: -0s;
 }
 .loader:before,
 .loader:after {
@@ -144,8 +145,8 @@ export default {
 }
 .loader:before {
   left: -3.5em;
-  -webkit-animation-delay: -0.32s;
-  animation-delay: -0.32s;
+  -webkit-animation-delay: -0s;
+  animation-delay: -0s;
 }
 .loader:after {
   left: 3.5em;

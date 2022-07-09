@@ -5,7 +5,7 @@ import HomeComponent from "../components/content/home/HomeComponent.vue";
 const routes = [
   {
     path: "/",
-    name: "Home",
+    name: "exia",
     component: HomeComponent,
   },
 ];

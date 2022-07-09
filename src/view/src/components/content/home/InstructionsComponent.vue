@@ -1,13 +1,6 @@
 <template>
   <div>
     <div class="text-start">
-      <button
-        @click="this.visible = !this.visible"
-        type="button"
-        class="btn btn-outline-secondary"
-      >
-        How to
-      </button>
     </div>
     <div v-if="visible" class="mt-5">
       <div class="row">

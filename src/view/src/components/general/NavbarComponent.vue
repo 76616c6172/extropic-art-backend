@@ -18,16 +18,16 @@
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           <li class="nav-item">
             <router-link to="/" class="nav-link text-start active"
-              >Home</router-link
+              >About</router-link
             >
           </li>
           <div class="nav-item">
             <router-link to="/" class="nav-link text-start"
-              >Settings</router-link
+              >Models</router-link
             >
           </div>
           <div class="nav-item">
-            <router-link to="/" class="nav-link text-start">About</router-link>
+            <router-link to="/" class="nav-link text-start">Settings</router-link>
           </div>
           <div class="nav-item">
             <router-link to="/" class="nav-link text-start">Login</router-link>

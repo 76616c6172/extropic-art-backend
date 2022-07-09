@@ -22,6 +22,7 @@ import (
 
 const IMAGE_PATH = "./images_out/TimeToDisco/progress.png"
 const WORKER_PORT = ":8090"
+const IS_COLAB_WORKER = true //set to false if not colab worker
 
 const SCHEDULER_IP = "http://exia.art:8091"
 
@@ -63,9 +64,14 @@ func handleNewJobPosting(w http.ResponseWriter, r *http.Request) {
 		HAVE_JOB = true
 		JOB_PROMPT = jobRequest.Prompt
 
-		//w.Header().Add("If-None-Match", `W/"wyzzy"`)
+		// Set headers
+		w.Header().Set(exapi.HeaderJobAccepted, "1")
+		if IS_COLAB_WORKER {
+			w.Header().Set(exapi.HeaderColabWorker, "1")
+		}
 		w.WriteHeader(http.StatusAccepted)
-		r.Body.Close() // Close the response
+
+		defer r.Body.Close() // Close the response
 		return
 
 	} else {
@@ -232,6 +238,10 @@ func registerWorkerWithScheduler() {
 		return
 	}
 	req.AddCookie(&http.Cookie{Name: "secret", Value: SECRET})
+
+	if IS_COLAB_WORKER {
+		req.Header.Add(exapi.HeaderColabWorker, "1")
+	}
 
 	// Send the web request
 	client := &http.Client{}

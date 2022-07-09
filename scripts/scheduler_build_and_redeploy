@@ -13,7 +13,7 @@ set -e # fail fast
 
 # exia="user@server-address" # set the remote target to deploy to
 SERVER_SSH="exia" # alternatively this can be $1 when called by GH actions
-SERVER_PATH="/root/scheduler-testing/SCHEDULER" # alternatively this can be $2 when called by GH Actions
+SERVER_PATH="/root/exia/SCHEDULER" # alternatively this can be $2 when called by GH Actions
 BINARY_NAME="SCHEDULER"
 SERVICE_NAME="exia-scheduler.service"
 SERVER_RESTART_COMMAND="systemctl restart $SERVICE_NAME"

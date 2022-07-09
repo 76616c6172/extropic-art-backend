@@ -4,12 +4,14 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -22,9 +24,11 @@ import (
 )
 
 const WEBSERVER_PORT = ":8091" // Scheduler is listening on this port
-const JOB_COMPLETE = true
+const COLAB_TEST_WORKER = true
+const NGROK_IP = "https://494c-35-201-156-213.ngrok.io/"
 
 var WORKERDB *sql.DB //pointer used to connect to the db, initialized in main
+var JOB_COMPLETE = true
 var JOBDB *sql.DB
 var SECRET string
 var PANIC bool
@@ -68,10 +72,6 @@ func handleWorkerRegistration(w http.ResponseWriter, r *http.Request) {
 // GPU_WORKERS send images+metadata to this endpoint: /api/0/report
 // FIXME: this function is too long
 func handleUpdateFromWorker(w http.ResponseWriter, r *http.Request) {
-	println("RECEIVING UPDATE")
-
-	//w.WriteHeader(http.StatusAccepted) // THIS SENDS A RESPONSE RIGHt?
-	//return
 
 	var maxBodySize int64 = 10 * 1024 * 1024
 
@@ -89,26 +89,37 @@ func handleUpdateFromWorker(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Identify the worker based on ip and get info from the databases
-	worker, err := exdb.GetWorkerByIP(WORKERDB, r.RemoteAddr)
-	if err != nil {
-		log.Println("Error getting worker from DB", err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
+	log.Println("RECEIVING UPDATE")
 
-	}
+	var worker exdb.Worker
 
-	println("CURRENT JOB IS:", worker.Worker_current_job)
-	job, err := exdb.GetJobByJobid(JOBDB, worker.Worker_current_job)
-	if err != nil {
-		log.Println("Error getting job from DB", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+	// Check if worker is Colab testworker
+	// and use the ngrok tunnel if it is
+	if COLAB_TEST_WORKER {
+		// Identify the worker based on ip and get info from the databases
+		// https://7150-34-83-189-107.ngrok.io
+		worker, err = exdb.GetWorkerByIP(WORKERDB, NGROK_IP)
+		if err != nil {
+			log.Println("Error getting worker from DB", err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+
+		} else {
+			// Identify the worker based on ip and get info from the databases
+			worker, err = exdb.GetWorkerByIP(WORKERDB, r.RemoteAddr)
+			if err != nil {
+				log.Println("Error getting worker from DB", err)
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+		}
 	}
 
 	// 3. Run logic based on the information we received
 	// FIXME: This may cause unexpected behavior when trying to override the file
-	filepath := exutils.PNG_PATH + job.Jobid + ".png"
+	jobString := strconv.Itoa(worker.Worker_current_job)
+	log.Println("Receiving update for JOB:", jobString)
+	filepath := exutils.PNG_PATH + jobString + ".png"
 	println("SAVING JOB TO", filepath)
 	emptyFile, err := os.Create(filepath)
 	if err != nil {
@@ -130,11 +141,10 @@ func handleUpdateFromWorker(w http.ResponseWriter, r *http.Request) {
 
 	// Update the jobdb
 	if jobIsDone {
-		exdb.UpdateJobById(JOBDB, job.Jobid, "completed", iterStatus)
-		exdb.UpdateWorkerByJobid(WORKERDB, job.Jobid, true) // set worker to no longer busy
+		exdb.UpdateJobById(JOBDB, jobString, "completed", iterStatus)
+		exdb.UpdateWorkerByJobid(WORKERDB, jobString, true) // set worker to no longer busy
 	} else {
-		exdb.UpdateJobById(JOBDB, job.Jobid, "processing", iterStatus)
-
+		exdb.UpdateJobById(JOBDB, jobString, "processing", iterStatus)
 	}
 
 	w.WriteHeader(http.StatusAccepted)
@@ -224,7 +234,7 @@ func runSchedulingLoop(quit chan bool) {
 
 			// 4. Update the Jobdb and the Workerdb
 			exdb.UpdateJobById(JOBDB, queuedJob.Jobid, "processing", "1")
-			exdb.UpdateWorkerByJobid(WORKERDB, queuedJob.Jobid, false) // set worker to no longer busy
+			exdb.UpdateWorkerByWorkerId(WORKERDB, queuedJob.Jobid, worker.Worker_id, 1)
 		}
 	}
 }
@@ -240,7 +250,8 @@ func postJobToWorker(job exdb.Job, worker exdb.Worker) error {
 		}
 	}()
 
-	workerUrl := "http://" + worker.Worker_ip + ":8090/api/0/worker"
+	//workerUrl := "http://" + worker.Worker_ip + "/api/0/worker"
+	workerUrl := worker.Worker_ip + "/api/0/worker"
 
 	println("Posting job:\"", job.Prompt, "\"to worker: ", worker.Worker_id)
 
@@ -259,6 +270,7 @@ func postJobToWorker(job exdb.Job, worker exdb.Worker) error {
 	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
 	if err != nil {
 		log.Println("error creating request to send to worker")
+		return err
 	}
 
 	// TODO: Scheduler is waiting on a response that doesn't come
@@ -266,11 +278,20 @@ func postJobToWorker(job exdb.Job, worker exdb.Worker) error {
 	response, err := client.Do(request)
 	if err != nil {
 		log.Println("Error posting job to scheduler", err)
+		return err
 	}
-	response.Body.Close()
+	defer response.Body.Close()
+
+	// Only return everything okay if correct status code
+	if _, exists := response.Request.Header[exapi.HeaderJobAccepted]; exists {
+		return nil
+	} else {
+
+		return errors.New("Error posting job")
+	}
+
 	// FIXME
 	//r.Header.Values(http.StatusOK
-	return nil
 
 	/*
 

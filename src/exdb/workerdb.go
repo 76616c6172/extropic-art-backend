@@ -93,7 +93,7 @@ func GetWorkerByIP(db *sql.DB, workerIp string) (Worker, error) {
 
 	rowExists := row.Next()
 	if rowExists {
-		err = row.Scan(wk.Worker_id, &wk.Worker_ip, &wk.Worker_Busy, &wk.Worker_current_job, &wk.Worker_last_health_check, &wk.Worker_time_created, &wk.Worker_secret, &wk.Worker_type)
+		err = row.Scan(&wk.Worker_id, &wk.Worker_ip, &wk.Worker_Busy, &wk.Worker_current_job, &wk.Worker_last_health_check, &wk.Worker_time_created, &wk.Worker_secret, &wk.Worker_type)
 		if err != nil {
 			log.Println("Error reading worker row", err)
 			return wk, err
@@ -101,6 +101,37 @@ func GetWorkerByIP(db *sql.DB, workerIp string) (Worker, error) {
 	}
 
 	return wk, err
+}
+
+// Updates the worker in the database that matches the id with provided parameters
+func UpdateWorkerByWorkerId(db *sql.DB, currentJob string, workerId string, isBusy int) {
+
+	currentJobNumber, err := strconv.Atoi(currentJob)
+	if err != nil {
+		log.Println("error converting currentJob to int", err)
+		return
+	}
+
+	stmnt, err := db.Prepare(`
+		UPDATE workers
+		SET
+			worker_busy = ?,
+			worker_current_job = ?
+		WHERE
+    	 worker_id = ?;`)
+	if err != nil {
+		log.Println("error preparing statement", err)
+		return
+	}
+	defer stmnt.Close()
+
+	// if job is done override the job assigned to the worker in the db with -1
+	result, err := stmnt.Exec(isBusy, currentJobNumber, workerId)
+	if err != nil {
+		log.Println("error executing statement", err)
+	}
+
+	println(result)
 }
 
 // Updates a worker in the db by the job it was assigned to

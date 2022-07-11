@@ -308,6 +308,8 @@ func UpdateJobById(db *sql.DB, jobid string, newStatus string, iterStatus string
 		log.Println("Error converting jobid string to int", err)
 	}
 
+	println("UPDATING JOBDB WITH:", newStatus, iterStatus, "for jobid = ", jobid)
+
 	// Iteration status is an int
 	stmnt, err := db.Prepare(`
 		UPDATE jobs

@@ -160,7 +160,6 @@ func UpdateWorkerByJobid(db *sql.DB, currentJob string, jobCompleted bool) {
 	// if job is done override the job assigned to the worker in the db with -1
 	if jobCompleted {
 		isBusy = 0
-		currentJobNumber = 0
 		result, err := stmnt.Exec(isBusy, -1, currentJobNumber)
 		if err != nil {
 			log.Println("error executing statement", err)
@@ -168,6 +167,7 @@ func UpdateWorkerByJobid(db *sql.DB, currentJob string, jobCompleted bool) {
 		println(result)
 		return
 	}
+	isBusy = 1
 	result, err := stmnt.Exec(isBusy, currentJobNumber, currentJobNumber)
 	if err != nil {
 		log.Println("error executing statement", err)

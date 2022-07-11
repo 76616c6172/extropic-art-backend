@@ -23,9 +23,9 @@ import (
 	"github.com/google/uuid"
 )
 
-const WEBSERVER_PORT = ":8091" // Scheduler is listening on this port
-const COLAB_TEST_WORKER = true
-const NGROK_IP = "https://8496-35-201-156-213.ngrok.io"
+const WEBSERVER_PORT = ":8091"  // Scheduler is listening on this port
+const COLAB_TEST_WORKER = false //debug
+const NGROK_IP = "8496-35-201-156-213.ngrok.io"
 
 var WORKERDB *sql.DB //pointer used to connect to the db, initialized in main
 var JOB_COMPLETE = true
@@ -95,10 +95,13 @@ func handleUpdateFromWorker(w http.ResponseWriter, r *http.Request) {
 
 	// Check if worker is Colab testworker
 	// and use the ngrok tunnel if it is
+
+	workerIp := strings.Split(r.RemoteAddr, ":")[0]
+
 	if COLAB_TEST_WORKER {
 		// Identify the worker based on ip and get info from the databases
 		// https://7150-34-83-189-107.ngrok.io
-		worker, err = exdb.GetWorkerByIP(WORKERDB, NGROK_IP)
+		worker, err = exdb.GetWorkerByIP(WORKERDB, "https://"+NGROK_IP)
 		if err != nil {
 			log.Println("Error getting worker from DB", err)
 			w.WriteHeader(http.StatusBadRequest)
@@ -106,13 +109,16 @@ func handleUpdateFromWorker(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Println("Handling update for: ", worker.Worker_id, "at", worker.Worker_current_job)
 	} else {
+		println("+Looking up worker by IP: ", r.RemoteAddr)
 		// Identify the worker based on ip and get info from the databases
-		worker, err = exdb.GetWorkerByIP(WORKERDB, r.RemoteAddr)
+		// TODO: Identify worker based on workerid instead!
+		worker, err = exdb.GetWorkerByIP(WORKERDB, workerIp)
 		if err != nil {
 			log.Println("Error getting worker from DB", err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
+		println("+Got worker from db: ", worker.Worker_ip, "job", worker.Worker_current_job)
 	}
 
 	// 3. Run logic based on the information we received
@@ -142,9 +148,11 @@ func handleUpdateFromWorker(w http.ResponseWriter, r *http.Request) {
 	// Update the jobdb
 	// TODO: Add a safety measure where jobs already marked completed can't be updated by the worker
 	if jobIsDone {
+		println("HAPPENED: CASE A")
 		exdb.UpdateJobById(JOBDB, jobString, "completed", iterStatus)
 		exdb.UpdateWorkerByJobid(WORKERDB, jobString, true) // set worker to no longer busy
 	} else {
+		println("HAPPENED: CASE B")
 		exdb.UpdateJobById(JOBDB, jobString, "processing", iterStatus)
 	}
 
@@ -161,9 +169,12 @@ func getIterationStatusAndJobStatusFromHeaders(w http.ResponseWriter, r *http.Re
 	isJobDoneFromHeader := r.Header.Values(exapi.HeaderJobStatusComplete)
 	isJobDone := string(isJobDoneFromHeader[0])
 	if isJobDone == "1" {
+		println("Scheduler detected Job is Done")
 		return true, iteration_status
 	}
-	return true, iteration_status
+
+	println("Scheduler detected Job is in progress")
+	return false, iteration_status
 }
 
 // Keeps the scheduler running until CTRL-C or exit signal is received.
@@ -251,9 +262,11 @@ func postJobToWorker(job exdb.Job, worker exdb.Worker) error {
 		}
 	}()
 
-	//workerUrl := "http://" + worker.Worker_ip + "/api/0/worker"
-	workerUrl := worker.Worker_ip + "/api/0/worker"
+	workerUrl := "http://" + worker.Worker_ip + ":8090/api/0/worker"
+	if COLAB_TEST_WORKER { // Ugly special case for colab testing
+		workerUrl = "https://" + worker.Worker_ip + "/api/0/worker"
 
+	}
 	println("Posting job:\"", job.Prompt, "\"to worker: ", worker.Worker_id)
 
 	client := &http.Client{}

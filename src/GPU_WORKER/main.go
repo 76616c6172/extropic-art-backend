@@ -22,11 +22,9 @@ import (
 
 const IMAGE_PATH = "./images_out/TimeToDisco/progress.png"
 const WORKER_PORT = ":8090"
-const IS_COLAB_WORKER = true //set to false if not colab worker
-
-const SCHEDULER_IP = "http://exia.art:8091"
-
-//const SCHEDULER_IP = "http://127.0.0.1:8091"
+const IS_COLAB_WORKER = false //set to false if not colab worker
+//const SCHEDULER_IP = "http://exia.art:8091"
+const SCHEDULER_IP = "http://127.0.0.1:8091"
 const JOB_IS_DONE bool = true
 const JOB_IS_NOT_DONE bool = false
 

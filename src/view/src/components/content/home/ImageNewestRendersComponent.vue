@@ -1,6 +1,6 @@
 <template>
 <div>
-    <h2 class="text-start display-7">Featured Model: Disco Diffusion 5.4</h2>
+    <h2 class="text-start display-7">Featured Model: Disco Diffusion</h2>
 <div><br></div>
 
   <div><br><br></div>

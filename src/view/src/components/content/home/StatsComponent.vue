@@ -9,7 +9,7 @@
         <h2 v-else class="display-3 text-start">
           {{ jobStatus.newestJobId }}
         </h2>
-        <p v-if="jobStatus.newestJobId" class="text-start">Images total</p>
+        <p v-if="jobStatus.newestJobId" class="text-start">Total jobs</p>
       </div>
       <div class="col-xxl-4 col-xl-4 col-lg-4 col-md-4 col-sm-1 col-xs-1">
         <!-- Jobs Queued -->
@@ -19,7 +19,7 @@
         <h2 v-else class="display-3 text-start">
           {{ jobStatus.jobsQueued }}
         </h2>
-        <p v-if="jobStatus.jobsQueued" class="text-start">Images queued</p>
+        <p v-if="jobStatus.jobsQueued" class="text-start">Queued jobs</p>
       </div>
       <div class="col-xxl-4 col-xl-4 col-lg-4 col-md-4 col-sm-1 col-xs-1">
         <!-- Jobs Completed -->
@@ -30,7 +30,7 @@
           {{ jobStatus.jobsCompleted }}
         </h2>
         <p v-if="jobStatus.jobsCompleted" class="text-start">
-          Images completed
+          Completed jobs
         </p>
       </div>
     </div>

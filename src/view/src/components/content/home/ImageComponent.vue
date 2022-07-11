@@ -7,13 +7,7 @@
       </div>
       <div v-show="Object.keys(getSelectedJob).length !== 0" class="imgTextbox">
         <div class="p-5 imgTextboxContent">
-          <hr />
-          <p class="fs-4">
-            {{ getSelectedJob.prompt }}
-          </p>
-          <hr />
           <span>
-
             <i class="fa-solid fa-link"></i>
             <a :href="imgObjectURL" class="text-white" target="_blank">
               Image</a

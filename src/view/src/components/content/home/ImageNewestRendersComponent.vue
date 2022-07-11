@@ -17,7 +17,7 @@
             <p class="prompt">{{ job.prompt }}</p>
             <button class="btn text-center">
               <a :href="`${job.imgURL}`" target="_blank"
-                ><i class="fa fa-eye"></i> Full image</a
+                ><i class="fa fa-eye"></i> Image</a
               >
             </button>
           </figcaption>

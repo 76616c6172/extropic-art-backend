@@ -13,9 +13,10 @@
           </p>
           <hr />
           <span>
+
             <i class="fa-solid fa-link"></i>
             <a :href="imgObjectURL" class="text-white" target="_blank">
-              Goto Image</a
+              Image</a
             >
           </span>
         </div>

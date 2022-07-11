@@ -24,17 +24,17 @@
           />
         </div>
       </div>
-      <div class="row justify-content-center pb-5 pt-5">
+      <div class="row justify-content-center pb-5 pt-6">
         <div class="col-lg-10 col-sm-12">
           <StatsComponent v-if="jobStatus" :jobStatus="jobStatus" />
         </div>
       </div>
-      <div class="row justify-content-center pt-5 pb-5">
+      <div class="row justify-content-center pt-5 pb-6">
         <div class="col-lg-10 col-sm-12">
           <Image />
         </div>
       </div>
-      <div class="row justify-content-center bg-light pt-5 pb-5">
+      <div class="row justify-content-center bg-light pt-7 pb-7">
         <div class="col-lg-10 col-sm-12">
           <TerminalWrapper :showCursor="showCursor" />
         </div>

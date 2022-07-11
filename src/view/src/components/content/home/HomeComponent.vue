@@ -45,6 +45,8 @@
 </template>
 
 <script>
+document.title = 'Exia'
+
 import { mapGetters } from "vuex";
 import { default as Navbar } from "../../general/NavbarComponent.vue";
 import { default as Footer } from "../../general/FooterComponent.vue";

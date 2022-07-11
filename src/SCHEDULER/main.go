@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"os/signal"
 	"strconv"
 	"strings"
@@ -23,8 +24,8 @@ import (
 	"github.com/google/uuid"
 )
 
-const WEBSERVER_PORT = ":8091"  // Scheduler is listening on this port
-const COLAB_TEST_WORKER = false //debug
+const WEBSERVER_PORT = ":8091" // Scheduler is listening on this port
+const COLAB_TEST_WORKER = true //debug
 const NGROK_IP = "8496-35-201-156-213.ngrok.io"
 
 var WORKERDB *sql.DB //pointer used to connect to the db, initialized in main
@@ -141,6 +142,9 @@ func handleUpdateFromWorker(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	// Create JPG "thumbnail"
+	exec.Command("../model/make_jpgs_from_name", jobString).Run()
 
 	// Extract metadata out of the request using custom headers defined in exapi/headers.go
 	jobIsDone, iterStatus := getIterationStatusAndJobStatusFromHeaders(w, r)

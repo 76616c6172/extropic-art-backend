@@ -38,7 +38,7 @@ export default {
     createImgObjectURL() {
       this.isLoading = true;
       this.imgObjectURL =
-        "https://via.placeholder.com/1920x1024.png?text=Loading%20image";
+        "https://via.placeholder.com/1920x1088.png?text=Loading%20image";
       this.$store
         .dispatch("getSelectedImg")
         .then((response) => {

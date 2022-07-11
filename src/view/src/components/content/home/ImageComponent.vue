@@ -3,7 +3,7 @@
     <div class="imgContainer">
       <div class="imgRendered">
         <div v-if="isLoading" class="loader">Loading...</div>
-        <img :src="imgObjectURL" class="img-fluid img-thumbnail" alt="" />
+        <img :src="imgObjectURL" class="img-fluid rounded" alt="" />
       </div>
       <div v-show="Object.keys(getSelectedJob).length !== 0" class="imgTextbox">
         <div class="p-5 imgTextboxContent">

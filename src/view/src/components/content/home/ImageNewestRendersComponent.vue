@@ -11,7 +11,7 @@
         class="col-xxl-4 col-xl-4 col-lg-4 col-md-4 col-sm-1 col-xs-1"
       >
         <figure class="image-block">
-          <img :src="job.imgURL" class="img-fluid img-thumbnail" alt="" />
+          <img :src="job.imgURL" class="img-fluid rounded" alt="" />
           <figcaption>
             <h4 class="h4">^</h4>
             <p class="prompt">{{ job.prompt }}</p>

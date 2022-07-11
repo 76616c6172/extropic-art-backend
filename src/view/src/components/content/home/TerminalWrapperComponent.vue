@@ -1,5 +1,5 @@
 <template>
-  <div class="terminalWrapper rounded-3 shadow border border-4 border-white">
+  <div class="terminalWrapper rounded-3 shadow">
     <div class="terminalWrapperBg p-4 rounded-3">
       <div class="ui-container">
       </div>

@@ -29,14 +29,14 @@
           <StatsComponent v-if="jobStatus" :jobStatus="jobStatus" />
         </div>
       </div>
-      <div class="row justify-content-center bg-light pt-5 pb-5">
-        <div class="col-lg-10 col-sm-12">
-          <TerminalWrapper :showCursor="showCursor" />
-        </div>
-      </div>
       <div class="row justify-content-center pt-5 pb-5">
         <div class="col-lg-10 col-sm-12">
           <Image />
+        </div>
+      </div>
+      <div class="row justify-content-center bg-light pt-5 pb-5">
+        <div class="col-lg-10 col-sm-12">
+          <TerminalWrapper :showCursor="showCursor" />
         </div>
       </div>
     </div>

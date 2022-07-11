@@ -22,7 +22,7 @@ export default {
       i: 0,
       textOutput: "",
       textInput:
-        "Run state of the art machine learning models in the cloud to generate high resolution images from just text! Made with love by zen and valar in 2022.",
+        "Run state of the art machine learning models in the cloud to generate high resolution images from just text!",
     };
   },
   methods: {
@@ -32,7 +32,7 @@ export default {
     async setText() {
       if (this.i <= this.textInput.length) {
         this.textOutput += this.textInput.charAt(this.i);
-        await this.delay(25);
+        await this.delay(20);
         this.i++;
         this.setText();
       } else {

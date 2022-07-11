@@ -1,6 +1,6 @@
 <template>
 <div>
-    <h2 class="text-start display-7">Featured Model: Disco Diffusion</h2>
+    <h2 class="text-start display-7">Featured Model: Disco Diffusion 5.3</h2>
 <div><br></div>
 
   <div><br><br></div>
@@ -13,7 +13,7 @@
         <figure class="image-block">
           <img :src="job.imgURL" class="img-fluid img-thumbnail" alt="" />
           <figcaption>
-            <h2 class="h4">^</h2>
+            <h4 class="h4">^</h4>
             <p class="prompt">{{ job.prompt }}</p>
             <button class="btn text-center">
               <a :href="`${job.imgURL}`" target="_blank"
@@ -148,18 +148,20 @@ figure figcaption {
   width: 100%;
   margin: 0;
   padding: 0px 5px 0px 0px;
-  background-color: rgba(255, 255, 255, 0.85);
+  background-color: rgba(25, 23, 36, 0.85);
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
   line-height: 1;
   transition: 0.25s;
 }
-figure figcaption h3 {
+figure figcaption h4 {
   margin: 0 0 10px;
   padding: 0;
+  color: white;
 }
 figure figcaption p {
   font-size: 14px;
   line-height: 1.75;
+  color: white;
 }
 figure figcaption button {
   position: relative;
@@ -171,11 +173,11 @@ figure figcaption button {
 }
 
 figcaption button i {
-  color: rgb(44, 62, 80);
+  color: white;
 }
 
 figure figcaption button a {
   text-decoration: none;
-  color: rgb(44, 62, 80);
+  color: white;
 }
 </style>

@@ -1,7 +1,7 @@
 <template>
   <li
-    :disabled="job.job_status != 'completed'"
-    :class="[job.job_status != 'completed' ? 'disabled' : '']"
+    :disabled="job.job_status == 'queued'"
+    :class="[job.job_status == 'queued' ? 'disabled' : '']"
     class="list-group-item list-group-item-action"
   >
     <div class="row">

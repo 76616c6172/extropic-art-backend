@@ -1,5 +1,5 @@
 <template>
-  <footer class="footer text-default mt-auto py-3 bg-light">
+  <footer class="footer text-default mt-auto py-2">
     <div class="text-center p-10">
       Made with <i class="fa fa-heart" aria-hidden="true"></i> by valar and
       zen in {{ getYear }}

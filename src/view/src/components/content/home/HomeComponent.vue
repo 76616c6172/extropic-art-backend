@@ -16,7 +16,7 @@
           <Instructions />
         </div>
       </div>
-      <div class="row justify-content-center">
+      <div class="row justify-content-center pb-5">
         <div class="col-lg-10 col-sm-12">
           <ImageNewestRendersComponent
             v-if="jobStatus.newestCompletedJobs"
@@ -24,17 +24,17 @@
           />
         </div>
       </div>
-      <div class="row justify-content-center pb-5 pt-6">
+      <div class="row justify-content-center pb-5 pt-1">
         <div class="col-lg-10 col-sm-12">
           <StatsComponent v-if="jobStatus" :jobStatus="jobStatus" />
         </div>
       </div>
-      <div class="row justify-content-center pt-5 pb-6">
+      <div class="row justify-content-center pb-0 pt-9 bg-light">
         <div class="col-lg-10 col-sm-12">
           <Image />
         </div>
       </div>
-      <div class="row justify-content-center bg-light pt-7 pb-7">
+      <div class="row justify-content-center pb-2 pt-0 bg-light">
         <div class="col-lg-10 col-sm-12">
           <TerminalWrapper :showCursor="showCursor" />
         </div>

@@ -26,7 +26,7 @@ import (
 
 const WEBSERVER_PORT = ":8091" // Scheduler is listening on this port
 const COLAB_TEST_WORKER = true //debug
-const NGROK_IP = "8496-35-201-156-213.ngrok.io"
+const NGROK_IP = "7fe2-34-80-36-252.ngrok.io"
 
 var WORKERDB *sql.DB //pointer used to connect to the db, initialized in main
 var JOB_COMPLETE = true
@@ -102,7 +102,7 @@ func handleUpdateFromWorker(w http.ResponseWriter, r *http.Request) {
 	if COLAB_TEST_WORKER {
 		// Identify the worker based on ip and get info from the databases
 		// https://7150-34-83-189-107.ngrok.io
-		worker, err = exdb.GetWorkerByIP(WORKERDB, "https://"+NGROK_IP)
+		worker, err = exdb.GetWorkerByIP(WORKERDB, NGROK_IP)
 		if err != nil {
 			log.Println("Error getting worker from DB", err)
 			w.WriteHeader(http.StatusBadRequest)
@@ -268,10 +268,10 @@ func postJobToWorker(job exdb.Job, worker exdb.Worker) error {
 
 	workerUrl := "http://" + worker.Worker_ip + ":8090/api/0/worker"
 	if COLAB_TEST_WORKER { // Ugly special case for colab testing
-		workerUrl = "https://" + worker.Worker_ip + "/api/0/worker"
+		workerUrl = "https://" + NGROK_IP + "/api/0/worker"
 
 	}
-	println("Posting job:\"", job.Prompt, "\"to worker: ", worker.Worker_id)
+	log.Println("Posting job:\"", job.Prompt, "\"to worker: ", worker.Worker_id)
 
 	client := &http.Client{}
 	client.Timeout = time.Second * 10

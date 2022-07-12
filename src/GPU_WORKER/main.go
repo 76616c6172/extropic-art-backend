@@ -96,7 +96,7 @@ func runModel(prompt string) {
 	args += prompt
 	args += "\"]}' --steps 250 --width_height '[1920, 1088]'"
 
-	modelSubProcess := exec.Command("./run_model", args)
+	modelSubProcess := exec.Command("disco.py", args)
 
 	stdout, err := modelSubProcess.StdoutPipe()
 	if err != nil {

@@ -92,7 +92,7 @@ func runModel(prompt string) {
 	//modelParameters := fmt.Sprintf("--text_prompts '{\"0\": [\"%s\"]}' --steps 240 --width_height '[1920, 1088]'", prompt)
 	// --n_batches 0 --text_prompts '{"0": ["Space panorama of celestial space station, cosmic, photorealistic materials, beeple behance"]}' --steps 250 --width_height '[1920, 1088]'
 
-	args := fmt.Sprintf("--n_batches 0 --text_prompts '{\"0\": [\"")
+	args := fmt.Sprintf("--n_batches 1 --text_prompts '{\"0\": [\"")
 	args += prompt
 	args += "\"]}' --steps 250 --width_height '[1920, 1088]'"
 

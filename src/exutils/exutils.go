@@ -16,8 +16,8 @@ const PNG_PATH = "../model/images/pngs/"
 // Checks for exactly 1 arg from stdin and returns it as string
 // Prints error if not exactly 1 argument received
 func InitializeSecretFromArgument() string {
-	if len(os.Args) < 2 || len(os.Args) > 2 { // Check arguments
-		println("Error: You must supply EXACTLY one argument (the GPU_WORER auth token) on startup.")
+	if len(os.Args) < 2 { // Check arguments
+		println("Error: You must supply at least one argument (the GPU_WORER auth token) on startup.")
 		os.Exit(1)
 	}
 	return strings.TrimSpace(os.Args[1])

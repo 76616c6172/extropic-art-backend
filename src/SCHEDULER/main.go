@@ -25,14 +25,16 @@ import (
 )
 
 const WEBSERVER_PORT = ":8091" // Scheduler is listening on this port
-const COLAB_TEST_WORKER = true //debug
-const NGROK_IP = "ca08-35-197-116-54.ngrok.io"
+//const COLAB_TEST_WORKER = false //debug
+//const NGROK_IP = "a936-35-197-116-54.ngrok.io"
 
 var WORKERDB *sql.DB //pointer used to connect to the db, initialized in main
 var JOB_COMPLETE = true
 var JOBDB *sql.DB
 var SECRET string
 var PANIC bool
+
+var WORKER_IP_TO_TUNNEL_URL = map[string]string{}
 
 // Initialize and connect to workerdb
 // GPU_WORERS register themselves with the scheduler through this endpoint
@@ -58,6 +60,16 @@ func handleWorkerRegistration(w http.ResponseWriter, r *http.Request) {
 			log.Println("Error registering worker:", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
+		}
+
+		// Check if the worker is using a tunnel
+		workerTunnel, err := r.Cookie(exapi.CookieWorkerTunnel)
+		if err != nil {
+			println("No worker tunnel cookie", err)
+		}
+		if len(workerTunnel.Value) > 0 {
+			println("Received worker tunnel:", workerTunnel.Value)
+			WORKER_IP_TO_TUNNEL_URL[workerIpForDB[0]] = workerTunnel.Value
 		}
 
 		// Send OK response
@@ -96,21 +108,21 @@ func handleUpdateFromWorker(w http.ResponseWriter, r *http.Request) {
 
 	// Check if worker is Colab testworker
 	// and use the ngrok tunnel if it is
-
 	workerIp := strings.Split(r.RemoteAddr, ":")[0]
 
-	if COLAB_TEST_WORKER {
-		// Identify the worker based on ip and get info from the databases
-		// https://7150-34-83-189-107.ngrok.io
-		worker, err = exdb.GetWorkerByIP(WORKERDB, NGROK_IP)
+	// Check if this worker is using a tunnel
+	if workerUrl, exists := WORKER_IP_TO_TUNNEL_URL[workerIp]; exists {
+
+		worker, err = exdb.GetWorkerByIP(WORKERDB, workerUrl)
 		if err != nil {
 			log.Println("Error getting worker from DB", err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 		log.Println("Handling update for: ", worker.Worker_id, "at", worker.Worker_current_job)
+
 	} else {
-		println("+Looking up worker by IP: ", r.RemoteAddr)
+		println("+Looking up worker by IP: ", workerIp)
 		// Identify the worker based on ip and get info from the databases
 		// TODO: Identify worker based on workerid instead!
 		worker, err = exdb.GetWorkerByIP(WORKERDB, workerIp)
@@ -152,11 +164,9 @@ func handleUpdateFromWorker(w http.ResponseWriter, r *http.Request) {
 	// Update the jobdb
 	// TODO: Add a safety measure where jobs already marked completed can't be updated by the worker
 	if jobIsDone {
-		println("HAPPENED: CASE A")
 		exdb.UpdateJobById(JOBDB, jobString, "completed", iterStatus)
 		exdb.UpdateWorkerByJobid(WORKERDB, jobString, true) // set worker to no longer busy
 	} else {
-		println("HAPPENED: CASE B")
 		exdb.UpdateJobById(JOBDB, jobString, "processing", iterStatus)
 	}
 
@@ -268,11 +278,14 @@ func postJobToWorker(job exdb.Job, worker exdb.Worker) error {
 		}
 	}()
 
+	// Default case if worker is reachable by ip
 	workerUrl := "http://" + worker.Worker_ip + ":8090/api/0/worker"
-	if COLAB_TEST_WORKER { // Ugly special case for colab testing
-		workerUrl = "https://" + NGROK_IP + "/api/0/worker"
 
+	// Check if this worker is using a tunnel
+	if url, exists := WORKER_IP_TO_TUNNEL_URL[worker.Worker_ip]; exists {
+		workerUrl = "https://" + url + "/api/0/worker"
 	}
+
 	log.Println("Posting job:\"", job.Prompt, "\"to worker: ", worker.Worker_id)
 
 	client := &http.Client{}
@@ -316,21 +329,6 @@ func postJobToWorker(job exdb.Job, worker exdb.Worker) error {
 
 		return errors.New("Error posting job")
 	}
-
-	// FIXME
-	//r.Header.Values(http.StatusOK
-
-	/*
-
-		defer response.Body.Close()
-
-		fmt.Println("response Status:", response.Status)
-		fmt.Println("response Headers:", response.Header)
-		body, _ := ioutil.ReadAll(response.Body)
-		fmt.Println("response Body:", string(body))
-
-		return nil
-	*/
 }
 
 // This is the main function >:D

@@ -22,17 +22,18 @@ import (
 
 const IMAGE_PATH = "./images_out/TimeToDisco/progress.png"
 const WORKER_PORT = ":8090"
-const IS_COLAB_WORKER = true //set to false if not colab worker
-const SCHEDULER_IP = "http://exia.art:8091"
 
 //const SCHEDULER_IP = "http://127.0.0.1:8091"
+const SCHEDULER_IP = "http://exia.art:8091"
 const JOB_IS_DONE bool = true
 const JOB_IS_NOT_DONE bool = false
 
 var HAVE_JOB = false //set to true while the worker is busy
 var WORKER_ID string
 var SECRET string
-var JOB_PROMPT string // prompt for the current job to be rendered
+var JOB_PROMPT string         // prompt for the current job to be rendered
+var TUNNEL_URL string         // send to scheduler if we're using a tunnel (provided as 2nd startup argument)
+var WORKER_HAS_TUNNEL = false // is set to false if not colab worker
 
 // Answers jobs posted to /api/0/worker
 func handleNewJobPosting(w http.ResponseWriter, r *http.Request) {
@@ -61,10 +62,6 @@ func handleNewJobPosting(w http.ResponseWriter, r *http.Request) {
 
 		// Set headers
 		w.Header().Set(exapi.HeaderJobAccepted, "1")
-
-		if IS_COLAB_WORKER {
-			w.Header().Set(exapi.HeaderColabWorker, "1")
-		}
 
 		w.WriteHeader(http.StatusAccepted)
 
@@ -148,7 +145,6 @@ func runModel(prompt string) {
 		isReceivingAnotherLineFromStdout := stdoutScanner.Scan()
 
 		if isReceivingAnotherLineFromStdout {
-			fmt.Println("1")
 			currentLineFromStdout := stdoutScanner.Text()
 
 			if strings.Contains(currentLineFromStdout, "<PIL.Image.Image") {
@@ -161,7 +157,7 @@ func runModel(prompt string) {
 					println("error after posting update to scheduler: ", err)
 				}
 
-			} else if strings.Contains(currentLineFromStdout, "SUCCESS") {
+			} else if strings.Contains(currentLineFromStdout, "finished by user") {
 				fmt.Println("SUCCESS, model run complete")
 				err = postJobdUpdateToScheduler("250", JOB_IS_DONE)
 				if err != nil {
@@ -251,8 +247,8 @@ func registerWorkerWithScheduler() {
 	}
 	req.AddCookie(&http.Cookie{Name: "secret", Value: SECRET})
 
-	if IS_COLAB_WORKER {
-		req.Header.Add(exapi.HeaderColabWorker, "1")
+	if WORKER_HAS_TUNNEL {
+		req.AddCookie(&http.Cookie{Name: exapi.CookieWorkerTunnel, Value: TUNNEL_URL})
 	}
 
 	// Send the web request
@@ -297,17 +293,28 @@ func runWorkerLoop() {
 	}
 }
 
+// Takes the second startupt argument as URL to be used for the tunnel
+func setTunnelUrl() (string, bool) {
+
+	if len(os.Args) > 2 {
+		return os.Args[2], true
+	}
+	return "", false
+}
+
 // This is the main function :D
 func main() {
+
 	initializeLogFile()
 	SECRET = exutils.InitializeSecretFromArgument()
+	TUNNEL_URL, WORKER_HAS_TUNNEL = setTunnelUrl()
 
 	registerWorkerWithScheduler()
-	http.HandleFunc("/api/0/worker", handleNewJobPosting) // Listen for new jobs on this endpoint
-	//postJobdUpdateToScheduler("250", JOB_IS_DONE)
 
-	fmt.Println("Worker is running, waiting for job posts..") // Debug
+	http.HandleFunc("/api/0/worker", handleNewJobPosting) // Listen for new jobs on this endpoint
+
 	go http.ListenAndServe(WORKER_PORT, nil)
+	fmt.Println("Worker is running, waiting for job posts..") // Debug
 
 	// Run worker loop
 	runWorkerLoop()

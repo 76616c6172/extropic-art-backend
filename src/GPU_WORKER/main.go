@@ -48,7 +48,6 @@ func handleNewJobPosting(w http.ResponseWriter, r *http.Request) {
 	if !HAVE_JOB {
 		var jobRequest exdb.Job
 
-		HAVE_JOB = true
 		// Read the request
 		jsonDecoder := json.NewDecoder(r.Body)
 		err := jsonDecoder.Decode(&jobRequest)
@@ -60,9 +59,6 @@ func handleNewJobPosting(w http.ResponseWriter, r *http.Request) {
 		println("received job:")
 		println(jobRequest.Jobid, jobRequest.Prompt)
 
-		HAVE_JOB = true
-		JOB_PROMPT = jobRequest.Prompt
-
 		// Set headers
 		w.Header().Set(exapi.HeaderJobAccepted, "1")
 
@@ -73,6 +69,9 @@ func handleNewJobPosting(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusAccepted)
 
 		defer r.Body.Close() // Close the response
+
+		JOB_PROMPT = jobRequest.Prompt
+		HAVE_JOB = true
 		return
 
 	} else {
@@ -104,19 +103,10 @@ func writeYamlConfiguration(prompt string) {
 // FIXME: This function is ugly!
 func runModel(prompt string) {
 
+	// 1. Write Model Configuration in the apropriate file
 	writeYamlConfiguration(prompt)
 
-	// 0. TODO: Write the prompt and params to yaml config file
-
-	// 1. Run the model
-	//modelParameters := fmt.Sprintf("--text_prompts '{\"0\": [\"%s\"]}' --steps 240 --width_height '[1920, 1088]'", prompt)
-	// --n_batches 0 --text_prompts '{"0": ["Space panorama of celestial space station, cosmic, photorealistic materials, beeple behance"]}' --steps 250 --width_height '[1920, 1088]'
-	/*
-		args := fmt.Sprintf("--n_batches 1 --text_prompts '{\"0\": [\"")
-		args += prompt
-		args += "\"]}' --steps 250 --width_height '[1920, 1088]'"
-	*/
-
+	// 2. Set up running the model as a subprocess while capturing the output
 	modelSubProcess := exec.Command("./run_model")
 
 	stdout, err := modelSubProcess.StdoutPipe()
@@ -133,7 +123,7 @@ func runModel(prompt string) {
 	}
 	defer stderr.Close()
 
-	// Run the model
+	// 3. Run the model
 	err = modelSubProcess.Start()
 	if err != nil {
 		log.Println("testing: error running cmd.Start()", err)

@@ -26,7 +26,7 @@ import (
 
 const WEBSERVER_PORT = ":8091" // Scheduler is listening on this port
 const COLAB_TEST_WORKER = true //debug
-const NGROK_IP = "5530-35-190-163-247.ngrok.io"
+const NGROK_IP = "ca08-35-197-116-54.ngrok.io"
 
 var WORKERDB *sql.DB //pointer used to connect to the db, initialized in main
 var JOB_COMPLETE = true
@@ -185,7 +185,7 @@ func getIterationStatusAndJobStatusFromHeaders(w http.ResponseWriter, r *http.Re
 func KeepSchedulerRunningUntilExitSignalIsReceived() {
 	fmt.Println("Scheduler is running..") // debug
 	channel := make(chan os.Signal, 1)
-	signal.Notify(channel, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+	signal.Notify(channel, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-channel
 	fmt.Println("scheduler closed gracefully")
 }
@@ -204,9 +204,11 @@ func runSchedulingLoop(quit chan bool) {
 
 	for {
 		select {
+
 		case <-quit:
 			println("Exiting scheduling loop")
 			return
+
 		default:
 
 			time.Sleep(5 * time.Second)

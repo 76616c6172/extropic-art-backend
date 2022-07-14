@@ -26,7 +26,7 @@ import (
 
 const WEBSERVER_PORT = ":8091" // Scheduler is listening on this port
 const COLAB_TEST_WORKER = true //debug
-const NGROK_IP = "263c-34-80-36-252.ngrok.io"
+const NGROK_IP = "5530-35-190-163-247.ngrok.io"
 
 var WORKERDB *sql.DB //pointer used to connect to the db, initialized in main
 var JOB_COMPLETE = true

@@ -1,4 +1,11 @@
 #!/bin/sh
-#python disco.py --config_file ./configs/TimeToDisco.yaml
-#echo $@ >> output
-echo python disco.py $@ >> output
+# Helper script that runs the pytorch model disco.py
+
+# Run model with parameters from yaml config
+python disco.py --config_file ./configs/TimeToDisco.yaml
+
+# Log the output for testing
+#echo $@ > output.log
+
+# Log the output for testing
+#echo python disco.py $@ >> output.log

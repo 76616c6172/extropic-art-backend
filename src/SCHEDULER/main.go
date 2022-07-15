@@ -25,16 +25,13 @@ import (
 )
 
 const WEBSERVER_PORT = ":8091" // Scheduler is listening on this port
-//const COLAB_TEST_WORKER = false //debug
-//const NGROK_IP = "a936-35-197-116-54.ngrok.io"
 
 var WORKERDB *sql.DB //pointer used to connect to the db, initialized in main
 var JOB_COMPLETE = true
 var JOBDB *sql.DB
 var SECRET string
 var PANIC bool
-
-var WORKER_IP_TO_TUNNEL_URL = map[string]string{}
+var WORKER_IP_TO_TUNNEL_URL = map[string]string{} // FIXME: scheduler should be stateless
 
 // Initialize and connect to workerdb
 // GPU_WORERS register themselves with the scheduler through this endpoint
@@ -110,29 +107,30 @@ func handleUpdateFromWorker(w http.ResponseWriter, r *http.Request) {
 	// and use the ngrok tunnel if it is
 	workerIp := strings.Split(r.RemoteAddr, ":")[0]
 
-	// Check if this worker is using a tunnel
-	if workerUrl, exists := WORKER_IP_TO_TUNNEL_URL[workerIp]; exists {
+	/*
+		// Check if this worker is using a tunnel
+		if workerUrl, exists := WORKER_IP_TO_TUNNEL_URL[workerIp]; exists {
 
-		worker, err = exdb.GetWorkerByIP(WORKERDB, workerUrl)
-		if err != nil {
-			log.Println("Error getting worker from DB", err)
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-		log.Println("Handling update for: ", worker.Worker_id, "at", worker.Worker_current_job)
+			worker, err = exdb.GetWorkerByIP(WORKERDB, workerUrl)
+			if err != nil {
+				log.Println("Error getting worker from DB", err)
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			log.Println("Handling update for: ", worker.Worker_id, "at", worker.Worker_current_job)
 
-	} else {
-		println("+Looking up worker by IP: ", workerIp)
-		// Identify the worker based on ip and get info from the databases
-		// TODO: Identify worker based on workerid instead!
-		worker, err = exdb.GetWorkerByIP(WORKERDB, workerIp)
-		if err != nil {
-			log.Println("Error getting worker from DB", err)
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-		println("+Got worker from db: ", worker.Worker_ip, "job", worker.Worker_current_job)
+		} else {
+	*/
+	println("+Looking up worker by IP: ", workerIp)
+	// Identify the worker based on ip and get info from the databases
+	// TODO: Identify worker based on workerid instead!
+	worker, err = exdb.GetWorkerByIP(WORKERDB, workerIp)
+	if err != nil {
+		log.Println("Error getting worker from DB", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
+	println("+Got worker from db: ", worker.Worker_ip, "job", worker.Worker_current_job)
 
 	// 3. Run logic based on the information we received
 	// FIXME: This may cause unexpected behavior when trying to override the file

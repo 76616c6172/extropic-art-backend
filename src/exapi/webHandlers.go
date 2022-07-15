@@ -20,6 +20,8 @@ const (
 	PNG
 )
 
+const MAXIMUM_NUMBER_OF_JOBS_IN_QUEUE = 50
+
 // Sends back the status response
 func HandleStatusRequest(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 
@@ -204,7 +206,12 @@ func HandleJobsApiPost(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 1. Santizie and check the input
+	// 1. Santizie the input
+	jobRequest.Prompt = strings.Replace(jobRequest.Prompt, "\"", "", -1)
+	jobRequest.Prompt = strings.Replace(jobRequest.Prompt, "'", "", -1)
+	jobRequest.Prompt = strings.Replace(jobRequest.Prompt, "\n", "", -1)
+	jobRequest.Prompt = strings.Replace(jobRequest.Prompt, "\t", "", -1)
+
 	if len(jobRequest.Prompt) > MAX_PROMPT_LENGTH {
 		log.Println("HandleJobsApiPost: Error large prompt length")
 		w.Write([]byte("500 - Something bad happened!"))
@@ -222,6 +229,19 @@ func HandleJobsApiPost(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 		log.Println("HandleJobsApiPost: Error small prompt length")
 		return
 	}
+
+	// 1.5 Check that we're not exceeding the queued job limit
+	numberOfQUeuedJobs := exdb.GetNumberOfQueuedJobs(db)
+	if numberOfQUeuedJobs > MAXIMUM_NUMBER_OF_JOBS_IN_QUEUE {
+		j.Jobid = -1
+		j.Prompt = jobRequest.Prompt
+		j.Job_status = "Rejected"
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("500 - Something bad happened!"))
+		json.NewEncoder(w).Encode(j)
+		log.Println("HandleJobsApiPost: Error exceeded maximum jobs in queue")
+	}
+	// HERE
 
 	// 2. Create the job in the database
 	newJobid, err := exdb.InsertNewJob(db, jobRequest.Prompt, "")

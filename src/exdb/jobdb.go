@@ -329,3 +329,26 @@ func UpdateJobById(db *sql.DB, jobid string, newStatus string, iterStatus string
 	}
 	println(result)
 }
+
+// Returns the number of queued jobs
+func GetNumberOfQueuedJobs(db *sql.DB) int {
+	var s string
+
+	rows, err := db.Query("select COUNT(*) from jobs where status = \"queued\";")
+	if err != nil {
+		println("Error in GetNumberOfQueued jobs", err)
+		return 999
+	}
+	defer rows.Close()
+
+	rows.Next()
+	rows.Scan(&s)
+
+	num, err := strconv.Atoi(s)
+	if err != nil {
+		println("Error converting in GetNumberOfQueued jobs", err)
+		return 999
+	}
+
+	return num
+}

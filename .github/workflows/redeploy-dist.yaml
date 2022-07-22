@@ -1,27 +1,27 @@
 # Redeploy website/view/dist to production on every push to master
-name: Redeploy DIST
-
-on:
-  push:
-    branches:
-      - master
-
-jobs:
-  Redeploy-DIST-to-prod:
-    runs-on: ubuntu-latest
-    env:
-      SSH_AUTH_SOCK: /tmp/ssh_agent.sock
-    steps:
-      - name: checkout the repo
-        uses: actions/checkout@v3
-      - name: configure-runner-SSH
-        run: |
-          mkdir -p /home/runner/.ssh
-          ssh-keyscan exia.art >> /home/runner/.ssh/known_hosts
-          echo "${{ secrets.EXIA_SSH_KEY }}" > /home/runner/.ssh/github_actions
-          chmod 600 /home/runner/.ssh/github_actions
-          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
-          ssh-add /home/runner/.ssh/github_actions
-      - name: redeploy-dist-folder
-        run: |
-          bash ./scripts/redeploy_dist
+#name: Redeploy DIST
+#
+#on:
+#  push:
+#    branches:
+#      - master
+#
+#jobs:
+#  Redeploy-DIST-to-prod:
+#    runs-on: ubuntu-latest
+#    env:
+#      SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+#    steps:
+#      - name: checkout the repo
+#        uses: actions/checkout@v3
+#      - name: configure-runner-SSH
+#        run: |
+#          mkdir -p /home/runner/.ssh
+#          ssh-keyscan exia.art >> /home/runner/.ssh/known_hosts
+#          echo "${{ secrets.EXIA_SSH_KEY }}" > /home/runner/.ssh/github_actions
+#          chmod 600 /home/runner/.ssh/github_actions
+#          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+#          ssh-add /home/runner/.ssh/github_actions
+#      - name: redeploy-dist-folder
+#        run: |
+#          bash ./scripts/redeploy_dist

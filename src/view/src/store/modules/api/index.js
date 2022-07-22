@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const url = "https://exia.art/api/0";
+const url = "http://34.127.45.50:8080/api/0";
 
 const state = {
   jobs: [],

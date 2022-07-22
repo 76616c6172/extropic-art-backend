@@ -1,10 +1,13 @@
 #!/bin/bash
 # Redeploy VIEW to remote server
 
+# rebuild dist
+# npm run build
+
 set -e # fail fast
 
 SERVER_SSH="exia"
-SERVER_PATH="/root/exia/view"
+SERVER_PATH="/home/valar/view"
 OUT_FOLDER="dist"
 REMOTE_FOLDERNAME="dist"
 

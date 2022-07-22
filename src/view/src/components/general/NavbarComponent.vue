@@ -18,10 +18,12 @@
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           <li class="nav-item">
             <router-link to="/" class="nav-link text-start active"
-              >About</router-link
+              >Disco Diffusion</router-link
             >
           </li>
-          <div class="nav-item">
+
+<!-- Navbar components that aren't implemented yet -->
+<!--          <div class="nav-item">                                                               
             <router-link to="/" class="nav-link text-start"
               >Models</router-link
             >
@@ -32,6 +34,8 @@
           <div class="nav-item">
             <router-link to="/" class="nav-link text-start">Login</router-link>
           </div>
+-->
+
         </ul>
       </div>
     </div>

@@ -1,0 +1,43 @@
+FROM nvidia/cuda:11.2.2-base-ubuntu20.04
+
+RUN apt update && apt install \
+git curl build-essential \
+-y
+
+RUN mkdir -p /content/
+WORKDIR /content
+
+
+# Clone and install the worker
+RUN git clone https://github.com/76616c6172/project-exia-monorepo.git
+RUN bash ./project-exia-monorepo/scripts/install_go
+
+# WORKDIR /project-exia-monorepo/src/GPU_WORKER/
+#RUN mv /content/project-exia-monorepo/src/go.mod .
+WORKDIR /content/project-exia-monorepo/src/
+RUN /usr/local/go/bin/go mod download
+RUN /usr/local/go/bin/go build .
+
+RUN mv /content/project-exia-monorepo/src/GPU_WORKER/GPU_WORKER /content/GPU_WORKER
+RUN mkdir -p logs
+RUN chmod +x GPU_WORKER
+
+
+
+
+# Clone and install the model
+# RUN git clone https://github.com/76616c6172/clip-diffusion
+# RUN mv clip-diffusion/* .
+# RUN rm -rf clip-diffusion
+# RUN pip install -r requirements.txt
+# RUN ./first_time_setup_and_testrun
+
+
+# Docker tweak to kill zombie processes
+RUN apk add --no-cache tini
+ENTRYPOINT ["tini", "--"]
+
+EXPOSE 8090/tcp
+
+# Run the worker
+CMD ["./GPU_WORKER", "sdkfjhksdfjhkfhsdkjlhfwfuii2oi32lhu9yrh8778ft267vb3v0293vn902vn8923v478bc23ce21cuiycbuuu1cvbutu2trccrbcr234444bcry2n87oyr78x23nftbvr623b7i1xnyu01mprci4cnhqebgfvdewv12cm43vhyb23cq"]

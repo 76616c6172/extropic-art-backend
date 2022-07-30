@@ -1,0 +1,46 @@
+#!/bin/bash
+set -e # fail fast
+
+echo " 2022-06-07 19:44:42.621 | SUCCESS  | dd:start_run:2158 - ✅ Session 79c37f6f-4e91-4735-9d00-b991fc3254cf."
+sleep 2
+echo " 2022-06-07 19:44:42.621 | SUCCESS  | dd:start_run:2158 - ✅ Session 79c37f6f-4e91-4735-9d00-b991fc3254cf."
+sleep 2
+echo "2022-06-07 19:00:10.276 | INFO     | dd:processBatch:2272 - Logger switched to '/content/images_out/TimeToDisco/TimeToDisco(1).log' logfile."
+echo "2022-06-07 19:00:10.277 | INFO     | dd:processBatch:2273 - Running session '79c37f6f-4e91-4735-9d00-b991fc3254cf' job 'ce6181b2-a21f-4ad1-9f0a-1d58f68443a6'..."
+echo "2022-06-07 19:00:10.277 | INFO     | dd:processBatch:2279 - 🌱 Randomly using seed: 404110817"
+echo "2022-06-07 19:00:10.277 | INFO     | dd:do_run:1181 - 💻 Starting Run: TimeToDisco(1) at frame 0"
+echo "2022-06-07 19:00:10.277 | INFO     | dd:do_run:1182 - Prepping models..."
+echo "2022-06-07 19:00:21.691 | INFO     | dd:clipLoad:1249 - 🤖 Loading model 'ViT-B/32'..."
+echo "2022-06-07 19:00:25.746 | INFO     | dd:clipLoad:1249 - 🤖 Loading model 'ViT-B/16'..."
+echo "2022-06-07 19:00:29.419 | INFO     | dd:clipLoad:1249 - 🤖 Loading model 'RN50'..."
+echo "2022-06-07 19:00:32.463 | INFO     | dd:do_run:1273 - 🤖 Loading secondary model..."
+echo "2022-06-07 19:00:32.628 | INFO     | dd:do_run:1278 - 🤖 Loading LPIPS..."
+echo "2022-06-07 19:00:34.179 | INFO     | dd:do_run:1505 - 🌱 Seed used: 404110817"
+echo "2022-06-07 19:00:34.182 | INFO     | dd:do_run:1532 - Frame 0 📝 Prompt: ['quizical look | friendly person | leica arstation HDR | extremely detailed']"
+echo "Batches:   0%|          | 0/1 [00:00<?, ?it/s]"
+echo "Output()"
+echo "Batch 0, step 0, output 0:"
+sleep 2
+echo "<PIL.Image.Image image mode=RGB size=1920x1088 at 0x7F1E6888CFD0>"
+echo "Batch 0, step 50, output 0:"
+sleep 1
+echo "<PIL.Image.Image image mode=RGB size=1920x1088 at 0x7F1E688BF4D0>"
+echo "Batch 0, step 100, output 0:"
+sleep 1
+#for kjshdfkjdhsfiuwehflewf # this should break
+echo "<PIL.Image.Image image mode=RGB size=1920x1088 at 0x7F1E642F4990>"
+sleep 1
+echo "Batch 0, step 150, output 0:"
+echo "<PIL.Image.Image image mode=RGB size=1920x1088 at 0x7F1E6888CFD0>"
+sleep 1
+echo "Batch 0, step 150, output 0:"
+echo "Batch 0, step 200, output 0:"
+echo "<PIL.Image.Image image mode=RGB size=1920x1088 at 0x7F1E6889CD50>"
+sleep 1
+echo " Batch 0, step 239, output 0:"
+echo " <PIL.Image.Image image mode=RGB size=1920x1088 at 0x7F1E75E87B90>"
+sleep 1
+echo " 2022-06-07 19:44:41.545 | INFO     | dd:do_run:1845 - Image render completed."
+echo " 2022-06-07 19:44:42.264 | INFO     | dd:do_run:1865 - Image saved to '/content/images_out/TimeToDisco/TimeToDisco(1)_0.png'"
+sleep 1
+echo " 2022-06-07 19:44:42.621 | SUCCESS  | dd:start_run:2158 - ✅ Session 79c37f6f-4e91-4735-9d00-b991fc3254cf finished by user."

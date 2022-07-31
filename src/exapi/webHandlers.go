@@ -191,6 +191,46 @@ func HandleJobsApiGet(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Returns sanitized user input that won't yaml
+func sanitizeUserPrompt(p string) string {
+	p = strings.Replace(p, " :", "", -1)
+	p = strings.Replace(p, ": ", "", -1)
+
+	p = strings.Replace(p, " -", "", -1)
+	p = strings.Replace(p, "- ", "", -1)
+
+	//p = strings.Replace(p, "\"", "", -1)
+	p = strings.Replace(p, "'", "", -1)
+	p = strings.Replace(p, "`", "", -1)
+	p = strings.Replace(p, "\n", "", -1)
+	p = strings.Replace(p, "\t", "", -1)
+	p = strings.Replace(p, "\r", "", -1)
+	p = strings.Replace(p, "(", "", -1)
+	p = strings.Replace(p, ")", "", -1)
+	p = strings.Replace(p, "[", "", -1)
+	p = strings.Replace(p, "]", "", -1)
+	p = strings.Replace(p, "—", "", -1)
+
+	return p
+}
+
+// Returns false if input is not valid and would be unsafe/yaml breaking
+func inputIsValid(input string) bool {
+
+	// TODO: write some good rules here
+
+	if strings.Contains(input, ":") {
+
+		collonAmount := strings.Count(input, ":")
+		barAmount := strings.Count(input, "|")
+		if collonAmount != barAmount+1 {
+			return false
+		}
+	}
+
+	return true
+}
+
 // Deals with POST requests made to the jobs endpoint (POST new jobs)
 // Adds job to the database with the "queued" status
 func HandleJobsApiPost(db *sql.DB, w http.ResponseWriter, r *http.Request) {
@@ -207,10 +247,13 @@ func HandleJobsApiPost(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 1. Santizie the input
-	jobRequest.Prompt = strings.Replace(jobRequest.Prompt, "\"", "", -1)
-	jobRequest.Prompt = strings.Replace(jobRequest.Prompt, "'", "", -1)
-	jobRequest.Prompt = strings.Replace(jobRequest.Prompt, "\n", "", -1)
-	jobRequest.Prompt = strings.Replace(jobRequest.Prompt, "\t", "", -1)
+	jobRequest.Prompt = sanitizeUserPrompt(jobRequest.Prompt)
+	if !inputIsValid(jobRequest.Prompt) {
+		log.Println("HandleJobsApiPost: Error decoding request", err)
+		w.Write([]byte("500 - Something bad happened!"))
+		json.NewEncoder(w).Encode(j) // send back the json as a the response
+		return
+	}
 
 	if len(jobRequest.Prompt) > MAX_PROMPT_LENGTH {
 		log.Println("HandleJobsApiPost: Error large prompt length")
@@ -219,14 +262,14 @@ func HandleJobsApiPost(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(jobRequest.Prompt) < 1 {
+	if len(jobRequest.Prompt) < 1 || len(jobRequest.Prompt) > MAX_PROMPT_LENGTH {
 		j.Jobid = -1
 		j.Prompt = jobRequest.Prompt
 		j.Job_status = "Rejected"
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("500 - Something bad happened!"))
 		json.NewEncoder(w).Encode(j)
-		log.Println("HandleJobsApiPost: Error small prompt length")
+		log.Println("HandleJobsApiPost: Prompt length out of bounds")
 		return
 	}
 

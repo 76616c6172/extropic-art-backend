@@ -5,7 +5,9 @@ type newjob struct {
 	Prompt string `json:"prompt"`
 }
 
-const MAX_PROMPT_LENGTH = 600 // Reject a new job posted by the view if longer than this value
+//const MAX_PROMPT_LENGTH = 600 // Reject a new job posted by the view if longer than this value
+//const MAX_PROMPT_LENGTH = 322 // Reject a new job posted by the view if longer than this value
+const MAX_PROMPT_LENGTH = 360 // Reject a new job posted by the view if longer than this value
 var GPU_STATUS = "offline"
 
 /* This is the response object of he /api/0/jobs endpoint

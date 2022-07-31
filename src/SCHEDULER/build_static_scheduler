@@ -1,3 +1,3 @@
 #!/bin/sh
-go build -ldflags '-linkmode external -extldflags "-fno-PIC -static"' -o SCHEDULER
+go build -ldflags '-linkmode external -extldflags "-fno-PIC -static"' -o scheduler
 

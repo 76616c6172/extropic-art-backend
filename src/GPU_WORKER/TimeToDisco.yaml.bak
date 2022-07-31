@@ -3,10 +3,10 @@ RN50: true
 RN50x16: false
 RN50x4: false
 RN50x64: false
-ViTB16: false
+ViTB16: true
 ViTB32: true
 ViTL14: false
-ViTL14_336: true
+ViTL14_336: false
 angle: 0:(0)
 animation_mode: None
 batch_name: TimeToDisco
@@ -14,7 +14,7 @@ check_model_SHA: false
 clamp_grad: true
 clamp_max: 0.05
 clip_denoised: false
-clip_guidance_scale: 20000
+clip_guidance_scale: 5000
 console_preview: false
 console_preview_width: 80
 cuda_device: cuda:0
@@ -80,7 +80,7 @@ symmetry_loss_scale: 1500
 symmetry_switch: 40
 text_prompts:
  0:
- - A beautifully detailed matte painting of chaos god khorne in an astral nebula plane, dramatic lighting, dynamic lighting, cinematic lighting, vibrant and powerful, unreal engine, featured on artstation, wide angle, warhammer miniature
+ - beautiful view of Coruscant at night, Starwars futuristic city at night, photoreal, artstation, teal colors
 translation_x: '0: (0)'
 translation_y: '0: (0)'
 translation_z: '0: (10.0)'

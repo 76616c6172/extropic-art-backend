@@ -245,12 +245,15 @@ func runSchedulingLoop(quit chan bool) {
 
 			//recoverWrapperForPostJobToWorker(queuedJob, worker)
 
-			err = postJobToWorker(queuedJob, worker)
-			if err != nil {
-				println("Error when trying to post job to worker", err)
-				log.Println("Error when trying to post job to worker", err)
-				continue
-			}
+			_ = postJobToWorker(queuedJob, worker)
+			//Dirty hack/fix bexause vast.ai worker is causing error here
+			/*
+				if err != nil {
+					println("Error when trying to post job to worker", err)
+					log.Println("Error when trying to post job to worker", err)
+					continue
+				}
+			*/
 			if PANIC {
 				println("Error, panic when trying to post job to worker", err)
 				log.Println("Error, panic when trying to post job to worker", err)
@@ -306,7 +309,7 @@ func postJobToWorker(job exdb.Job, worker exdb.Worker) error {
 
 	// TODO: Scheduler is waiting on a response that doesn't come
 
-	response, err := client.Do(request)
+	response, _ := client.Do(request)
 	if err != nil {
 		log.Println("Error posting job to scheduler", err)
 		return err

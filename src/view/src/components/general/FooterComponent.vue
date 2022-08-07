@@ -1,5 +1,5 @@
 <template>
-  <footer class="footer text-muted mt-auto py-3 bg-light">
+  <footer class="footer text-muted mt-auto py-3">
     <div class="footer__menu text-center p-3">
       <div class="footer__content">
         <p class="footer__content-text">

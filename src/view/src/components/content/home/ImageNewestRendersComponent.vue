@@ -2,21 +2,21 @@
   <div class="row justify-content-center">
     <div class="col-lg-10 col-sm-12">
       <div class="row">
+        <!--{{ $store.getters.getJobs }}-->
         <div
           v-for="(job, index) in imgArray"
           :key="index"
           class="col-xxl-4 col-xl-4 col-lg-4 col-md-4 col-sm-1 col-xs-1"
         >
           <figure class="image-block">
-            <img :src="job.imgURL" class="img-fluid img-thumbnail" alt="" />
+            <img
+              @click="onClickOpenFullImage(job)"
+              :src="job.imgURL"
+              class="img-fluid img-thumbnail"
+              alt=""
+            />
             <figcaption>
-              <h3 class="h5">More Info</h3>
-              <p class="prompt">{{ job.prompt }}</p>
-              <button class="btn text-center">
-                <a :href="`${job.imgURL}`" target="_blank"
-                  ><i class="fa fa-eye"></i> Full image</a
-                >
-              </button>
+              <p class="prompt text-white">{{ job.prompt }}</p>
             </figcaption>
           </figure>
         </div>
@@ -35,43 +35,31 @@ export default {
   },
   props: ["newestJobIds"],
   methods: {
+    onClickOpenFullImage(job) {
+      let routeData = this.$router.resolve({
+        name: "JobDetails",
+        params: { jobId: job.jobid },
+      });
+      window.open(routeData.href, "_blank");
+    },
     createImgObjectURL(jobId) {
       return new Promise((resolve) => {
         this.$store
-          .dispatch("getSelectedImg", jobId)
+          .dispatch("getSelectedImg", { jobId: jobId, type: "thumbnail" })
           .then((responseImg) => {
-            this.imgArray.push({
-              jobid: jobId,
-              imgURL: responseImg,
+            this.$store.getters.getJobs.map((job) => {
+              if (job.jobid == jobId) {
+                this.imgArray.push({
+                  jobid: jobId,
+                  imgURL: responseImg,
+                  prompt: job.prompt,
+                });
+              }
             });
           })
           .finally(() => {
             resolve();
           });
-      });
-    },
-    async getSelectedJobsObject(jobId) {
-      await this.createImgObjectURL(jobId).then(() => {
-        if (this.imgArray.length == 3) {
-          let newestJobIdsValues = Object.values(this.newestJobIds);
-          let newestJobIdsMax = Math.max(...newestJobIdsValues);
-          let newestJobIdsMin = Math.min(...newestJobIdsValues);
-          this.$store
-            .dispatch("getSelectedJobs", {
-              jobx: newestJobIdsMin,
-              joby: newestJobIdsMax,
-              jobIds: newestJobIdsValues,
-            })
-            .then(() => {
-              this.$store.getters.getSelectedJobs.forEach((storeJobElement) => {
-                this.imgArray.forEach((imgArrayElement) => {
-                  if (imgArrayElement.jobid == storeJobElement.jobid) {
-                    imgArrayElement.prompt = storeJobElement.prompt;
-                  }
-                });
-              });
-            });
-        }
       });
     },
   },
@@ -82,9 +70,9 @@ export default {
   },
   async mounted() {
     if (this.imgArray.length == 0) {
-      this.newestJobIds.map((jobId, index) =>
-        index <= 3 ? this.getSelectedJobsObject(jobId) : ""
-      );
+      this.newestJobIds.map((jobId) => {
+        this.createImgObjectURL(jobId);
+      });
     }
   },
 };
@@ -117,7 +105,7 @@ figure:hover img {
   transform: scale(1.25);
 }
 figure:hover figcaption {
-  bottom: 0;
+  bottom: -25px;
 }
 figure:hover figcaption p {
   white-space: auto;
@@ -134,6 +122,7 @@ figure h1 {
   line-height: 1;
 }
 figure img {
+  cursor: pointer;
   height: 100%;
   transition: 0.25s;
 }
@@ -143,8 +132,8 @@ figure figcaption {
   left: 0;
   width: 100%;
   margin: 0;
-  padding: 15px 30px 15px 30px;
-  background-color: rgba(255, 255, 255, 0.85);
+  padding: 5px 30px 15px;
+  background-color: rgba(0, 0, 0, 0.8);
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
   line-height: 1;
   transition: 0.25s;

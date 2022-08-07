@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
-import HomeComponent from "../components/content/home/HomeComponent.vue";
+import HomeComponent from "../components/content/home/HomeWrapperComponent.vue";
+import FullSizeImageComponent from "../components/content/fullsizeImg/FullSizeImageWrapperCompoment.vue";
 
 // create and config
 const routes = [
@@ -8,6 +9,12 @@ const routes = [
     name: "Home",
     component: HomeComponent,
   },
+  {
+    path: "/jobdetails/:jobId",
+    name: "JobDetails",
+    component: FullSizeImageComponent,
+    props: true,
+  },
 ];
 
 const router = createRouter({
@@ -15,5 +22,4 @@ const router = createRouter({
   routes,
 });
 
-// export router
 export default router;

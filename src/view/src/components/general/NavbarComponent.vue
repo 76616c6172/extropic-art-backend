@@ -26,27 +26,6 @@
                     >Home</router-link
                   >
                 </li>
-                <div class="navigation__list-item nav-item">
-                  <router-link
-                    to="/"
-                    class="navigation__list-link nav-link text-start"
-                    >Settings</router-link
-                  >
-                </div>
-                <div class="navigation__list-item nav-item">
-                  <router-link
-                    to="/"
-                    class="navigation__list-link nav-link text-start"
-                    >About</router-link
-                  >
-                </div>
-                <div class="navigation__list-item nav-item">
-                  <router-link
-                    to="/"
-                    class="navigation__list-link nav-link text-start"
-                    >Login</router-link
-                  >
-                </div>
               </ul>
             </div>
           </div>

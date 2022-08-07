@@ -1,5 +1,5 @@
 <template>
-  <div class="row justify-content-center bg-light pt-5 pb-5">
+  <div class="row justify-content-center pt-5 pb-5">
     <div class="col-lg-10 col-sm-12">
       <div
         class="terminalWrapper rounded-3 shadow border border-4 border-white"

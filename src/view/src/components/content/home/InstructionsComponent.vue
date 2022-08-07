@@ -10,6 +10,7 @@
           How to
         </button>
       </div>
+
       <div v-if="visible" class="mt-5">
         <div class="row">
           <template v-for="(instruction, index) in instructions" :key="index">

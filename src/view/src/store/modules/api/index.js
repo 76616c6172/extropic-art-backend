@@ -148,6 +148,18 @@ const actions = {
         break;
     }
   },
+  async fetchJob({ commit }, jobId) {
+    try {
+      return await axios.get(`${url}/jobs?jobid=${jobId}`).then((response) => {
+        if (response.status == 200) {
+          const payload = response.data;
+          commit("FETCH_SELECTED_JOB", payload);
+        }
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  },
   // Send Job
   async sendNewJob({ commit, dispatch }, newJobObj) {
     try {
@@ -197,18 +209,9 @@ const actions = {
       console.log(error);
     }
   },
-  async getSelectedImg(_, jobId) {
-    let imgType = jobId ? "jpg" : "png";
-    let imgSize = jobId ? "thumbnail" : "full";
-    // to get JPG: /api/0/img?type=thumbnail?jobid=10
-    // to get PNG: /api/0/img?type=full?jobid=10
-    let imgURL = jobId
-      ? // JPG
-        `${url}/img?type=${imgSize}?jobid=${jobId}`
-      : // PNG
-        `${
-          state.selectedJob.img_path.split("?jobid")[0]
-        }?type=${imgSize}?jobid=${state.selectedJob.jobid}`;
+  async getSelectedImg(_, { jobId, type }) {
+    let imgType = type == "thumbnail" ? "jpg" : "png";
+    let imgURL = `${url}/img?type=${type}?jobid=${jobId}`;
     try {
       return await axios
         .get(`${imgURL}`, { responseType: "blob" })

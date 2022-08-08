@@ -219,13 +219,13 @@ func runSchedulingLoop(quit chan bool) {
 
 		default:
 
-			time.Sleep(5 * time.Second)
+			time.Sleep(20 * time.Second)
 
 			// 1. Get the oldest queued job from the jobdb
 			println("checking jobdb for oldest queued job")
 			queuedJob, err := exdb.GetOldestQueuedJob(JOBDB)
 			if err != nil {
-				println("no queued job in db")
+				println("..waiting for queued job")
 				//log.Println("error getting queued job from db")
 				continue
 			}
@@ -234,8 +234,8 @@ func runSchedulingLoop(quit chan bool) {
 			// 2. Get a worker from the workerdb that is not busy
 			worker, err := exdb.GetFreeWorker(WORKERDB)
 			if err != nil {
-				println("error getting worker from db")
-				log.Println("error getting worker from db")
+				println("..waiting for free worker")
+				//log.Println("error getting worker from db")
 				continue
 
 			}

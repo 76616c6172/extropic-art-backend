@@ -13,8 +13,8 @@ set -e # fail fast
 
 # exia="user@server-address" # set the remote target to deploy to
 SERVER_SSH="exia" # alternatively this can be $1 when called by GH actions
-SERVER_PATH="/root/exia/controller" # alternatively this can be $2 when called by GH Actions
-BINARY_NAME="exia-controller"
+SERVER_PATH="/home/valar/controller" # alternatively this can be $2 when called by GH Actions
+BINARY_NAME="controller"
 SERVER_RESTART_COMMAND="systemctl restart $BINARY_NAME"
 
 # 1. Call the build script to create a static binary

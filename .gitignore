@@ -21,7 +21,6 @@ scripts/clean_db_and_restart_controller
 
 
 # Ignore binaries
-GPU_WORKER
 SCHEDULER
 CONTROLLER
 

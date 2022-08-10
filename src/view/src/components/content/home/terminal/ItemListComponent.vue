@@ -18,7 +18,12 @@
       class="list-group-flush"
       style="padding-left: 0 !important"
     >
-      <Item v-for="(job, index) in getFilteredJobs" :key="index" :job="job" />
+      <Item
+        v-for="(job, index) in getFilteredJobs"
+        :key="index"
+        :job="job"
+        @click="onClickOpenFullImage(job)"
+      />
     </ul>
   </div>
 </template>
@@ -55,6 +60,13 @@ export default {
       }
 
       return;
+    },
+    onClickOpenFullImage(job) {
+      let routeData = this.$router.resolve({
+        name: "JobDetails",
+        params: { jobId: job.jobid },
+      });
+      window.open(routeData.href, "_blank");
     },
   },
   computed: {

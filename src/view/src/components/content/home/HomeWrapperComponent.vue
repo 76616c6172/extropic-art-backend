@@ -10,7 +10,6 @@
       />
       <StatsComponent v-if="jobStatus" :jobStatus="jobStatus" />
       <TerminalWrapper :showCursor="showCursor" />
-      <!--<Image />-->
     </div>
     <FooterComponent />
   </div>
@@ -20,12 +19,11 @@
 import { mapGetters } from "vuex";
 import { default as Typing } from "./TypingComponent.vue";
 import { default as ImageNewestRendersComponent } from "./ImageNewestRendersComponent";
-import { default as TerminalWrapper } from "./TerminalWrapperComponent.vue";
+import { default as TerminalWrapper } from "./terminal/TerminalWrapperComponent.vue";
 import { default as Instructions } from "./InstructionsComponent.vue";
 import { default as StatsComponent } from "./StatsComponent.vue";
 import { default as NavbarComponent } from "../../general/NavbarComponent.vue";
 import { default as FooterComponent } from "../../general/FooterComponent.vue";
-/* import { default as Image } from "./ImageComponent.vue"; */
 
 export default {
   name: "HomeComponent",
@@ -37,7 +35,6 @@ export default {
     ImageNewestRendersComponent,
     NavbarComponent,
     FooterComponent,
-    /* Image, */
   },
   props: {
     msg: String,

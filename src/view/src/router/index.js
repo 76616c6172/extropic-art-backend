@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import HomeComponent from "../components/content/home/HomeWrapperComponent.vue";
-import FullSizeImageComponent from "../components/content/fullsizeImg/FullSizeImageWrapperCompoment.vue";
+import FullSizeImageComponent from "../components/content/jobdetails/FullSizeImageWrapperCompoment.vue";
 
 // create and config
 const routes = [

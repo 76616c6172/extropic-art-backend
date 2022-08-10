@@ -1,5 +1,5 @@
-@import "animations/animations.css";
+@import "content/home/home.css";
+@import "content/jobdetails/jobdetails.css";
+@import "general/navbar/navbar.css";
+@import "general/footer/footer.css";
 @import "variables/colors.css";
-@import "content/home.css";
-@import "general/footer.css";
-@import "general/navbar.css";

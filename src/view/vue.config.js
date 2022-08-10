@@ -1,5 +1,6 @@
 const { defineConfig } = require("@vue/cli-service");
 const path = require("path");
+
 module.exports = defineConfig({
   transpileDependencies: true,
   chainWebpack: (config) => {
@@ -17,9 +18,8 @@ function addStyleResource(rule) {
     .loader("style-resources-loader")
     .options({
       patterns: [
-        path.resolve(__dirname, "./src/styles/animations/*.scss"),
-        path.resolve(__dirname, "./src/styles/functions/*.scss"),
-        path.resolve(__dirname, "./src/styles/mixins/*.scss"),
+        path.resolve(__dirname, "./src/styles/content/*.scss"),
+        path.resolve(__dirname, "./src/styles/general/*.scss"),
         path.resolve(__dirname, "./src/styles/variables/*.scss"),
       ],
     });

@@ -192,7 +192,7 @@ func HandleJobsApiGet(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 }
 
 // Returns sanitized user input that won't yaml
-func sanitizeUserPrompt(p string) string {
+func SanitizeUserPrompt(p string) string {
 	p = strings.Replace(p, " :", "", -1)
 	p = strings.Replace(p, ": ", "", -1)
 
@@ -215,23 +215,53 @@ func sanitizeUserPrompt(p string) string {
 }
 
 // Returns false if input is not valid and would be unsafe/yaml breaking
-func inputIsValid(input string) bool {
+// TODO: write some good rules here
+func InputIsValid(input string) bool {
 
-	// TODO: write some good rules here
+	// If prompt contains no weights that is fine too
+	if !strings.Contains(input, ":") && !strings.Contains(input, "|") {
+		return true
 
-	if strings.Contains(input, ":") {
+	}
 
-		collonAmount := strings.Count(input, ":")
-		barAmount := strings.Count(input, "|")
-		if collonAmount != barAmount+1 {
+	// Check if every prompt has a weight
+	// Maybe we don't need this!
+	collonAmount := strings.Count(input, ":")
+	barAmount := strings.Count(input, "|")
+	if collonAmount != barAmount+1 {
+		return false
+	}
+
+	// Split on |
+	s := strings.Split(input, "|")
+	var weightsTotal float64 = 0
+
+	for _, ss := range s {
+		// Split on :-
+		s3 := strings.Split(ss, ":")
+		strNumber := s3[len(s3)-1]
+
+		// Convert number to float
+		strNumNoSpace := strings.TrimSpace(strNumber)
+		if number, err := strconv.ParseFloat(strNumNoSpace, 64); err == nil {
+			//fmt.Println(number)
+			weightsTotal += number
+		} else {
+			//println(err)
 			return false
 		}
 	}
 
-	return true
+	//println("d: weights total=", weightsTotal)
+	if weightsTotal == 1 {
+		return true
+	}
+
+	return false
 }
 
 // Deals with POST requests made to the jobs endpoint (POST new jobs)
+// Checks if the posted job is valid and then
 // Adds job to the database with the "queued" status
 func HandleJobsApiPost(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	var j jobResponse
@@ -247,8 +277,8 @@ func HandleJobsApiPost(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 1. Santizie the input
-	jobRequest.Prompt = sanitizeUserPrompt(jobRequest.Prompt)
-	if !inputIsValid(jobRequest.Prompt) {
+	jobRequest.Prompt = SanitizeUserPrompt(jobRequest.Prompt)
+	if !InputIsValid(jobRequest.Prompt) {
 		log.Println("HandleJobsApiPost: Error decoding request", err)
 		w.Write([]byte("500 - Something bad happened!"))
 		json.NewEncoder(w).Encode(j) // send back the json as a the response

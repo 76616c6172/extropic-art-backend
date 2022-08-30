@@ -22,7 +22,7 @@ func api_0_jobs(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		exapi.HandleJobsApiGet(JOBDB, w, r)
-	case "POST":
+	case "POST": // Handle new job postings
 		exapi.HandleJobsApiPost(JOBDB, w, r)
 	}
 }

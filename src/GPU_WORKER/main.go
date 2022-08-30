@@ -29,6 +29,7 @@ const JOB_IS_DONE bool = true
 const JOB_IS_NOT_DONE bool = false
 
 var HAVE_JOB = false //set to true while the worker is busy
+var WORKER_IS_BUSY = false
 var WORKER_ID string
 var SECRET string
 var JOB_PROMPT string         // prompt for the current job to be rendered
@@ -46,7 +47,7 @@ func handleNewJobPosting(w http.ResponseWriter, r *http.Request) {
 		var m exapi.WorkerResponse // Response for the scheduler
 	*/
 
-	if !HAVE_JOB {
+	if !WORKER_IS_BUSY {
 		var jobRequest exdb.Job
 
 		// Read the request
@@ -64,7 +65,6 @@ func handleNewJobPosting(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set(exapi.HeaderJobAccepted, "1")
 
 		w.WriteHeader(http.StatusAccepted)
-
 		defer r.Body.Close() // Close the response
 
 		JOB_PROMPT = jobRequest.Prompt
@@ -73,8 +73,6 @@ func handleNewJobPosting(w http.ResponseWriter, r *http.Request) {
 
 	} else {
 		w.WriteHeader(http.StatusForbidden)
-		// Send response to the scheduler
-		//json.NewEncoder(w).Encode(m)
 	}
 }
 
@@ -289,9 +287,11 @@ func runWorkerLoop() {
 	for {
 
 		if HAVE_JOB {
+			WORKER_IS_BUSY = true
 			println("Running job:", JOB_PROMPT)
 			runModel(JOB_PROMPT)
 			println("Completed Job", JOB_PROMPT)
+			WORKER_IS_BUSY = false
 		}
 
 		HAVE_JOB = false

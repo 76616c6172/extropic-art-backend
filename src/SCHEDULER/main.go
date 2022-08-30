@@ -219,7 +219,7 @@ func runSchedulingLoop(quit chan bool) {
 
 		default:
 
-			time.Sleep(20 * time.Second)
+			time.Sleep(5 * time.Second)
 
 			// 1. Get the oldest queued job from the jobdb
 			println("checking jobdb for oldest queued job")
@@ -245,7 +245,7 @@ func runSchedulingLoop(quit chan bool) {
 
 			//recoverWrapperForPostJobToWorker(queuedJob, worker)
 
-			_ = postJobToWorker(queuedJob, worker)
+			errPostingJob := postJobToWorker(queuedJob, worker)
 			//Dirty hack/fix bexause vast.ai worker is causing error here
 			/*
 				if err != nil {
@@ -258,6 +258,10 @@ func runSchedulingLoop(quit chan bool) {
 				println("Error, panic when trying to post job to worker", err)
 				log.Println("Error, panic when trying to post job to worker", err)
 				PANIC = false
+				continue
+			}
+			if errPostingJob != nil {
+				println("major Error when trying to post job to worker", err)
 				continue
 			}
 
@@ -318,19 +322,33 @@ func postJobToWorker(job exdb.Job, worker exdb.Worker) error {
 
 	// Only return everything okay if correct status code
 
+	if _, exists := response.Header[exapi.HeaderJobAccepted]; !exists {
+		println("job posting rejected by worker")
+		return errors.New("job posting rejected by worker")
+
+	}
+
+	/*
+		if _, exists := response.Request.Header[exapi.HeaderJobAccepted]; !exists {
+			println("job posting rejected by worker")
+			return errors.New("job posting rejected by worker")
+		}
+		return nil
+	*/
+	return nil
+}
+
+/*
+	// Check if job
+
 	if response.StatusCode == http.StatusAccepted {
 		log.Println("Job posting accepted for JobId:", job.Jobid)
 		return nil
-	}
-
-	if _, exists := response.Request.Header[exapi.HeaderJobAccepted]; exists {
-		return nil
-
 	} else {
-
 		return errors.New("Error posting job")
 	}
 }
+*/
 
 // This is the main function >:D
 func main() {

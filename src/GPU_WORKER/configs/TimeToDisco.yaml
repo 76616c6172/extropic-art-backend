@@ -80,7 +80,7 @@ symmetry_loss_scale: 1500
 symmetry_switch: 40
 text_prompts:
  0:
- - A beautifully detailed matte painting of chaos god khorne in an astral nebula plane, dramatic lighting, dynamic lighting, cinematic lighting, vibrant and powerful, unreal engine, featured on artstation, wide angle, warhammer miniature
+ - the cover of an epic adventure movie, in the background a comet passes in the sky towards the mountain range, ultra high detail, videogame, clean texture, artstation, dark fantasy digital art
 translation_x: '0: (0)'
 translation_y: '0: (0)'
 translation_z: '0: (10.0)'

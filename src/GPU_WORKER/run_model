@@ -2,8 +2,7 @@
 # Helper script that runs the pytorch model disco.py
 
 # Run model with parameters from yaml config
-# python disco.py --config_file ./configs/TimeToDisco.yaml
-bash ./run_model_example
+python disco.py --config_file ./configs/TimeToDisco.yaml
 
 # Log the output for testing
 #echo $@ > output.log

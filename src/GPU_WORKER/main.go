@@ -20,7 +20,7 @@ import (
 	"project-exia-monorepo/website/exutils"
 )
 
-const IMAGE_PATH = "./images_out/TimeToDisco/progress.png"
+const IMAGE_PATH = "./progress.png"
 const WORKER_PORT = ":8090"
 
 //const SCHEDULER_IP = "http://127.0.0.1:8091"
@@ -77,7 +77,7 @@ func handleNewJobPosting(w http.ResponseWriter, r *http.Request) {
 }
 
 func writeYamlConfiguration(prompt string) {
-	filePath := "./configs/TimeToDisco.yaml"
+	filePath := "./config.yaml"
 
 	prompts := strings.Split(prompt, "|")
 
@@ -108,7 +108,7 @@ func runModel(prompt string) {
 	writeYamlConfiguration(prompt)
 
 	// 2. Set up running the model as a subprocess while capturing the output
-	modelSubProcess := exec.Command("./run_model")
+	modelSubProcess := exec.Command("./run_dd_model")
 
 	stdout, err := modelSubProcess.StdoutPipe()
 	if err != nil {
@@ -151,7 +151,8 @@ func runModel(prompt string) {
 		if isReceivingAnotherLineFromStdout {
 			currentLineFromStdout := stdoutScanner.Text()
 
-			if strings.Contains(currentLineFromStdout, "<PIL.Image.Image") {
+			// if strings.Contains(currentLineFromStdout, "<PIL.Image.Image") {
+			if strings.Contains(currentLineFromStdout, "<IPython.core.display.Image object>") {
 				// Another in progress.png was created by the model!
 				numberOfTimesInProgressPngWasCreated++
 				iterationStatus := numberOfTimesInProgressPngWasCreated * 50
@@ -161,7 +162,7 @@ func runModel(prompt string) {
 					println("error after posting update to scheduler: ", err)
 				}
 
-			} else if strings.Contains(currentLineFromStdout, "finished by user") {
+			} else if strings.Contains(currentLineFromStdout, "Seed used:") {
 				fmt.Println("SUCCESS, model run complete")
 				err = postJobdUpdateToScheduler("250", JOB_IS_DONE)
 				if err != nil {
@@ -196,7 +197,7 @@ func postJobdUpdateToScheduler(iteration_status string, jobIsDone bool) error {
 		return err
 	}
 
-	file, err := os.Open("images_out/TimeToDisco/progress.png")
+	file, err := os.Open("./progress.png")
 	if err != nil {
 		log.Println(err)
 		return err

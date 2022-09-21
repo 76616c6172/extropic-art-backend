@@ -352,3 +352,26 @@ func GetNumberOfQueuedJobs(db *sql.DB) int {
 
 	return num
 }
+
+// Returns slice with all jobs that match status <status>
+func GetAllJobsWithStatus(db *sql.DB, status string) ([]Job, error) {
+	var jobs []Job
+
+	rows, err := db.Query(`SELECT * FROM "jobs" where status = ? ORDER BY jobid DESC;`, status) // Query the database
+	if err != nil {
+		return jobs, err
+	}
+	defer rows.Close()
+
+	// Iterate over the rows and add them to the slice
+	var j Job
+	for rows.Next() {
+		err = rows.Scan(&j.Jobid, &j.Prompt, &j.Status, &j.Job_params, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
+		if err != nil {
+			return jobs, err
+		}
+		jobs = append(jobs, j)
+	}
+
+	return jobs, err
+}

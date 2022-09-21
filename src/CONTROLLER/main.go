@@ -41,6 +41,13 @@ func api_0_status(w http.ResponseWriter, r *http.Request) {
 	exapi.HandleStatusRequest(JOBDB, w, r)
 }
 
+// Answers calls to the endpoint /api/1/queue
+func api_1_queue(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")  // TESTING: allow CORS for testing purposes
+	w.Header().Set("Access-Control-Allow-Headers", "*") //FIXME because I don't get it
+	exapi.HandleQueueRequest(JOBDB, w, r)
+}
+
 // Initializes log file for the controller
 func initializeLogFile() {
 	logFile, err := os.OpenFile(("./logs/controller.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
@@ -61,6 +68,9 @@ func main() {
 	http.HandleFunc("/api/0/status", api_0_status)
 	http.HandleFunc("/api/0/jobs", api_0_jobs)
 	http.HandleFunc("/api/0/img", api_0_img)
+
+	// New API endpoints used by the react frontend
+	http.HandleFunc("/api/1/queue", api_1_queue)
 
 	http.ListenAndServe(CONTROLLER_PORT, nil)
 }

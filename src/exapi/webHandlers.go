@@ -330,3 +330,23 @@ func HandleJobsApiPost(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(j) // send back the json as a the response
 }
+
+// Send back the prompts that are in the current queue
+func HandleQueueRequest(db *sql.DB, w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" { // send back the response
+
+		jobsInQueue, err := exdb.GetAllJobsWithStatus(db, "queued")
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			println(err)
+			return
+		}
+
+		response := []string{}
+		for _, b := range jobsInQueue {
+			response = append(response, b.Prompt)
+		}
+
+		json.NewEncoder(w).Encode(response) // send back the json as a the response
+	}
+}

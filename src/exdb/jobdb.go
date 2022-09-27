@@ -354,10 +354,11 @@ func GetNumberOfQueuedJobs(db *sql.DB) int {
 }
 
 // Returns slice with all jobs that match status <status>
-func GetAllJobsWithStatus(db *sql.DB, status string) ([]Job, error) {
+func GetAllJobsInQueue(db *sql.DB) ([]Job, error) {
 	var jobs []Job
 
-	rows, err := db.Query(`SELECT * FROM "jobs" where status = ? ORDER BY jobid DESC;`, status) // Query the database
+	rows, err := db.Query(`SELECT * FROM "jobs" where
+	status = "queued" or status = "processing" ORDER BY jobid DESC;`) // Query the database
 	if err != nil {
 		return jobs, err
 	}

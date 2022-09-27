@@ -359,7 +359,7 @@ func buildApiJobListForTheView(jobs []exdb.Job) []apiJob {
 func HandleQueueRequest(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" { // send back the response
 
-		jobsInQueue, err := exdb.GetAllJobsWithStatus(db, "queued")
+		jobsInQueue, err := exdb.GetAllJobsInQueue(db)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			println(err)

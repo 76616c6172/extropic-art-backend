@@ -331,6 +331,30 @@ func HandleJobsApiPost(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(j) // send back the json as a the response
 }
 
+// Takes a raw list of jobs from the DB and builds a lighter list of job objects meant for the view
+// Without the metadata the view doesn need.
+func buildApiJobListForTheView(jobs []exdb.Job) []apiJob {
+	var newJobList []apiJob
+
+	for _, j := range jobs {
+		newJobObject := apiJob{
+			Jobid:            j.Jobid,
+			Prompt:           j.Prompt,
+			Job_status:       j.Status,
+			Iteration_status: j.Iteration_status,
+			Iteration_max:    j.Iteration_max,
+			Img_path:         "https://exia.art/api/0/img?type=thumbnail?jobid=" + j.Jobid,
+		}
+		newJobList = append(newJobList, newJobObject)
+	}
+
+	fmt.Println("DB Input:", jobs)
+	println()
+	fmt.Println("List", newJobList)
+
+	return newJobList
+}
+
 // Send back the prompts that are in the current queue
 func HandleQueueRequest(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" { // send back the response
@@ -342,11 +366,7 @@ func HandleQueueRequest(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		response := []string{}
-		for _, b := range jobsInQueue {
-			response = append(response, b.Prompt)
-		}
-
-		json.NewEncoder(w).Encode(response) // send back the json as a the response
+		listOfJobObjectsForTheView := buildApiJobListForTheView(jobsInQueue)
+		json.NewEncoder(w).Encode(listOfJobObjectsForTheView) // send back the json as a the response
 	}
 }

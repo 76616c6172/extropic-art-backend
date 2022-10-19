@@ -39,6 +39,19 @@ func HandleStatusRequest(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 
 }
 
+// Answers requests to version 2 of the status api
+func Handle_status_api_endpoint_version_2(db *sql.DB, w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		type status_response struct {
+			Newest_completed_job string `json:"newest_completed_job"`
+		}
+		var status status_response
+		//int Newest_completed_job: 11,
+		status.Newest_completed_job = exdb.GetNewestCoupleJobsThatHaveStatus(db, "completed", 1)[0]
+		json.NewEncoder(w).Encode(status) // send back the response
+	}
+}
+
 // Sends back PNG to the client
 // expects requests like: https://exia.art/api/0/img?type=full?jobid=10
 func SendBackPNGorJPG(w http.ResponseWriter, r *http.Request, imageType int) {

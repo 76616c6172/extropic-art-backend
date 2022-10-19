@@ -48,6 +48,13 @@ func api_1_queue(w http.ResponseWriter, r *http.Request) {
 	exapi.HandleQueueRequest(JOBDB, w, r)
 }
 
+// Answers calls to the endpoint /api/1/status
+func api_1_status_handler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+	exapi.Handle_status_api_endpoint_version_2(JOBDB, w, r)
+}
+
 // Initializes log file for the controller
 func initializeLogFile() {
 	logFile, err := os.OpenFile(("./logs/controller.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
@@ -62,7 +69,7 @@ func main() {
 	initializeLogFile()
 	JOBDB = exdb.InitializeJobdb()
 
-	http.Handle("/", http.FileServer(http.Dir("../view/dist"))) // Handles requests for ressources in dist
+	http.Handle("/", http.FileServer(http.Dir("../view/build"))) // Handles requests for ressources in dist
 
 	// Register API endpoints
 	http.HandleFunc("/api/0/status", api_0_status)
@@ -71,6 +78,7 @@ func main() {
 
 	// New API endpoints used by the react frontend
 	http.HandleFunc("/api/1/queue", api_1_queue)
+	http.HandleFunc("/api/1/status", api_1_status_handler)
 
 	http.ListenAndServe(CONTROLLER_PORT, nil)
 }

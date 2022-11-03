@@ -4,7 +4,6 @@
 	# TODO insert tests
 	outputs = { self, nixpkgs }:
 		let
-      version = "build-${builtins.substring 0 8 self.lastModifiedDate}";
       supportedSystems = [ "x86_64-linux" ];
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
       nixpkgsFor = forAllSystems (system: import nixpkgs { inherit system; });

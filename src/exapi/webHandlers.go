@@ -273,6 +273,28 @@ func InputIsValid(input string) bool {
 	return false
 }
 
+// Deals with requests made to the api endpoint /api/1/jobs
+func HandleJobsApiPostVersion2(db *sql.DB, w http.ResponseWriter, r *http.Request) {
+
+	// 1. Check if the job post is authorized
+	var newJobPosting jobPostingFromApiVersion1
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&newJobPosting)
+	if err != nil {
+		log.Println("error decoding request", err)
+		w.Write([]byte("500 - Something bad happened!"))
+		return
+	}
+	fmt.Println(newJobPosting)
+
+	// 2. Decode the job object
+
+	// 3. Sanitize the user input
+
+	// 4. Write the job to the jobdb
+
+}
+
 // Deals with POST requests made to the jobs endpoint (POST new jobs)
 // Checks if the posted job is valid and then
 // Adds job to the database with the "queued" status
@@ -330,7 +352,7 @@ func HandleJobsApiPost(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	// HERE
 
 	// 2. Create the job in the database
-	newJobid, err := exdb.InsertNewJob(db, jobRequest.Prompt, "")
+	newJobid, err := exdb.InsertNewJob(db, "1", 0, 42, 0, 0, jobRequest.Prompt, "unknown", "")
 	if err != nil {
 		log.Println("HandleJobsApiPost: Error inserting new job", err)
 		return
@@ -353,6 +375,9 @@ func buildApiJobListForTheView(jobs []exdb.Job) []apiJob {
 		newJobObject := apiJob{
 			Jobid:            j.Jobid,
 			Prompt:           j.Prompt,
+			Seed:             j.Seed,
+			IsHighGuidance:   j.Guidance,
+			IsUpscale:        j.Upscale,
 			Job_status:       j.Status,
 			Iteration_status: j.Iteration_status,
 			Iteration_max:    j.Iteration_max,
@@ -361,9 +386,9 @@ func buildApiJobListForTheView(jobs []exdb.Job) []apiJob {
 		newJobList = append(newJobList, newJobObject)
 	}
 
-	fmt.Println("DB Input:", jobs)
-	println()
-	fmt.Println("List", newJobList)
+	//fmt.Println("DB Input:", jobs)
+	//println()
+	//fmt.Println("List", newJobList)
 
 	return newJobList
 }

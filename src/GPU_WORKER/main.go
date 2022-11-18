@@ -15,16 +15,16 @@ import (
 	"strings"
 	"time"
 
-	"project-exia-monorepo/website/exapi"
-	"project-exia-monorepo/website/exdb"
-	"project-exia-monorepo/website/exutils"
+	"extropic-art-backend/src/exapi"
+	"extropic-art-backend/src/exdb"
+	"extropic-art-backend/src/exutils"
 )
 
 const IMAGE_PATH = "./progress.png"
 const WORKER_PORT = ":8090"
 
-//const SCHEDULER_IP = "http://127.0.0.1:8091"
-const SCHEDULER_IP = "http://exia.art:8091"
+// const SCHEDULER_IP = "http://127.0.0.1:8091"
+const SCHEDULER_IP = "http://extropic.art:8091"
 const JOB_IS_DONE bool = true
 const JOB_IS_NOT_DONE bool = false
 

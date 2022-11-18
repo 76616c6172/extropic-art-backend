@@ -1,7 +1,6 @@
 {
 	description = "defines extropic-art-backend dev environment in a nix flake";
 	inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-	# TODO insert tests
 	outputs = { self, nixpkgs }:
 		let
       supportedSystems = [ "x86_64-linux" ];

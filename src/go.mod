@@ -1,4 +1,4 @@
-module project-exia-monorepo/website
+module extropic-art-backend/src
 
 go 1.18
 

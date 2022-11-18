@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -55,6 +56,21 @@ func api_1_status_handler(w http.ResponseWriter, r *http.Request) {
 	exapi.Handle_status_api_endpoint_version_2(JOBDB, w, r)
 }
 
+// Answers calls to the endpoint /api/1/jobs
+func api_1_jobs(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("API 1 called!")
+
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "*")
+
+	switch r.Method {
+	case "GET":
+		exapi.HandleJobsApiGet(JOBDB, w, r)
+	case "POST": // Handle new job postings
+		exapi.HandleJobsApiPostVersion2(JOBDB, w, r)
+	}
+}
+
 // Initializes log file for the controller
 func initializeLogFile() {
 	logFile, err := os.OpenFile(("./logs/controller.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
@@ -79,6 +95,7 @@ func main() {
 	// New API endpoints used by the react frontend
 	http.HandleFunc("/api/1/queue", api_1_queue)
 	http.HandleFunc("/api/1/status", api_1_status_handler)
+	http.HandleFunc("/api/1/jobs", api_1_jobs)
 
 	http.ListenAndServe(CONTROLLER_PORT, nil)
 }

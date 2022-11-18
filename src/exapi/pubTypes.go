@@ -1,26 +1,41 @@
 // Webhandlers and data structures for the API
 package exapi
 
+// DEPRECATED
+// schema for a job posted by the old frontend
 type newjob struct {
 	Prompt string `json:"prompt"`
 }
 
-//const MAX_PROMPT_LENGTH = 600 // Reject a new job posted by the view if longer than this value
-//const MAX_PROMPT_LENGTH = 322 // Reject a new job posted by the view if longer than this value
-const MAX_PROMPT_LENGTH = 360 // Reject a new job posted by the view if longer than this value
-var GPU_STATUS = "offline"
+// schema for a job posted by the react frontend
+type jobPostingFromApiVersion1 struct {
+	ModelPipeline  int    `json:"model_pipeline"`
+	Prompt         string `json:"prompt"`
+	IsLockedSeed   bool   `json:"lock_seed"`
+	Seed           string `json:"seed"`
+	IsHighGuidance bool   `json:"high_guidance"`
+	IsUpscale      bool   `json:"upscale"`
+}
 
-/* This is the response object of he /api/0/jobs endpoint
+/*
+	This is the response object of he /api/0/jobs endpoint
+
 For reference here is the Schema the client expects from /api/0/jobs?jobid=1
-{
-  "jobid": "1",
-  "prompt": "Space wool bla bla, bla bla..",
-  "job_status": "qeued",
-  "iteration_status": "125",
-  "iteration_max": "240",
-} */
+
+	{
+	  "jobid": "1",
+	  "prompt": "Space wool bla bla, bla bla..",
+	  "job_status": "qeued",
+	  "iteration_status": "125",
+	  "iteration_max": "240",
+	}
+*/
 type apiJob struct {
 	Jobid            string `json:"jobid"`
+	Seed             int    `json:"seed"`
+	Owner            string `json:"owner"`
+	IsHighGuidance   int    `json:"high_guidance"`
+	IsUpscale        int    `json:"upscale"`
 	Prompt           string `json:"prompt"`
 	Job_status       string `json:"job_status"`
 	Iteration_status int    `json:"iteration_status"`

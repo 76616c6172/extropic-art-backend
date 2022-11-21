@@ -28,6 +28,7 @@ const SCHEDULER_IP = "http://extropic.art:8091"
 const JOB_IS_DONE bool = true
 const JOB_IS_NOT_DONE bool = false
 
+var CURRENT_JOB exdb.Job
 var HAVE_JOB = false //set to true while the worker is busy
 var WORKER_IS_BUSY = false
 var WORKER_ID string
@@ -35,6 +36,15 @@ var SECRET string
 var JOB_PROMPT string         // prompt for the current job to be rendered
 var TUNNEL_URL string         // send to scheduler if we're using a tunnel (provided as 2nd startup argument)
 var WORKER_HAS_TUNNEL = false // is set to false if not colab worker
+
+type stableDiffusionParameters struct {
+	prompt         string
+	owner          string
+	pipeline       string
+	resolution     string
+	seed           string
+	isHighGuidance int
+}
 
 // Answers jobs posted to /api/0/worker
 func handleNewJobPosting(w http.ResponseWriter, r *http.Request) {
@@ -48,18 +58,17 @@ func handleNewJobPosting(w http.ResponseWriter, r *http.Request) {
 	*/
 
 	if !WORKER_IS_BUSY {
-		var jobRequest exdb.Job
 
 		// Read the request
 		jsonDecoder := json.NewDecoder(r.Body)
-		err := jsonDecoder.Decode(&jobRequest)
+		err := jsonDecoder.Decode(&CURRENT_JOB)
 		if err != nil {
 			log.Println(err) // maybe handle this better
 			return
 		}
 
-		println("received job:")
-		println(jobRequest.Jobid, jobRequest.Prompt)
+		println("received job: ", CURRENT_JOB.Prompt)
+		//println(jobRequest.Jobid, jobRequest.Prompt, jobRequest.Seed, jobRequest.Guidance, jobRequest.Model_pipeline)
 
 		// Set headers
 		w.Header().Set(exapi.HeaderJobAccepted, "1")
@@ -67,13 +76,129 @@ func handleNewJobPosting(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusAccepted)
 		defer r.Body.Close() // Close the response
 
-		JOB_PROMPT = jobRequest.Prompt
+		JOB_PROMPT = CURRENT_JOB.Prompt
 		HAVE_JOB = true
 		return
 
 	} else {
 		w.WriteHeader(http.StatusForbidden)
 	}
+}
+
+// run_stable_diffusion runs the stable diffusion model
+func run_stable_diffusion(sdp stableDiffusionParameters) {
+
+	// 0. Select the right stable diffusion pipeline
+	cmdName := "./run_model_mj"
+	if sdp.pipeline == "2" {
+		cmdName = "./run_model_sd"
+	}
+
+	// Write resolution
+	writeStringToFile(sdp.resolution, "./resolution")
+
+	// TODO pre prompt or not
+	if strings.Contains(sdp.owner, "with_pre_prompt") {
+		writeStringToFile("1", "./pre_prompt")
+	} else {
+		writeStringToFile("0", "./pre_prompt")
+	}
+
+	// TODO this could me moved to just writing json and parsing it fromm python
+	// 1. Write additional params to files
+	writeStringToFile(sdp.prompt, "./prompt")
+	if sdp.isHighGuidance == 1 {
+		writeStringToFile("12", "./scale")
+	} else {
+		writeStringToFile("7", "./scale")
+	}
+
+	// 2. Set up running the model as a subprocess while capturing the output
+	modelSubProcess := exec.Command(cmdName, sdp.seed)
+
+	stdout, err := modelSubProcess.StdoutPipe()
+	if err != nil {
+		log.Println("testing: error connecting to stdout", err)
+		return
+	}
+	defer stdout.Close()
+
+	stderr, err := modelSubProcess.StderrPipe()
+	if err != nil {
+		log.Println("testing: error connecting to stderr", err)
+		return
+	}
+	defer stderr.Close()
+
+	// 3. Run the model
+	err = modelSubProcess.Start()
+	if err != nil {
+		log.Println("testing: error running cmd.Start()", err)
+		return
+	}
+
+	// Read the output of the model line by line
+	stdoutScanner := bufio.NewScanner(stdout)
+	//stderrScanner := bufio.NewScanner(stderr)
+
+	numberOfTimesInProgressPngWasCreated := -1
+	var exiting bool
+	for {
+
+		if exiting {
+			if modelSubProcess.ProcessState.Exited() {
+				fmt.Println("Exiting the model gracefully")
+				break
+			}
+		}
+
+		isReceivingAnotherLineFromStdout := stdoutScanner.Scan()
+
+		if isReceivingAnotherLineFromStdout {
+			currentLineFromStdout := stdoutScanner.Text()
+
+			// TODO
+			// Check if it's time to send a status update!
+			fmt.Println("OUT:", currentLineFromStdout) //valar: debugging!
+
+			// if strings.Contains(currentLineFromStdout, "<PIL.Image.Image") {
+			if strings.Contains(currentLineFromStdout, "<IPython.core.display.Image object>") {
+				// Another in progress.png was created by the model!
+				numberOfTimesInProgressPngWasCreated++
+				// iterationStatus := numberOfTimesInProgressPngWasCreated * 50
+
+				// err = postJobdUpdateToScheduler(strconv.Itoa(iterationStatus), JOB_IS_NOT_DONE)
+				// if err != nil {
+				// println("error after posting update to scheduler: ", err)
+				// }
+
+			} else if strings.Contains(currentLineFromStdout, "Your samples are ready and waiting for you here") {
+				fmt.Println("SUCCESS, model run complete")
+				err = postJobdUpdateToScheduler("250", JOB_IS_DONE)
+				if err != nil {
+					println("error sending final update to scheduler", err)
+					log.Println("error sending final update to scheduler", err)
+					break
+				}
+				exiting = true
+				modelSubProcess.Wait()
+			}
+
+		}
+	}
+	HAVE_JOB = false
+}
+
+// writeStringTofile takes a string and overrides the provided
+func writeStringToFile(s string, filePath string) error {
+	bytes := []byte(s)
+	err := os.WriteFile(filePath, bytes, 0666)
+	if err != nil {
+		println("error writing string ", s, "to file", filePath, err)
+		log.Println("error writing string ", s, "to file", filePath, err)
+		return err
+	}
+	return nil
 }
 
 func writeYamlConfiguration(prompt string) {
@@ -100,9 +225,8 @@ func writeYamlConfiguration(prompt string) {
 	}
 }
 
-// Runs the clip guided diffusion model
-// FIXME: This function is ugly!
-func runModel(prompt string) {
+// run_disco_diffusion_model runs the disco diffusion model
+func run_disco_diffusion_model(prompt string) {
 
 	// 1. Write Model Configuration in the apropriate file
 	writeYamlConfiguration(prompt)
@@ -197,7 +321,7 @@ func postJobdUpdateToScheduler(iteration_status string, jobIsDone bool) error {
 		return err
 	}
 
-	file, err := os.Open("./progress.png")
+	file, err := os.Open("/workspace/stable-diffusion/outputs/txt2img-samples/samples/00000.png")
 	if err != nil {
 		log.Println(err)
 		return err
@@ -286,11 +410,20 @@ func initializeLogFile() {
 // if HAVE_JOB is false, keep checking every 5 seconds if we have a job
 func runWorkerLoop() {
 	for {
-
 		if HAVE_JOB {
 			WORKER_IS_BUSY = true
 			println("Running job:", JOB_PROMPT)
-			runModel(JOB_PROMPT)
+			//run_disco_diffusion_model(JOB_PROMPT)
+			// Just testing
+			parameters := stableDiffusionParameters{
+				prompt:         CURRENT_JOB.Prompt,
+				pipeline:       CURRENT_JOB.Model_pipeline,
+				owner:          CURRENT_JOB.Owner,
+				resolution:     CURRENT_JOB.Job_params,
+				seed:           strconv.Itoa(CURRENT_JOB.Seed),
+				isHighGuidance: CURRENT_JOB.Guidance,
+			}
+			run_stable_diffusion(parameters)
 			println("Completed Job", JOB_PROMPT)
 			WORKER_IS_BUSY = false
 		}

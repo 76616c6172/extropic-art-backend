@@ -1,7 +1,7 @@
 package main
 
 import (
-	"project-exia-monorepo/website/exapi"
+	"extropic-art-backend/src/exapi"
 )
 
 func main() {

@@ -106,7 +106,7 @@ func InsertNewJob(db *sql.DB, model string, lock_seed int, seed int, guidance in
 	// Execute the statement
 	// for reference the jobs schema is:
 	//INSERT INTO "jobs" (prompt, status, job_params, iteration_status, iteration_max, time_created, time_last_updated, time_completed)
-	result, err := stmnt.Exec(model, lock_seed, seed, guidance, upscale, prompt, "queued", job_params_str, "anon", 0, iteration_max, time, time, "")
+	result, err := stmnt.Exec(model, lock_seed, seed, guidance, upscale, prompt, "queued", job_params_str, owner, 0, iteration_max, time, time, "")
 	if err != nil {
 		return -1, err
 	}
@@ -131,7 +131,7 @@ func GetJobByJobid(db *sql.DB, jobid int) (Job, error) {
 	defer row.Close()
 
 	row.Next()
-	err = row.Scan(&j.Jobid, &j.Lock_seed, &j.Seed, &j.Guidance, &j.Upscale, &j.Prompt, &j.Status, &j.Job_params, &j.Owner, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
+	err = row.Scan(&j.Jobid, &j.Model_pipeline, &j.Lock_seed, &j.Seed, &j.Guidance, &j.Upscale, &j.Prompt, &j.Status, &j.Job_params, &j.Owner, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
 	if err != nil {
 		return j, err
 	}
@@ -154,7 +154,7 @@ func GetAllJobs(db *sql.DB) ([]Job, error) {
 	var j Job
 
 	for rows.Next() {
-		err = rows.Scan(&j.Jobid, &j.Lock_seed, &j.Seed, &j.Guidance, &j.Upscale, &j.Prompt, &j.Status, &j.Job_params, &j.Owner, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
+		err = rows.Scan(&j.Jobid, &j.Model_pipeline, &j.Lock_seed, &j.Seed, &j.Guidance, &j.Upscale, &j.Prompt, &j.Status, &j.Job_params, &j.Owner, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
 		if err != nil {
 			return jobs, err
 		}
@@ -182,7 +182,7 @@ func GetjobsBetweenJobidXandJobidY(db *sql.DB, a int, b int) ([]Job, error) {
 	var j Job
 	for rows.Next() {
 
-		err = rows.Scan(&j.Jobid, &j.Lock_seed, &j.Seed, &j.Guidance, &j.Upscale, &j.Prompt, &j.Status, &j.Job_params, &j.Owner, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
+		err = rows.Scan(&j.Jobid, &j.Model_pipeline, &j.Lock_seed, &j.Seed, &j.Guidance, &j.Upscale, &j.Prompt, &j.Status, &j.Job_params, &j.Owner, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
 		if err != nil {
 			return nil, err
 		}
@@ -206,7 +206,7 @@ func GetOldestQueuedJob(db *sql.DB) (Job, error) {
 
 	row.Next()
 
-	err = row.Scan(&j.Jobid, &j.Lock_seed, &j.Seed, &j.Guidance, &j.Upscale, &j.Prompt, &j.Status, &j.Job_params, &j.Owner, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
+	err = row.Scan(&j.Jobid, &j.Model_pipeline, &j.Lock_seed, &j.Seed, &j.Guidance, &j.Upscale, &j.Prompt, &j.Status, &j.Job_params, &j.Owner, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
 	if err != nil {
 		return j, err
 	}
@@ -227,7 +227,7 @@ func GetNumberOfJobsThatHaveStatus(db *sql.DB, status string) int {
 	defer row.Close()
 
 	for row.Next() {
-		err = row.Scan(&j.Jobid, &j.Lock_seed, &j.Seed, &j.Guidance, &j.Upscale, &j.Prompt, &j.Status, &j.Job_params, &j.Owner, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
+		err = row.Scan(&j.Jobid, &j.Model_pipeline, &j.Lock_seed, &j.Seed, &j.Guidance, &j.Upscale, &j.Prompt, &j.Status, &j.Job_params, &j.Owner, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
 		if err != nil {
 			log.Println("Error in GetNumberOfCompletedJobs", err)
 			return -1
@@ -250,13 +250,30 @@ func GetLatestJobid(db *sql.DB) string {
 
 	row.Next()
 
-	err = row.Scan(&j.Jobid, &j.Lock_seed, &j.Seed, &j.Guidance, &j.Upscale, &j.Prompt, &j.Status, &j.Job_params, &j.Owner, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
+	err = row.Scan(&j.Jobid, &j.Model_pipeline, &j.Lock_seed, &j.Seed, &j.Guidance, &j.Upscale, &j.Prompt, &j.Status, &j.Job_params, &j.Owner, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
 	if err != nil {
 		log.Println("Error in GetNumberOfCompletedJobs", err)
 		return "error scanning last job"
 	}
 
 	return j.Jobid
+}
+
+// returns only the newest job
+func GetNewestCompletedJob(db *sql.DB, status string) Job {
+	var j Job
+	row, err := db.Query(`SELECT * FROM "jobs" WHERE status = ? ORDER BY jobid DESC LIMIT 1;`, status)
+	if err != nil {
+		log.Println("Error in GetNewestCompletedJob", err)
+	}
+	defer row.Close()
+
+	row.Next()
+	err = row.Scan(&j.Jobid, &j.Model_pipeline, &j.Lock_seed, &j.Seed, &j.Guidance, &j.Upscale, &j.Prompt, &j.Status, &j.Job_params, &j.Owner, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
+	if err != nil {
+		log.Println("Error in GetNewestCompletedJob scan operation", err)
+	}
+	return j
 }
 
 // Returns the last couple jobs from the databasee that have the status you ask
@@ -273,7 +290,7 @@ func GetNewestCoupleJobsThatHaveStatus(db *sql.DB, status string, numberOfJobs i
 	defer row.Close()
 
 	for row.Next() {
-		err = row.Scan(&j.Jobid, &j.Lock_seed, &j.Seed, &j.Guidance, &j.Upscale, &j.Prompt, &j.Status, &j.Job_params, &j.Owner, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
+		err = row.Scan(&j.Jobid, &j.Model_pipeline, &j.Lock_seed, &j.Seed, &j.Guidance, &j.Upscale, &j.Prompt, &j.Status, &j.Job_params, &j.Owner, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
 		if err != nil {
 			log.Println("Error in GetNewestFiveCompletedJobs", err)
 		}
@@ -362,7 +379,7 @@ func GetAllJobsInQueue(db *sql.DB) ([]Job, error) {
 	// Iterate over the rows and add them to the slice
 	var j Job
 	for rows.Next() {
-		err = rows.Scan(&j.Jobid, &j.Lock_seed, &j.Seed, &j.Guidance, &j.Upscale, &j.Prompt, &j.Status, &j.Job_params, &j.Owner, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
+		err = rows.Scan(&j.Jobid, &j.Model_pipeline, &j.Lock_seed, &j.Seed, &j.Guidance, &j.Upscale, &j.Prompt, &j.Status, &j.Job_params, &j.Owner, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
 		if err != nil {
 			return jobs, err
 		}

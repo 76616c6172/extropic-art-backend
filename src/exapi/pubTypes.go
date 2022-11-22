@@ -10,9 +10,11 @@ type newjob struct {
 // schema for a job posted by the react frontend
 type jobPostingFromApiVersion1 struct {
 	ModelPipeline  int    `json:"model_pipeline"`
+	Resolution     int    `json:"resolution"`
 	Prompt         string `json:"prompt"`
 	IsLockedSeed   bool   `json:"lock_seed"`
 	Seed           string `json:"seed"`
+	IsPrePrompt    bool   `json:"pre_prompt"`
 	IsHighGuidance bool   `json:"high_guidance"`
 	IsUpscale      bool   `json:"upscale"`
 }

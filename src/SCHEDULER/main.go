@@ -17,9 +17,9 @@ import (
 	"syscall"
 	"time"
 
-	"project-exia-monorepo/website/exapi"
-	"project-exia-monorepo/website/exdb"
-	"project-exia-monorepo/website/exutils"
+	"extropic-art-backend/src/exapi"
+	"extropic-art-backend/src/exdb"
+	"extropic-art-backend/src/exutils"
 
 	"github.com/google/uuid"
 )

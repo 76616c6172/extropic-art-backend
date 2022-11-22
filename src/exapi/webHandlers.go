@@ -6,12 +6,13 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
 
-	"project-exia-monorepo/website/exdb"
+	"extropic-art-backend/src/exdb"
 )
 
 // Used to decide to send back JPG or PNG
@@ -31,7 +32,7 @@ func HandleStatusRequest(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 		statusResponse.Gpu = GPU_STATUS
 		statusResponse.Jobs_completed = exdb.GetNumberOfJobsThatHaveStatus(db, "completed")
 		statusResponse.Jobs_queued = exdb.GetNumberOfJobsThatHaveStatus(db, "queued")
-		statusResponse.Newest_completed_jobs = exdb.GetNewestCoupleJobsThatHaveStatus(db, "completed", 3)
+		// statusResponse.Newest_completed_jobs = exdb.GetNewestCoupleJobsThatHaveStatus(db, "completed", 3) //dprecated
 		statusResponse.Newest_jobid = exdb.GetLatestJobid(db)
 
 		json.NewEncoder(w).Encode(statusResponse) // send back the response
@@ -47,7 +48,8 @@ func Handle_status_api_endpoint_version_2(db *sql.DB, w http.ResponseWriter, r *
 		}
 		var status status_response
 		//int Newest_completed_job: 11,
-		status.Newest_completed_job = exdb.GetNewestCoupleJobsThatHaveStatus(db, "completed", 1)[0]
+		status.Newest_completed_job = exdb.GetNewestCompletedJob(db, "completed").Jobid
+		// exdb.GetNewestCoupleJobsThatHaveStatus(db, "completed", 1)[0]
 		json.NewEncoder(w).Encode(status) // send back the response
 	}
 }
@@ -131,6 +133,7 @@ func sendBackOneJob(db *sql.DB, w http.ResponseWriter, r *http.Request, str_a st
 		// 3. Build the response object
 		var responseJob apiJob
 		responseJob.Jobid = realJob.Jobid
+		responseJob.Seed = realJob.Seed
 		responseJob.Prompt = realJob.Prompt
 		responseJob.Job_status = realJob.Status
 		responseJob.Iteration_status = realJob.Iteration_status
@@ -234,7 +237,6 @@ func InputIsValid(input string) bool {
 	// If prompt contains no weights that is fine too
 	if !strings.Contains(input, ":") && !strings.Contains(input, "|") {
 		return true
-
 	}
 
 	// Check if every prompt has a weight
@@ -285,16 +287,103 @@ func HandleJobsApiPostVersion2(db *sql.DB, w http.ResponseWriter, r *http.Reques
 		w.Write([]byte("500 - Something bad happened!"))
 		return
 	}
-	fmt.Println(newJobPosting)
 
-	// 2. Decode the job object
+	// 1. Santizie the input
 
-	// 3. Sanitize the user input
+	var jobResponse jobResponse
+	newJobPosting.Prompt = SanitizeUserPrompt(newJobPosting.Prompt)
+	if !InputIsValid(newJobPosting.Prompt) {
+		log.Println("HandleJobsApiPost: Error decoding request", err)
+		w.Write([]byte("500 - Something bad happened!"))
+		json.NewEncoder(w).Encode(jobResponse) // send back the json as a the response
+		return
+	}
 
-	// 4. Write the job to the jobdb
+	if len(newJobPosting.Prompt) > MAX_PROMPT_LENGTH {
+		log.Println("HandleJobsApiPost: Error large prompt length")
+		w.Write([]byte("500 - Something bad happened!"))
+		json.NewEncoder(w).Encode(jobResponse) // send back the json as a the response
+		return
+	}
 
+	if len(newJobPosting.Prompt) < 1 || len(newJobPosting.Prompt) > MAX_PROMPT_LENGTH {
+		jobResponse.Jobid = -1
+		jobResponse.Prompt = newJobPosting.Prompt
+		jobResponse.Job_status = "Rejected"
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("500 - Something bad happened!"))
+		json.NewEncoder(w).Encode(jobResponse)
+		log.Println("HandleJobsApiPost: Prompt length out of bounds")
+		return
+	}
+	//
+	// 1.5 Check that we're not exceeding the queued job limit
+	numberOfQUeuedJobs := exdb.GetNumberOfQueuedJobs(db)
+	if numberOfQUeuedJobs > MAXIMUM_NUMBER_OF_JOBS_IN_QUEUE {
+		jobResponse.Jobid = -1
+		jobResponse.Prompt = newJobPosting.Prompt
+		jobResponse.Job_status = "Rejected"
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("500 - Something bad happened!"))
+		json.NewEncoder(w).Encode(jobResponse)
+		log.Println("HandleJobsApiPost: Error exceeded maximum jobs in queue")
+	}
+	// HERE
+
+	// 2. Create the job in the database
+	//newJobid, err := exdb.InsertNewJob(db, "1", 0, 42, 0, 0, jobRequest.Prompt, "unknown", "")
+	var lockSeed int
+	var seedNumber int
+	if newJobPosting.IsLockedSeed {
+		lockSeed = 1
+		if seedNumber, err = strconv.Atoi(newJobPosting.Seed); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("500 - Something bad happened!"))
+
+			// Check to make sure seed is within acceptable bounds
+			if seedNumber < 0 || seedNumber > 4294967295 {
+				seedNumber = createRandomSeed()
+			}
+		}
+
+	} else {
+		seedNumber = createRandomSeed()
+	}
+
+	var guidance int
+	if newJobPosting.IsHighGuidance {
+		guidance = 1
+	}
+	var upscale int
+	if newJobPosting.IsUpscale {
+		upscale = 1
+	}
+
+	// dirty hack to get preprompt metadata across
+	var User string
+	if newJobPosting.IsPrePrompt {
+		User = "anonymous_with_pre_prompt"
+	} else {
+		User = "anonymous_no_preprompt"
+	}
+	if newJobPosting.ModelPipeline != 1 { // hack to only do pre prompting for midjourny v4 finetune
+		newJobPosting.IsPrePrompt = false
+		User = "anonymous_no_pre_prompt"
+	}
+
+	jobResponse.Jobid, err = exdb.InsertNewJob(db, strconv.Itoa(newJobPosting.ModelPipeline), lockSeed, seedNumber, guidance, upscale, newJobPosting.Prompt, User, newJobPosting.Resolution)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("500 - Something bad happened!"))
+		log.Println("HandleJobsApiPost: Error inserting new job", err)
+		return
+	}
+
+	w.WriteHeader(http.StatusAccepted)
+	json.NewEncoder(w).Encode(jobResponse)
 }
 
+/*
 // Deals with POST requests made to the jobs endpoint (POST new jobs)
 // Checks if the posted job is valid and then
 // Adds job to the database with the "queued" status
@@ -364,6 +453,12 @@ func HandleJobsApiPost(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	j.Job_status = "accepted"
 
 	json.NewEncoder(w).Encode(j) // send back the json as a the response
+}
+*/
+
+// createRandomSeed emits a between 0 and 4294967295
+func createRandomSeed() int {
+	return rand.Intn(4294967295)
 }
 
 // Takes a raw list of jobs from the DB and builds a lighter list of job objects meant for the view

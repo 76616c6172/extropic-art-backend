@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"os"
 
-	"project-exia-monorepo/website/exapi"
-	"project-exia-monorepo/website/exdb"
+	"extropic-art-backend/src/exapi"
+	"extropic-art-backend/src/exdb"
 )
 
 const CONTROLLER_PORT = ":8080"
@@ -24,7 +24,7 @@ func api_0_jobs(w http.ResponseWriter, r *http.Request) {
 	case "GET":
 		exapi.HandleJobsApiGet(JOBDB, w, r)
 	case "POST": // Handle new job postings
-		exapi.HandleJobsApiPost(JOBDB, w, r)
+		// exapi.HandleJobsApiPost(JOBDB, w, r) // deprecated!
 	}
 }
 

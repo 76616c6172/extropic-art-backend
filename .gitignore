@@ -21,8 +21,10 @@ scripts/clean_db_and_restart_controller
 
 
 # Ignore binaries
-SCHEDULER
-CONTROLLER
+*SCHEDULER/scheduler
+*SCHEDULER/SCHEDULER
+*/CONTROLLER/CONTROLLER
+*/CONTROLLER/controller
 
 
 # local env files

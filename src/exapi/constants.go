@@ -15,5 +15,5 @@ const RES_512_BY_768 = 2 // portrait
 const RES_768_BY_512 = 3 // wide
 
 // DEFAULT offline
-var GPU_STATUS = "offline"
-var GPU_IS_ONLINE = false
+var GPU_STATUS = "online"
+var GPU_IS_ONLINE = true

@@ -24,18 +24,16 @@ import (
 	"github.com/google/uuid"
 )
 
-const WEBSERVER_PORT = ":8091" // Scheduler is listening on this port
+const PORT_TO_LISTEN_ON = ":8091"
 
-var WORKERDB *sql.DB //pointer used to connect to the db, initialized in main
+var WORKER_DB *sql.DB
 var JOB_COMPLETE = true
 var JOBDB *sql.DB
 var SECRET string
 var PANIC bool
 var WORKER_IP_TO_TUNNEL_URL = map[string]string{} // FIXME: scheduler should be stateless
 
-// Initialize and connect to workerdb
-// GPU_WORERS register themselves with the scheduler through this endpoint
-// /api/0/registration
+// handles /api/0/registration endpoint
 func handleWorkerRegistration(w http.ResponseWriter, r *http.Request) {
 	println("Receiving new worker registration..")
 
@@ -51,15 +49,15 @@ func handleWorkerRegistration(w http.ResponseWriter, r *http.Request) {
 		newWorkerId := uuid.New().String()
 		log.Println("New worker ID created:", newWorkerId)
 
-		workerIpForDB := strings.Split(r.RemoteAddr, ":") // Parse the ip and edit the port
-		err := exdb.RegisterNewWorker(WORKERDB, newWorkerId, workerIpForDB[0], exutils.P100_16GB_X1)
+		workerIpForDB := strings.Split(r.RemoteAddr, ":")
+		err := exdb.RegisterNewWorker(WORKER_DB, newWorkerId, workerIpForDB[0], exutils.P100_16GB_X1)
 		if err != nil {
 			log.Println("Error registering worker:", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
-		// Check if the worker is using a tunnel
+		// Check if the worker is using a tunnel (TODO: this should be saved in workerdb)
 		workerTunnel, err := r.Cookie(exapi.CookieWorkerTunnel)
 		if err != nil {
 			println("No worker tunnel cookie", err)
@@ -69,14 +67,13 @@ func handleWorkerRegistration(w http.ResponseWriter, r *http.Request) {
 			WORKER_IP_TO_TUNNEL_URL[workerIpForDB[0]] = workerTunnel.Value
 		}
 
-		// Send OK response
 		println("Registered new worker with: ", newWorkerId)
 		w.WriteHeader(http.StatusAccepted)
 		return
 	}
-	// Registration secret is wrong, send back bad response
-	w.WriteHeader(http.StatusForbidden)
 
+	// If registration secret is wrong, send back bad response
+	w.WriteHeader(http.StatusForbidden)
 }
 
 // GPU_WORKERS send images+metadata to this endpoint: /api/0/report
@@ -107,24 +104,10 @@ func handleUpdateFromWorker(w http.ResponseWriter, r *http.Request) {
 	// and use the ngrok tunnel if it is
 	workerIp := strings.Split(r.RemoteAddr, ":")[0]
 
-	/*
-		// Check if this worker is using a tunnel
-		if workerUrl, exists := WORKER_IP_TO_TUNNEL_URL[workerIp]; exists {
-
-			worker, err = exdb.GetWorkerByIP(WORKERDB, workerUrl)
-			if err != nil {
-				log.Println("Error getting worker from DB", err)
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
-			log.Println("Handling update for: ", worker.Worker_id, "at", worker.Worker_current_job)
-
-		} else {
-	*/
 	println("+Looking up worker by IP: ", workerIp)
 	// Identify the worker based on ip and get info from the databases
 	// TODO: Identify worker based on workerid instead!
-	worker, err = exdb.GetWorkerByIP(WORKERDB, workerIp)
+	worker, err = exdb.GetWorkerByIP(WORKER_DB, workerIp)
 	if err != nil {
 		log.Println("Error getting worker from DB", err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -163,7 +146,7 @@ func handleUpdateFromWorker(w http.ResponseWriter, r *http.Request) {
 	// TODO: Add a safety measure where jobs already marked completed can't be updated by the worker
 	if jobIsDone {
 		exdb.UpdateJobById(JOBDB, jobString, "completed", iterStatus)
-		exdb.UpdateWorkerByJobid(WORKERDB, jobString, true) // set worker to no longer busy
+		exdb.UpdateWorkerByJobid(WORKER_DB, jobString, true) // set worker to no longer busy
 	} else {
 		exdb.UpdateJobById(JOBDB, jobString, "processing", iterStatus)
 	}
@@ -210,11 +193,13 @@ func InitializeLogFile() {
 // Run the scheduling loop posting jobs to the workers
 func runSchedulingLoop(quit chan bool) {
 
+	var PROMPT, SEED, WIDTH, HEIGHT, STEPS, SCALE string
+
 	for {
 		select {
 
 		case <-quit:
-			println("Exiting scheduling loop")
+			println("scheduler exiting")
 			return
 
 		default:
@@ -231,43 +216,54 @@ func runSchedulingLoop(quit chan bool) {
 			}
 			println("Got queued job:", queuedJob.Jobid, queuedJob.Prompt)
 
-			// 2. Get a worker from the workerdb that is not busy
-			worker, err := exdb.GetFreeWorker(WORKERDB)
-			if err != nil {
-				println("..waiting for free worker")
-				//log.Println("error getting worker from db")
-				continue
+			// 0. TODO: select the pipelines
+			modelCmd := "./run_worker.py"
 
-			}
-			println("Got worker: ", worker.Worker_id)
+			// 2. Run serverless GPU worker
 
-			// 3. Assign the job to the worker
+			PROMPT = queuedJob.Prompt
 
-			//recoverWrapperForPostJobToWorker(queuedJob, worker)
-
-			errPostingJob := postJobToWorker(queuedJob, worker)
-			//Dirty hack/fix bexause vast.ai worker is causing error here
-			/*
-				if err != nil {
-					println("Error when trying to post job to worker", err)
-					log.Println("Error when trying to post job to worker", err)
-					continue
-				}
-			*/
-			if PANIC {
-				println("Error, panic when trying to post job to worker", err)
-				log.Println("Error, panic when trying to post job to worker", err)
-				PANIC = false
-				continue
-			}
-			if errPostingJob != nil {
-				println("major Error when trying to post job to worker", err)
-				continue
+			// This could be much cleaner
+			WIDTH = "512"
+			HEIGHT = "512"
+			if queuedJob.Job_params == "2" {
+				WIDTH = "512"
+				HEIGHT = "768"
+			} else if queuedJob.Job_params == "3" {
+				WIDTH = "768"
+				HEIGHT = "512"
 			}
 
-			// 4. Update the Jobdb and the Workerdb
+			SEED = strconv.Itoa(queuedJob.Seed)
+			STEPS = "75"
+			SCALE = "7"
+			if queuedJob.Guidance == 1 {
+				STEPS = "145"
+				SCALE = "6"
+			}
+
+			// Ugly hack to communicate the pre-prompt option without changing the jobdb schema..
+			// fix this.
+			if strings.Contains(queuedJob.Owner, "with_pre_prompt") {
+				PROMPT = "mdjrny v4 style " + queuedJob.Prompt
+			} else {
+				PROMPT = queuedJob.Prompt
+			}
+
 			exdb.UpdateJobById(JOBDB, queuedJob.Jobid, "processing", "1")
-			exdb.UpdateWorkerByWorkerId(WORKERDB, queuedJob.Jobid, worker.Worker_id, 1)
+
+			cmd := exec.Command(modelCmd, PROMPT, SEED, WIDTH, HEIGHT, STEPS, SCALE, queuedJob.Jobid)
+			out, err := cmd.Output()
+			if err != nil {
+				log.Println(err)
+			}
+			fmt.Println(string(out))
+
+			// Create JPG "thumbnail", TODO: Pull this into the gi runtime and just use the standard library for this
+			exec.Command("../model/make_jpgs_from_name", queuedJob.Jobid).Run()
+
+			// Update the jobdb, TODO: Add safety measure where jobs already marked completed can't be updated by the worker
+			exdb.UpdateJobById(JOBDB, queuedJob.Jobid, "completed", "250")
 		}
 	}
 }
@@ -297,7 +293,6 @@ func postJobToWorker(job exdb.Job, worker exdb.Worker) error {
 	client.Timeout = time.Second * 10
 	client.Transport = http.DefaultTransport
 
-	// Marshal the job to json
 	jsonData, err := json.Marshal(job)
 	if err != nil {
 		log.Println("error marshalling struct into json", err)
@@ -311,8 +306,6 @@ func postJobToWorker(job exdb.Job, worker exdb.Worker) error {
 		return err
 	}
 
-	// TODO: Scheduler is waiting on a response that doesn't come
-
 	response, _ := client.Do(request)
 	if err != nil {
 		log.Println("Error posting job to scheduler", err)
@@ -321,54 +314,30 @@ func postJobToWorker(job exdb.Job, worker exdb.Worker) error {
 	defer response.Body.Close()
 
 	// Only return everything okay if correct status code
-
 	if _, exists := response.Header[exapi.HeaderJobAccepted]; !exists {
 		println("job posting rejected by worker")
 		return errors.New("job posting rejected by worker")
 
 	}
 
-	/*
-		if _, exists := response.Request.Header[exapi.HeaderJobAccepted]; !exists {
-			println("job posting rejected by worker")
-			return errors.New("job posting rejected by worker")
-		}
-		return nil
-	*/
 	return nil
 }
-
-/*
-	// Check if job
-
-	if response.StatusCode == http.StatusAccepted {
-		log.Println("Job posting accepted for JobId:", job.Jobid)
-		return nil
-	} else {
-		return errors.New("Error posting job")
-	}
-}
-*/
 
 // This is the main function >:D
 func main() {
 	SECRET = exutils.InitializeSecretFromArgument()
 	InitializeLogFile()
 	JOBDB = exdb.InitializeJobdb()
-	WORKERDB = exdb.InitializeWorkerdb()
+	WORKER_DB = exdb.InitializeWorkerdb()
 
 	// Register handlers
 	http.HandleFunc("/api/0/registration", handleWorkerRegistration)
 	http.HandleFunc("/api/0/report", handleUpdateFromWorker)
 
-	go http.ListenAndServe(WEBSERVER_PORT, nil)
+	go http.ListenAndServe(PORT_TO_LISTEN_ON, nil)
 
 	quit := make(chan bool)
 	go runSchedulingLoop(quit)
-
-	// Just testing
-	//newWorkerId := uuid.New().String()
-	//exdb.RegisterNewWorker(WORKERDB, newWorkerId, "1.1.1.1:69", exutils.P100_16GB_X1)
 
 	KeepSchedulerRunningUntilExitSignalIsReceived()
 	close(quit)

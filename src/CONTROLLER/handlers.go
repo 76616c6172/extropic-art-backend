@@ -16,6 +16,8 @@ func api_0_jobs(w http.ResponseWriter, r *http.Request) {
 		exapi.HandleJobsApiGet(JOB_DB, w, r)
 	case "POST": // Handle new job postings
 		// exapi.HandleJobsApiPost(JOB_DB, w, r) // deprecated!
+		w.WriteHeader(http.StatusForbidden)
+		return
 	}
 }
 

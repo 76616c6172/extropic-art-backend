@@ -278,6 +278,11 @@ func InputIsValid(input string) bool {
 // Deals with requests made to the api endpoint /api/1/jobs
 func HandleJobsApiPostVersion2(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 
+	if !GPU_IS_ONLINE {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
 	// 1. Check if the job post is authorized
 	var newJobPosting jobPostingFromApiVersion1
 	decoder := json.NewDecoder(r.Body)

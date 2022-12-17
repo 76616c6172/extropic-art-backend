@@ -25,7 +25,10 @@ import (
 )
 
 const PORT_TO_LISTEN_ON = ":8091"
+const MAX_RETRIES = 3
 
+var MJSD_INSTANCE_1_IS_IN_USE = false
+var MJSD_INSTANCE_2_IS_IN_USE = false
 var WORKER_DB *sql.DB
 var JOB_COMPLETE = true
 var JOBDB *sql.DB
@@ -190,10 +193,103 @@ func InitializeLogFile() {
 	log.SetOutput(logFile)
 }
 
-// Run the scheduling loop posting jobs to the workers
-func runSchedulingLoop(quit chan bool) {
+func runModel(j exdb.Job) error {
+	var timesRetried int
+	var modelCmd string
+	var instanceNumber int
 
 	var PROMPT, SEED, WIDTH, HEIGHT, STEPS, SCALE string
+
+	// 1. Set the correct inference script to run
+	if MJSD_INSTANCE_1_IS_IN_USE {
+		MJSD_INSTANCE_2_IS_IN_USE = true
+		modelCmd = "./run_mjsd.py"
+		instanceNumber = 2
+	} else {
+		MJSD_INSTANCE_1_IS_IN_USE = true
+		modelCmd = "./run_mjsd.py"
+		instanceNumber = 1
+	}
+
+	// 2. Run serverless GPU worker
+
+	// This could be much cleaner
+	WIDTH = "512"
+	HEIGHT = "512"
+	if j.Job_params == "2" {
+		WIDTH = "512"
+		HEIGHT = "768"
+	} else if j.Job_params == "3" {
+		WIDTH = "768"
+		HEIGHT = "512"
+	} else if j.Job_params == "4" {
+		WIDTH = "1024"
+		HEIGHT = "512"
+	} else if j.Job_params == "5" {
+		WIDTH = "512"
+		HEIGHT = "1024"
+	} else if j.Job_params == exapi.RES_768_BY_768 {
+		WIDTH = "768"
+		HEIGHT = "768"
+	} else if j.Job_params == exapi.RES_768_BY_1024 {
+		WIDTH = "768"
+		HEIGHT = "1024"
+	} else if j.Job_params == exapi.RES_1024_BY_768 {
+		WIDTH = "1024"
+		HEIGHT = "768"
+	}
+
+	SEED = strconv.Itoa(j.Seed)
+	STEPS = "25"
+	SCALE = "7"
+	if j.Guidance == 1 {
+		STEPS = "100"
+		SCALE = "9"
+	}
+
+	// Ugly hack to communicate the pre-prompt option without changing the jobdb schema..
+	// fix this.
+	if strings.Contains(j.Owner, "with_pre_prompt") {
+		PROMPT = "mdjrny v4 style " + j.Prompt
+	} else {
+		PROMPT = j.Prompt
+	}
+
+	exdb.UpdateJobById(JOBDB, j.Jobid, "processing", "1")
+
+	// DANGER here we need to change the command
+	cmd := exec.Command(modelCmd, PROMPT, SEED, WIDTH, HEIGHT, STEPS, SCALE, j.Jobid)
+	out, err := cmd.Output()
+	if err != nil {
+		log.Println(err)
+	}
+	fmt.Println(string(out))
+
+	if instanceNumber == 1 {
+		MJSD_INSTANCE_1_IS_IN_USE = false
+	} else if instanceNumber == 2 {
+		MJSD_INSTANCE_2_IS_IN_USE = false
+	}
+
+	// Create JPG "thumbnail", TODO: Pull this into the gi runtime and just use the standard library for this
+	if err = exec.Command("../model/make_jpgs_from_name", j.Jobid).Run(); err != nil {
+		if timesRetried < MAX_RETRIES {
+			timesRetried++
+			exdb.UpdateJobById(JOBDB, j.Jobid, "j", "0")
+			return err
+		} else {
+			timesRetried = 0
+			exdb.UpdateJobById(JOBDB, j.Jobid, "failed", "0")
+		}
+	}
+
+	// Update the jobdb, TODO: Add safety measure where jobs already marked completed can't be updated by the worker
+	exdb.UpdateJobById(JOBDB, j.Jobid, "completed", "250")
+	return nil
+}
+
+// Run the scheduling loop posting jobs to the workers
+func runSchedulingLoop(quit chan bool) {
 
 	for {
 		select {
@@ -203,67 +299,19 @@ func runSchedulingLoop(quit chan bool) {
 			return
 
 		default:
-
-			time.Sleep(5 * time.Second)
-
-			// 1. Get the oldest queued job from the jobdb
+			time.Sleep(1 * time.Second)
 			println("checking jobdb for oldest queued job")
 			queuedJob, err := exdb.GetOldestQueuedJob(JOBDB)
 			if err != nil {
 				println("..waiting for queued job")
-				//log.Println("error getting queued job from db")
 				continue
 			}
 			println("Got queued job:", queuedJob.Jobid, queuedJob.Prompt)
-
-			// 0. TODO: select the pipelines
-			modelCmd := "./run_worker.py"
-
-			// 2. Run serverless GPU worker
-
-			PROMPT = queuedJob.Prompt
-
-			// This could be much cleaner
-			WIDTH = "512"
-			HEIGHT = "512"
-			if queuedJob.Job_params == "2" {
-				WIDTH = "512"
-				HEIGHT = "768"
-			} else if queuedJob.Job_params == "3" {
-				WIDTH = "768"
-				HEIGHT = "512"
+			if !MJSD_INSTANCE_1_IS_IN_USE || !MJSD_INSTANCE_2_IS_IN_USE {
+				go runModel(queuedJob)
 			}
-
-			SEED = strconv.Itoa(queuedJob.Seed)
-			STEPS = "75"
-			SCALE = "7"
-			if queuedJob.Guidance == 1 {
-				STEPS = "145"
-				SCALE = "6"
-			}
-
-			// Ugly hack to communicate the pre-prompt option without changing the jobdb schema..
-			// fix this.
-			if strings.Contains(queuedJob.Owner, "with_pre_prompt") {
-				PROMPT = "mdjrny v4 style " + queuedJob.Prompt
-			} else {
-				PROMPT = queuedJob.Prompt
-			}
-
-			exdb.UpdateJobById(JOBDB, queuedJob.Jobid, "processing", "1")
-
-			cmd := exec.Command(modelCmd, PROMPT, SEED, WIDTH, HEIGHT, STEPS, SCALE, queuedJob.Jobid)
-			out, err := cmd.Output()
-			if err != nil {
-				log.Println(err)
-			}
-			fmt.Println(string(out))
-
-			// Create JPG "thumbnail", TODO: Pull this into the gi runtime and just use the standard library for this
-			exec.Command("../model/make_jpgs_from_name", queuedJob.Jobid).Run()
-
-			// Update the jobdb, TODO: Add safety measure where jobs already marked completed can't be updated by the worker
-			exdb.UpdateJobById(JOBDB, queuedJob.Jobid, "completed", "250")
+			println("..waiting for free worker instance")
+			continue
 		}
 	}
 }
@@ -334,11 +382,9 @@ func main() {
 	http.HandleFunc("/api/0/registration", handleWorkerRegistration)
 	http.HandleFunc("/api/0/report", handleUpdateFromWorker)
 
-	go http.ListenAndServe(PORT_TO_LISTEN_ON, nil)
-
 	quit := make(chan bool)
+	go http.ListenAndServe(PORT_TO_LISTEN_ON, nil)
 	go runSchedulingLoop(quit)
-
 	KeepSchedulerRunningUntilExitSignalIsReceived()
 	close(quit)
 }

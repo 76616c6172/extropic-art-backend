@@ -1,6 +1,7 @@
 package exapi
 
 import (
+	"crypto/sha1"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 
 	"extropic-art-backend/src/exdb"
 )
@@ -21,11 +23,13 @@ const (
 	PNG
 )
 
-const MAXIMUM_NUMBER_OF_JOBS_IN_QUEUE = 50
+const MAXIMUM_NUMBER_OF_JOBS_IN_QUEUE = 25
+const MAXIMUM_DAILY_USES = 100
+
+var FREE_USES_REMAINING = MAXIMUM_DAILY_USES
 
 // Sends back the status response
 func HandleStatusRequest(db *sql.DB, w http.ResponseWriter, r *http.Request) {
-
 	if r.Method == "GET" {
 		var statusResponse status
 
@@ -37,7 +41,6 @@ func HandleStatusRequest(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 
 		json.NewEncoder(w).Encode(statusResponse) // send back the response
 	}
-
 }
 
 // Answers requests to version 2 of the status api
@@ -47,9 +50,7 @@ func Handle_status_api_endpoint_version_2(db *sql.DB, w http.ResponseWriter, r *
 			Newest_completed_job string `json:"newest_completed_job"`
 		}
 		var status status_response
-		//int Newest_completed_job: 11,
 		status.Newest_completed_job = exdb.GetNewestCompletedJob(db, "completed").Jobid
-		// exdb.GetNewestCoupleJobsThatHaveStatus(db, "completed", 1)[0]
 		json.NewEncoder(w).Encode(status) // send back the response
 	}
 }
@@ -275,10 +276,13 @@ func InputIsValid(input string) bool {
 	return false
 }
 
+var mutex = &sync.Mutex{}
+
 // Deals with requests made to the api endpoint /api/1/jobs
 func HandleJobsApiPostVersion2(db *sql.DB, w http.ResponseWriter, r *http.Request) {
+	mutex.Lock()
 
-	if !GPU_IS_ONLINE {
+	if !GPU_IS_ONLINE || FREE_USES_REMAINING <= 0 {
 		w.WriteHeader(http.StatusForbidden)
 		return
 	}
@@ -292,6 +296,8 @@ func HandleJobsApiPostVersion2(db *sql.DB, w http.ResponseWriter, r *http.Reques
 		w.Write([]byte("500 - Something bad happened!"))
 		return
 	}
+
+	fmt.Println("[Job posted]: ", newJobPosting.Prompt, "\n[User info hash]: ", sha1.Sum([]byte(r.UserAgent())))
 
 	// 1. Santizie the input
 
@@ -333,7 +339,8 @@ func HandleJobsApiPostVersion2(db *sql.DB, w http.ResponseWriter, r *http.Reques
 		json.NewEncoder(w).Encode(jobResponse)
 		log.Println("HandleJobsApiPost: Error exceeded maximum jobs in queue")
 	}
-	// HERE
+
+	newJobPosting.Seed = strings.TrimSpace(newJobPosting.Seed)
 
 	// 2. Create the job in the database
 	//newJobid, err := exdb.InsertNewJob(db, "1", 0, 42, 0, 0, jobRequest.Prompt, "unknown", "")
@@ -383,6 +390,9 @@ func HandleJobsApiPostVersion2(db *sql.DB, w http.ResponseWriter, r *http.Reques
 		log.Println("HandleJobsApiPost: Error inserting new job", err)
 		return
 	}
+
+	FREE_USES_REMAINING--
+	mutex.Unlock()
 
 	w.WriteHeader(http.StatusAccepted)
 	json.NewEncoder(w).Encode(jobResponse)
@@ -493,6 +503,11 @@ func buildApiJobListForTheView(jobs []exdb.Job) []apiJob {
 	return newJobList
 }
 
+type queueResponse struct {
+	CurrentJobQueue   []apiJob `json:"queue"`
+	FreeUsesRemaining int      `json:"freeUsesRemaining"`
+}
+
 // Send back the prompts that are in the current queue
 func HandleQueueRequest(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" { // send back the response
@@ -505,6 +520,10 @@ func HandleQueueRequest(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 		}
 
 		listOfJobObjectsForTheView := buildApiJobListForTheView(jobsInQueue)
-		json.NewEncoder(w).Encode(listOfJobObjectsForTheView) // send back the json as a the response
+		response := queueResponse{
+			CurrentJobQueue:   listOfJobObjectsForTheView,
+			FreeUsesRemaining: FREE_USES_REMAINING,
+		}
+		json.NewEncoder(w).Encode(response) // send back the json as a the response
 	}
 }

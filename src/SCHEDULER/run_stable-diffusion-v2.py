@@ -12,8 +12,8 @@ MODEL = "prompthero/openjourney"
 CACHE_PATH = "/root/model_cache"
 GPU = modal.gpu.A100()
 
-stub = modal.Stub("serverless-worker")
-volume = modal.SharedVolume().persist("serverless-worker-volume")
+stub = modal.Stub("serverless-gpu-worker")
+volume = modal.SharedVolume().persist("serverless-gpu-worker-volume")
 
 @stub.function(
 	gpu = GPU,
@@ -27,7 +27,6 @@ volume = modal.SharedVolume().persist("serverless-worker-volume")
 )
 async def run_large_diffusion_model(prompt: str, seed, width, height, steps, scale):
 	from diffusers import StableDiffusionPipeline
-	from diffusers import DDIMScheduler
 	from torch import float16
 	import torch as torch
 
@@ -37,7 +36,6 @@ async def run_large_diffusion_model(prompt: str, seed, width, height, steps, sca
    	torch_dtype=float16,
     cache_dir=CACHE_PATH,
     device_map="auto",
-		scheduler = DDIMScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear", clip_sample=False, set_alpha_to_one=False),
 		safety_checker=None,
 	)
 

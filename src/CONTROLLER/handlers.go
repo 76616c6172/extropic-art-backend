@@ -6,6 +6,9 @@ import (
 	"net/http"
 )
 
+/* old api  */
+// ========
+
 // Answers calls to the endpoint /api/0/jobs
 func api_0_jobs(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -34,6 +37,9 @@ func api_0_status(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Headers", "*")
 	exapi.HandleStatusRequest(JOB_DB, w, r)
 }
+
+/* new api  */
+// ========
 
 // Answers calls to the endpoint /api/1/queue
 func api_1_queue(w http.ResponseWriter, r *http.Request) {

@@ -8,7 +8,6 @@ import (
 	"os/exec"
 	"os/signal"
 	"strconv"
-	"strings"
 	"syscall"
 	"time"
 
@@ -82,21 +81,16 @@ func runJob(j exdb.Job) error {
 		WIDTH = "1024"
 		HEIGHT = "768"
 	}
-	MODEL := j.Model_pipeline
 	SEED = strconv.Itoa(j.Seed)
-	STEPS = "25"
 	SCALE = "7"
-	if j.Guidance == 1 {
-		STEPS = "100"
-		SCALE = "9"
-	}
+	PROMPT = j.Prompt
 
-	// Ugly hack to communicate the pre-prompt option without changing the jobdb schema..
-	// fix this.
-	if strings.Contains(j.Owner, "with_pre_prompt") {
-		PROMPT = "mdjrny v4 style " + j.Prompt
-	} else {
-		PROMPT = j.Prompt
+	// FIXME: steps and scale should be collumns in jobdb and directly exposed to the user
+	MODEL := j.Model_pipeline
+	if MODEL == "1" {
+		STEPS = "75"
+	} else if MODEL == "2" {
+		STEPS = "30"
 	}
 
 	exdb.UpdateJobById(JOBDB, j.Jobid, "processing", "1")

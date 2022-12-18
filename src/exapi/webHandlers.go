@@ -327,7 +327,7 @@ func HandleJobsApiPostVersion2(db *sql.DB, w http.ResponseWriter, r *http.Reques
 		log.Println("HandleJobsApiPost: Prompt length out of bounds")
 		return
 	}
-	//
+
 	// 1.5 Check that we're not exceeding the queued job limit
 	numberOfQUeuedJobs := exdb.GetNumberOfQueuedJobs(db)
 	if numberOfQUeuedJobs > MAXIMUM_NUMBER_OF_JOBS_IN_QUEUE {
@@ -343,7 +343,6 @@ func HandleJobsApiPostVersion2(db *sql.DB, w http.ResponseWriter, r *http.Reques
 	newJobPosting.Seed = strings.TrimSpace(newJobPosting.Seed)
 
 	// 2. Create the job in the database
-	//newJobid, err := exdb.InsertNewJob(db, "1", 0, 42, 0, 0, jobRequest.Prompt, "unknown", "")
 	var lockSeed int
 	var seedNumber int
 	if newJobPosting.IsLockedSeed {
@@ -393,83 +392,9 @@ func HandleJobsApiPostVersion2(db *sql.DB, w http.ResponseWriter, r *http.Reques
 
 	FREE_USES_REMAINING--
 	mutex.Unlock()
-
 	w.WriteHeader(http.StatusAccepted)
 	json.NewEncoder(w).Encode(jobResponse)
 }
-
-/*
-// Deals with POST requests made to the jobs endpoint (POST new jobs)
-// Checks if the posted job is valid and then
-// Adds job to the database with the "queued" status
-func HandleJobsApiPost(db *sql.DB, w http.ResponseWriter, r *http.Request) {
-	var j jobResponse
-
-	jsonDecoder := json.NewDecoder(r.Body)
-	var jobRequest newjob
-	err := jsonDecoder.Decode(&jobRequest)
-	if err != nil {
-		log.Println("HandleJobsApiPost: Error decoding request", err)
-		w.Write([]byte("500 - Something bad happened!"))
-		json.NewEncoder(w).Encode(j) // send back the json as a the response
-		return
-	}
-
-	// 1. Santizie the input
-	jobRequest.Prompt = SanitizeUserPrompt(jobRequest.Prompt)
-	if !InputIsValid(jobRequest.Prompt) {
-		log.Println("HandleJobsApiPost: Error decoding request", err)
-		w.Write([]byte("500 - Something bad happened!"))
-		json.NewEncoder(w).Encode(j) // send back the json as a the response
-		return
-	}
-
-	if len(jobRequest.Prompt) > MAX_PROMPT_LENGTH {
-		log.Println("HandleJobsApiPost: Error large prompt length")
-		w.Write([]byte("500 - Something bad happened!"))
-		json.NewEncoder(w).Encode(j) // send back the json as a the response
-		return
-	}
-
-	if len(jobRequest.Prompt) < 1 || len(jobRequest.Prompt) > MAX_PROMPT_LENGTH {
-		j.Jobid = -1
-		j.Prompt = jobRequest.Prompt
-		j.Job_status = "Rejected"
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("500 - Something bad happened!"))
-		json.NewEncoder(w).Encode(j)
-		log.Println("HandleJobsApiPost: Prompt length out of bounds")
-		return
-	}
-
-	// 1.5 Check that we're not exceeding the queued job limit
-	numberOfQUeuedJobs := exdb.GetNumberOfQueuedJobs(db)
-	if numberOfQUeuedJobs > MAXIMUM_NUMBER_OF_JOBS_IN_QUEUE {
-		j.Jobid = -1
-		j.Prompt = jobRequest.Prompt
-		j.Job_status = "Rejected"
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("500 - Something bad happened!"))
-		json.NewEncoder(w).Encode(j)
-		log.Println("HandleJobsApiPost: Error exceeded maximum jobs in queue")
-	}
-	// HERE
-
-	// 2. Create the job in the database
-	newJobid, err := exdb.InsertNewJob(db, "1", 0, 42, 0, 0, jobRequest.Prompt, "unknown", "")
-	if err != nil {
-		log.Println("HandleJobsApiPost: Error inserting new job", err)
-		return
-	}
-
-	// 3. Send back the jobid of the newly created job to the client
-	j.Jobid = newJobid
-	j.Prompt = jobRequest.Prompt
-	j.Job_status = "accepted"
-
-	json.NewEncoder(w).Encode(j) // send back the json as a the response
-}
-*/
 
 // createRandomSeed emits a between 0 and 4294967295
 func createRandomSeed() int {
@@ -495,10 +420,6 @@ func buildApiJobListForTheView(jobs []exdb.Job) []apiJob {
 		}
 		newJobList = append(newJobList, newJobObject)
 	}
-
-	//fmt.Println("DB Input:", jobs)
-	//println()
-	//fmt.Println("List", newJobList)
 
 	return newJobList
 }

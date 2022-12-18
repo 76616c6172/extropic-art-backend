@@ -13,9 +13,9 @@ const PORT_TO_SERVE_ON = ":8080"
 
 var JOB_DB *sql.DB
 
-// Initializes log file for the controller
+// initializeLogFile as controller.log
 func initializeLogFile() {
-	logFile, err := os.OpenFile(("./logs/controller.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	logFile, err := os.OpenFile(("./controller.log"), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatal("main: error opening logfile")
 	}

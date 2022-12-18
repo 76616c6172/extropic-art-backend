@@ -32,7 +32,7 @@ type jobParam struct {
 func InitializeJobdb() *sql.DB {
 	JOBDB, err := sql.Open("sqlite3", "../model/jobdb/jobs.db")
 	if err != nil {
-		log.Fatal(err) // TODO: Maybe handle this better
+		log.Fatal("error opening jobdb", err) // TODO: Maybe handle this better
 	}
 
 	// Create table if it doesn't exist
@@ -55,13 +55,13 @@ func InitializeJobdb() *sql.DB {
 	"time_completed" TIMESTAMP
 	);`)
 	if err != nil {
-		log.Fatal(err) // TODO: Maybe handle this better
+		log.Fatal("error initializing jobdb", err)
 	}
 	defer stmnt.Close()
 
 	_, err = stmnt.Exec()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("error executing jobdb initialize statememtn", err)
 	}
 	return JOBDB
 }
@@ -72,47 +72,48 @@ func InitializeJobdb() *sql.DB {
 // Assumes JOBDB is initialized first by calling InnitializeJobdb()
 func InsertNewJob(db *sql.DB, model string, lock_seed int, seed int, guidance int, upscale int, prompt string, owner string, job_params interface{}) (int, error) {
 
-	job_params_unm, err := json.Marshal(job_params) // Convert job_params to a string
+	job_params_unm, err := json.Marshal(job_params)
 	if err != nil {
+		log.Println("Error marshalling job_params", err)
 		return -1, err
 	}
 	job_params_str := string(job_params_unm)
 
 	stmnt, err := db.Prepare(`
 	INSERT INTO "jobs" (
-		model_pipeline,
-		lock_seed,
-		seed,
-		guidance,
-		upscale,
-		prompt,
-		status,
-		job_params,
-		owner,
-		iteration_status,
-		iteration_max,
-		time_created,
-		time_last_updated,
-		time_completed
-		) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,? ,?);`) // Prepare the stament
+	model_pipeline,
+	lock_seed,
+	seed,
+	guidance,
+	upscale,
+	prompt,
+	status,
+	job_params,
+	owner,
+	iteration_status,
+	iteration_max,
+	time_created,
+	time_last_updated,
+	time_completed
+	) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,? ,?);`)
 	if err != nil {
+		log.Println("error preparing job insert statement", err)
 		return -1, err
 	}
 	defer stmnt.Close()
 
 	time := strconv.Itoa(int(time.Now().Nanosecond()))
-	iteration_max := 250 // TODO: make this check if the user provided different values first
+	iteration_max := 250
 
-	// Execute the statement
-	// for reference the jobs schema is:
-	//INSERT INTO "jobs" (prompt, status, job_params, iteration_status, iteration_max, time_created, time_last_updated, time_completed)
 	result, err := stmnt.Exec(model, lock_seed, seed, guidance, upscale, prompt, "queued", job_params_str, owner, 0, iteration_max, time, time, "")
 	if err != nil {
+		log.Println("error executing job insert statement", err)
 		return -1, err
 	}
 
 	numberOfNewJob, err := result.LastInsertId()
 	if err != nil {
+		log.Println("error getting result from LastInsertId", err)
 		return -1, err
 	}
 
@@ -126,6 +127,7 @@ func GetJobByJobid(db *sql.DB, jobid int) (Job, error) {
 
 	row, err := db.Query(`SELECT * FROM "jobs" WHERE jobid = ?;`, jobid) // Query the database
 	if err != nil {
+		log.Println("error querying jobdb while getting job by id", err)
 		return j, err
 	}
 	defer row.Close()
@@ -133,6 +135,7 @@ func GetJobByJobid(db *sql.DB, jobid int) (Job, error) {
 	row.Next()
 	err = row.Scan(&j.Jobid, &j.Model_pipeline, &j.Lock_seed, &j.Seed, &j.Guidance, &j.Upscale, &j.Prompt, &j.Status, &j.Job_params, &j.Owner, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
 	if err != nil {
+		log.Println("error scaning jobdb row while getting job by id", err)
 		return j, err
 	}
 
@@ -146,6 +149,7 @@ func GetAllJobs(db *sql.DB) ([]Job, error) {
 
 	rows, err := db.Query(`SELECT * FROM "jobs" ORDER BY jobid DESC;`) // Query the database
 	if err != nil {
+		log.Println("error querying jobdb while getting all jobs", err)
 		return jobs, err
 	}
 	defer rows.Close()
@@ -156,6 +160,7 @@ func GetAllJobs(db *sql.DB) ([]Job, error) {
 	for rows.Next() {
 		err = rows.Scan(&j.Jobid, &j.Model_pipeline, &j.Lock_seed, &j.Seed, &j.Guidance, &j.Upscale, &j.Prompt, &j.Status, &j.Job_params, &j.Owner, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
 		if err != nil {
+			log.Println("error scanning rows from jobdb while getting all jobs", err)
 			return jobs, err
 		}
 		jobs = append(jobs, j)
@@ -173,17 +178,35 @@ func GetjobsBetweenJobidXandJobidY(db *sql.DB, a int, b int) ([]Job, error) {
 
 	rows, err := db.Query(`SELECT * FROM "jobs" WHERE jobid BETWEEN ? AND ?;`, a, b) // Query the database
 	if err != nil {
+		log.Println("error querying jobdb while getting jobs between X/Y", err)
 		return nil, err
 	}
 	defer rows.Close()
 
-	// Unmarshal the results rnto a slice of Jobs
-	var jobs []Job
+	// Unmarshal the results into a slice of Jobs
 	var j Job
+	var jobs []Job
 	for rows.Next() {
+		err = rows.Scan(
+			&j.Jobid,
+			&j.Model_pipeline,
+			&j.Lock_seed,
+			&j.Seed,
+			&j.Guidance,
+			&j.Upscale,
+			&j.Prompt,
+			&j.Status,
+			&j.Job_params,
+			&j.Owner,
+			&j.Iteration_status,
+			&j.Iteration_max,
+			&j.Time_created,
+			&j.Time_last_updated,
+			&j.Time_completed,
+		)
 
-		err = rows.Scan(&j.Jobid, &j.Model_pipeline, &j.Lock_seed, &j.Seed, &j.Guidance, &j.Upscale, &j.Prompt, &j.Status, &j.Job_params, &j.Owner, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
 		if err != nil {
+			log.Println("error scanning rows while getting jobs between x/y", err)
 			return nil, err
 		}
 		jobs = append(jobs, j)
@@ -198,28 +221,45 @@ func GetjobsBetweenJobidXandJobidY(db *sql.DB, a int, b int) ([]Job, error) {
 func GetOldestQueuedJob(db *sql.DB) (Job, error) {
 	var j Job
 
-	row, err := db.Query(`SELECT * FROM "jobs" WHERE status = "queued" ORDER BY jobid ASC LIMIT 1;`) // Query the database
+	rows, err := db.Query(`SELECT * FROM "jobs" WHERE status = "queued" ORDER BY jobid ASC LIMIT 1;`) // Query the database
 	if err != nil {
+		log.Println("error getting row for oldest queued job", err)
 		return j, err
 	}
-	defer row.Close()
+	defer rows.Close()
 
-	row.Next()
-
-	err = row.Scan(&j.Jobid, &j.Model_pipeline, &j.Lock_seed, &j.Seed, &j.Guidance, &j.Upscale, &j.Prompt, &j.Status, &j.Job_params, &j.Owner, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
+	rows.Next()
+	err = rows.Scan(
+		&j.Jobid,
+		&j.Model_pipeline,
+		&j.Lock_seed,
+		&j.Seed,
+		&j.Guidance,
+		&j.Upscale,
+		&j.Prompt,
+		&j.Status,
+		&j.Job_params,
+		&j.Owner,
+		&j.Iteration_status,
+		&j.Iteration_max,
+		&j.Time_created,
+		&j.Time_last_updated,
+		&j.Time_completed,
+	)
 	if err != nil {
+		log.Println("error scanning rows while getting oldest queued job", err)
 		return j, err
 	}
 
 	return j, err
 }
 
-// Returns number of jobs from the db that have the status
+// Returns number of jobs from the <db> that have the <status>
 func GetNumberOfJobsThatHaveStatus(db *sql.DB, status string) int {
 	var jobs []Job
 	var j Job
 
-	row, err := db.Query(`SELECT * FROM "jobs" WHERE status = ?;`, status) // Query the database
+	row, err := db.Query(`SELECT * FROM "jobs" WHERE status = ?;`, status)
 	if err != nil {
 		log.Println("Error in GetNumberOfCompletedJobs", err)
 		return -1
@@ -227,11 +267,28 @@ func GetNumberOfJobsThatHaveStatus(db *sql.DB, status string) int {
 	defer row.Close()
 
 	for row.Next() {
-		err = row.Scan(&j.Jobid, &j.Model_pipeline, &j.Lock_seed, &j.Seed, &j.Guidance, &j.Upscale, &j.Prompt, &j.Status, &j.Job_params, &j.Owner, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
+		err = row.Scan(
+			&j.Jobid,
+			&j.Model_pipeline,
+			&j.Lock_seed,
+			&j.Seed,
+			&j.Guidance,
+			&j.Upscale,
+			&j.Prompt,
+			&j.Status,
+			&j.Job_params,
+			&j.Owner,
+			&j.Iteration_status,
+			&j.Iteration_max,
+			&j.Time_created,
+			&j.Time_last_updated,
+			&j.Time_completed,
+		)
 		if err != nil {
 			log.Println("Error in GetNumberOfCompletedJobs", err)
 			return -1
 		}
+
 		jobs = append(jobs, j)
 	}
 
@@ -249,8 +306,23 @@ func GetLatestJobid(db *sql.DB) string {
 	defer row.Close()
 
 	row.Next()
-
-	err = row.Scan(&j.Jobid, &j.Model_pipeline, &j.Lock_seed, &j.Seed, &j.Guidance, &j.Upscale, &j.Prompt, &j.Status, &j.Job_params, &j.Owner, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
+	err = row.Scan(
+		&j.Jobid,
+		&j.Model_pipeline,
+		&j.Lock_seed,
+		&j.Seed,
+		&j.Guidance,
+		&j.Upscale,
+		&j.Prompt,
+		&j.Status,
+		&j.Job_params,
+		&j.Owner,
+		&j.Iteration_status,
+		&j.Iteration_max,
+		&j.Time_created,
+		&j.Time_last_updated,
+		&j.Time_completed,
+	)
 	if err != nil {
 		log.Println("Error in GetNumberOfCompletedJobs", err)
 		return "error scanning last job"
@@ -261,40 +333,97 @@ func GetLatestJobid(db *sql.DB) string {
 
 // returns only the newest job
 func GetNewestCompletedJob(db *sql.DB, status string) Job {
-	var j Job
-	row, err := db.Query(`SELECT * FROM "jobs" WHERE status = ? ORDER BY jobid DESC LIMIT 1;`, status)
+	var newestCompletedJob Job
+
+	rows, err := db.Query(`SELECT * FROM "jobs" WHERE status = ? ORDER BY jobid DESC LIMIT 1;`, status)
 	if err != nil {
 		log.Println("Error in GetNewestCompletedJob", err)
+		return newestCompletedJob
 	}
-	defer row.Close()
+	defer rows.Close()
+	println("B")
 
-	row.Next()
-	err = row.Scan(&j.Jobid, &j.Model_pipeline, &j.Lock_seed, &j.Seed, &j.Guidance, &j.Upscale, &j.Prompt, &j.Status, &j.Job_params, &j.Owner, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
+	newestCompletedJob, err = scan_single_row_of_jobs(rows, newestCompletedJob)
 	if err != nil {
 		log.Println("Error in GetNewestCompletedJob scan operation", err)
+		return newestCompletedJob
 	}
-	return j
+	println("C")
+	return newestCompletedJob
+}
+
+func scan_single_row_of_jobs(r *sql.Rows, j Job) (Job, error) {
+	r.Next()
+	err := r.Scan(
+		&j.Jobid,
+		&j.Model_pipeline,
+		&j.Lock_seed,
+		&j.Seed,
+		&j.Guidance,
+		&j.Upscale,
+		&j.Prompt,
+		&j.Status,
+		&j.Job_params,
+		&j.Owner,
+		&j.Iteration_status,
+		&j.Iteration_max,
+		&j.Time_created,
+		&j.Time_last_updated,
+		&j.Time_completed,
+	)
+	if err != nil {
+		log.Println("error while scanning single row of jobs", err)
+		return j, err
+	}
+
+	return j, nil
+}
+
+func scan_all_job_rows_into_a_job_slice(rows *sql.Rows, jobs []Job) ([]Job, error) {
+	var j Job
+	for rows.Next() {
+		err := rows.Scan(
+			&j.Jobid,
+			&j.Model_pipeline,
+			&j.Lock_seed,
+			&j.Seed,
+			&j.Guidance,
+			&j.Upscale,
+			&j.Prompt,
+			&j.Status,
+			&j.Job_params,
+			&j.Owner,
+			&j.Iteration_status,
+			&j.Iteration_max,
+			&j.Time_created,
+			&j.Time_last_updated,
+			&j.Time_completed,
+		)
+		if err != nil {
+			log.Println("error while scanning job rows into a job slice", err)
+			return jobs, err
+		}
+
+		jobs = append(jobs, j)
+	}
+
+	return jobs, nil
 }
 
 // Returns the last couple jobs from the databasee that have the status you ask
 // status = the status you are filtering for
 // numberOfJobs = the amount of jobs the function will return
 func GetNewestCoupleJobsThatHaveStatus(db *sql.DB, status string, numberOfJobs int) []string {
-	var jobs []Job
-	var j Job
-
 	row, err := db.Query(`SELECT * FROM "jobs" WHERE status = ? ORDER BY jobid DESC LIMIT ?;`, status, numberOfJobs) // Query the database
 	if err != nil {
 		log.Println("Error in GetNewestFiveCompletedJobs", err)
 	}
 	defer row.Close()
 
-	for row.Next() {
-		err = row.Scan(&j.Jobid, &j.Model_pipeline, &j.Lock_seed, &j.Seed, &j.Guidance, &j.Upscale, &j.Prompt, &j.Status, &j.Job_params, &j.Owner, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
-		if err != nil {
-			log.Println("Error in GetNewestFiveCompletedJobs", err)
-		}
-		jobs = append(jobs, j)
+	var jobs []Job
+	jobs, err = scan_all_job_rows_into_a_job_slice(row, jobs)
+	if err != nil {
+		log.Println("error in get newest couple jobs that have status", err)
 	}
 
 	var answer []string
@@ -372,18 +501,15 @@ func GetAllJobsInQueue(db *sql.DB) ([]Job, error) {
 	rows, err := db.Query(`SELECT * FROM "jobs" where
 	status = "queued" or status = "processing" ORDER BY jobid DESC;`) // Query the database
 	if err != nil {
+		log.Println("error getting all jobs in queue", err)
 		return jobs, err
 	}
 	defer rows.Close()
 
-	// Iterate over the rows and add them to the slice
-	var j Job
-	for rows.Next() {
-		err = rows.Scan(&j.Jobid, &j.Model_pipeline, &j.Lock_seed, &j.Seed, &j.Guidance, &j.Upscale, &j.Prompt, &j.Status, &j.Job_params, &j.Owner, &j.Iteration_status, &j.Iteration_max, &j.Time_created, &j.Time_last_updated, &j.Time_completed)
-		if err != nil {
-			return jobs, err
-		}
-		jobs = append(jobs, j)
+	jobs, err = scan_all_job_rows_into_a_job_slice(rows, jobs)
+	if err != nil {
+		log.Println("error after trying to scan al jobs rows into new job slice", err)
+		return jobs, err
 	}
 
 	return jobs, err

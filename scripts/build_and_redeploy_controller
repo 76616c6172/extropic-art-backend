@@ -10,12 +10,10 @@ set -e # fail fast
 #    exit 1
 #fi
 
-
-# exia="user@server-address" # set the remote target to deploy to
 SERVER_SSH="extropic" # alternatively this can be $1 when called by GH actions
 SERVER_PATH="/home/valar/controller" # alternatively this can be $2 when called by GH Actions
 BINARY_NAME="controller"
-SERVER_RESTART_COMMAND="systemctl restart $BINARY_NAME"
+SERVER_RESTART_COMMAND="sudo systemctl restart extropic-controller.service"
 
 # 1. Call the build script to create a static binary
 #$( cd "./src/controller/" && ./build_controller )
@@ -25,7 +23,6 @@ OUTFILE="../src/CONTROLLER/$BINARY_NAME" # set the location of the new binary
 COMMIT_HASH=$(git rev-parse HEAD)
 BUILD_TIMESTAMP=$(TZ=UTC date -u +"%s")
 FILE_HASH=$(b2sum $OUTFILE | cut -f1 -d' ')
-#REMOTE_FILENAME="$BINARY_NAME-$BUILD_TIMESTAMP-$COMMIT_HASH-$FILE_HASH"
 REMOTE_FILENAME="$BINARY_NAME-$COMMIT_HASH-$FILE_HASH"
 
 # 2. Copy over the file

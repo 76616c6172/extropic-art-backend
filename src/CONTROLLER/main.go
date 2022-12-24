@@ -30,12 +30,12 @@ func main() {
 	// Website ressources are served from filepath ../view/build
 	http.Handle("/", http.FileServer(http.Dir("../view/build")))
 
-	// Old API
+	// Old API endpoints
 	http.HandleFunc("/api/0/status", api_0_status)
 	http.HandleFunc("/api/0/jobs", api_0_jobs)
 	http.HandleFunc("/api/0/img", api_0_img)
 
-	// New API
+	// New API endpoints
 	http.HandleFunc("/api/1/queue", api_1_queue)
 	http.HandleFunc("/api/1/status", api_1_status_handler)
 	http.HandleFunc("/api/1/jobs", api_1_jobs)

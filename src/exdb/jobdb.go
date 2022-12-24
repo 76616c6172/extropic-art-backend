@@ -11,13 +11,12 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// The parameters the diffusion model uses when running the job
+// Currently not used to store parameters
 type jobParam struct {
-	placeholder int // TODO add more parameters here
+	placeholder int
 }
 
-// Initialize and connect to jobdb
-// the job schema based on the data from the jobdb
+// initializeJobdb connects to the jobs database with a hardcoded schema, if jobsdb doesn't exist it will create it.
 /* the schema for reference
 "jobid" INTEGER PRIMARY KEY AUTOINCREMENT,
 "prompt" TEXT,
@@ -247,7 +246,9 @@ func GetOldestQueuedJob(db *sql.DB) (Job, error) {
 		&j.Time_completed,
 	)
 	if err != nil {
-		log.Println("error scanning rows while getting oldest queued job", err)
+		// Minor bug
+		// I think this is where the bug is, we should not be scanning if the resulting row is empty
+		// It will be empty when there are no jobs in the queue, which is fine.
 		return j, err
 	}
 

@@ -2,7 +2,6 @@ package main
 
 import (
 	"extropic-art-backend/src/exapi"
-	"fmt"
 	"net/http"
 )
 
@@ -57,8 +56,6 @@ func api_1_status_handler(w http.ResponseWriter, r *http.Request) {
 
 // Answers calls to the endpoint /api/1/jobs
 func api_1_jobs(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("API 1 called!")
-
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "*")
 

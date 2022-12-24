@@ -1,7 +1,6 @@
 package exapi
 
 import (
-	"crypto/sha1"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -24,7 +23,7 @@ const (
 )
 
 const MAXIMUM_NUMBER_OF_JOBS_IN_QUEUE = 25
-const MAXIMUM_DAILY_USES = 50
+const MAXIMUM_DAILY_USES = 200
 
 var FREE_USES_REMAINING = MAXIMUM_DAILY_USES
 
@@ -297,7 +296,7 @@ func HandleJobsApiPostVersion2(db *sql.DB, w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	fmt.Println("[Job posted]: ", newJobPosting.Prompt, "\n[User info hash]: ", sha1.Sum([]byte(r.UserAgent())))
+	//fmt.Println("[Job posted]: ", newJobPosting.Prompt, "\n[User info hash]: ", sha1.Sum([]byte(r.UserAgent())))
 
 	// 1. Santizie the input
 

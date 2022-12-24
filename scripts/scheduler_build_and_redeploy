@@ -15,8 +15,8 @@ set -e # fail fast
 SERVER_SSH="extropic" # alternatively this can be $1 when called by GH actions
 SERVER_PATH="/home/valar/scheduler" # alternatively this can be $2 when called by GH Actions
 BINARY_NAME="scheduler"
-SERVICE_NAME="exia-scheduler.service"
-SERVER_RESTART_COMMAND="systemctl restart $SERVICE_NAME"
+SERVICE_NAME="extropic-scheduler.service"
+SERVER_RESTART_COMMAND="sudo systemctl restart $SERVICE_NAME"
 
 # 1. Call the build script to create a static binary
 #$( cd "./src/controller/" && ./build_controller )

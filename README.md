@@ -1,1 +1,1 @@
-![architecture](./diagram.png)
+![architecture](./ex_diagram.png)

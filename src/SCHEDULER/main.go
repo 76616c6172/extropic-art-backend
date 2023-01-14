@@ -19,6 +19,8 @@ import (
 const MAX_RETRIES = 3
 const INFERENCE_CMD = "./run_inference.py"
 
+var MAX_PARALELL_EXECUTION = 8
+var CURRENT_WORKERS = 0
 var MJSD_INSTANCE_1_IS_IN_USE = false
 var MJSD_INSTANCE_2_IS_IN_USE = false
 var WORKER_DB *sql.DB
@@ -47,15 +49,9 @@ func InitializeLogFile() {
 
 func runJob(j exdb.Job) error {
 	var PROMPT, SEED, WIDTH, HEIGHT, STEPS, SCALE string
-	var timesRetried, instanceNumber int
+	var timesRetried int
 
-	if MJSD_INSTANCE_1_IS_IN_USE {
-		MJSD_INSTANCE_2_IS_IN_USE = true
-		instanceNumber = 2
-	} else {
-		MJSD_INSTANCE_1_IS_IN_USE = true
-		instanceNumber = 1
-	}
+	CURRENT_WORKERS++
 
 	WIDTH = "512"
 	HEIGHT = "512"
@@ -102,12 +98,7 @@ func runJob(j exdb.Job) error {
 	}
 	fmt.Println(string(out))
 
-	// Free up a new inference thread because our inference has finished
-	if instanceNumber == 1 {
-		MJSD_INSTANCE_1_IS_IN_USE = false
-	} else if instanceNumber == 2 {
-		MJSD_INSTANCE_2_IS_IN_USE = false
-	}
+	CURRENT_WORKERS--
 
 	// Create JPG "thumbnail", TODO: Pull this into the gi runtime and just use the standard library for this
 	if err = exec.Command("../model/make_jpgs_from_name", j.Jobid).Run(); err != nil {
@@ -143,7 +134,7 @@ func runSchedulingLoop(quit chan bool) {
 				continue
 			}
 			println("Got queued job:", queuedJob.Jobid, queuedJob.Prompt)
-			if !MJSD_INSTANCE_1_IS_IN_USE || !MJSD_INSTANCE_2_IS_IN_USE {
+			if CURRENT_WORKERS < MAX_PARALELL_EXECUTION {
 				go runJob(queuedJob)
 			}
 			println("..waiting for free worker instance")

@@ -5,7 +5,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
+	"extropic-art-backend/src/exapi"
 	"extropic-art-backend/src/exdb"
 )
 
@@ -20,6 +22,16 @@ func initializeLogFile() {
 		log.Fatal("main: error opening logfile")
 	}
 	log.SetOutput(logFile)
+}
+
+// go resetDailyUsageLimit() resets the usage period every 24h
+func resetDailyUsageLimit() {
+	for {
+		<-time.After(24 * time.Hour)
+		exapi.Mutex.Lock()
+		exapi.FREE_USES_REMAINING = exapi.MAXIMUM_DAILY_USES
+		exapi.Mutex.Unlock()
+	}
 }
 
 // This is the main function :D
@@ -39,6 +51,8 @@ func main() {
 	http.HandleFunc("/api/1/queue", api_1_queue)
 	http.HandleFunc("/api/1/status", api_1_status_handler)
 	http.HandleFunc("/api/1/jobs", api_1_jobs)
+
+	go resetDailyUsageLimit()
 
 	http.ListenAndServe(PORT_TO_SERVE_ON, nil)
 }

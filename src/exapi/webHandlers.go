@@ -23,7 +23,7 @@ const (
 )
 
 const MAXIMUM_NUMBER_OF_JOBS_IN_QUEUE = 25
-const MAXIMUM_DAILY_USES = 200
+const MAXIMUM_DAILY_USES = 100
 
 var FREE_USES_REMAINING = MAXIMUM_DAILY_USES
 
@@ -139,6 +139,7 @@ func sendBackOneJob(db *sql.DB, w http.ResponseWriter, r *http.Request, str_a st
 		responseJob.Iteration_status = realJob.Iteration_status
 		responseJob.Iteration_max = realJob.Iteration_max
 		responseJob.Img_path = "https://exia.art/api/0/img?jobid=" + responseJob.Jobid
+		responseJob.Model_id = realJob.Model_pipeline
 
 		// 4. Send back the response
 		json.NewEncoder(w).Encode(responseJob)
@@ -275,11 +276,12 @@ func InputIsValid(input string) bool {
 	return false
 }
 
-var mutex = &sync.Mutex{}
+var Mutex = &sync.Mutex{}
 
 // Deals with requests made to the api endpoint /api/1/jobs
 func HandleJobsApiPostVersion2(db *sql.DB, w http.ResponseWriter, r *http.Request) {
-	mutex.Lock()
+	Mutex.Lock()
+	defer Mutex.Unlock()
 
 	if !GPU_IS_ONLINE || FREE_USES_REMAINING <= 0 {
 		w.WriteHeader(http.StatusForbidden)
@@ -390,7 +392,6 @@ func HandleJobsApiPostVersion2(db *sql.DB, w http.ResponseWriter, r *http.Reques
 	}
 
 	FREE_USES_REMAINING--
-	mutex.Unlock()
 	w.WriteHeader(http.StatusAccepted)
 	json.NewEncoder(w).Encode(jobResponse)
 }
